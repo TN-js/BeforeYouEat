@@ -211,6 +211,9 @@
         }
         .image-upload-container {
             margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Optional: center vertically */
         }
         .image-upload-container input[type="file"] {
             display: none;
@@ -231,6 +234,17 @@
             max-width: 100%;
             margin-top: 10px;
             display: none;
+        }
+        #uploadedImageBreakfast,
+        #uploadedImageLunch,
+        #uploadedImageDinner,
+        #uploadedImageSnacks {
+            display: none;
+            max-width: 100%;
+            margin-top: 10px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block; /* Center the image */
         }
         #currentDateDisplay {
             font-size: 18px; /* Adjust as needed */
@@ -254,7 +268,7 @@
                 <button onclick="changeDate(1)">&#9654;</button>
             </div>
             <div class="row center">
-                <div class="version">v0.1.4</div>
+                <div class="version">v0.1.5</div>
                 <div id="currentDateDisplay"></div>
             </div>
         </div>
@@ -438,7 +452,25 @@
 
         function toggleMealForm(mealType) {
             const form = document.getElementById(`${mealType}Form`);
-            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+            const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+            const calorieInput = document.getElementById(`${mealType}Calories`);
+            const proteinInput = document.getElementById(`${mealType}Protein`);
+            const carbsInput = document.getElementById(`${mealType}Carbs`);
+            const fatInput = document.getElementById(`${mealType}Fat`);
+
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                // Hide the image and clear the src when the form is opened
+                uploadedImage.style.display = 'none';
+                uploadedImage.src = '';
+            } else {
+                form.style.display = 'none';
+                // Clear the form fields
+                calorieInput.value = '';
+                proteinInput.value = '';
+                carbsInput.value = '';
+                fatInput.value = '';
+            }
         }
 
         function toggleExerciseForm() {
@@ -635,14 +667,14 @@
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = async function(e) {  // Make the onload function async
+                reader.onload = async function(e) {
                     try {
                         // Compress the image
                         const compressedImage = await compressImage(e.target.result, 500, 500);
-                        
+
                         const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                         uploadedImage.src = compressedImage;
-                        uploadedImage.style.display = 'block';
+                        uploadedImage.style.display = 'block'; // Show the image
 
                         // Convert base64 to a Blob
                         const blob = dataURLToBlob(compressedImage);
