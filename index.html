@@ -386,16 +386,16 @@
             <button id="editGoalsButton">Edit Goals</button>
             <div id="editGoalsForm">
                 <label for="calorieGoal">Calorie Goal:</label>
-                <input type="number" id="calorieGoal" placeholder="e.g., 2150">
+                <input type="number" id="calorieGoal" placeholder="e.g., 2000">
                 
                 <label for="proteinGoal">Protein Goal (g):</label>
-                <input type="number" id="proteinGoal" placeholder="e.g., 116">
+                <input type="number" id="proteinGoal" placeholder="e.g., 75">
                 
                 <label for="carbGoal">Carb Goal (g):</label>
-                <input type="number" id="carbGoal" placeholder="e.g., 289">
+                <input type="number" id="carbGoal" placeholder="e.g., 275">
                 
                 <label for="fatGoal">Fat Goal (g):</label>
-                <input type="number" id="fatGoal" placeholder="e.g., 38">
+                <input type="number" id="fatGoal" placeholder="e.g., 67">
                 
                 <button id="saveGoalsButton">Save Goals</button>
             </div>
@@ -406,7 +406,7 @@
     <script>
         let meals = {};
         let exercise = {};
-        let goals = {calories: 2150, protein: 116, carbs: 289, fat: 38};
+        let goals = {calories: 2000, protein: 75, carbs: 275, fat: 67};
         let currentDate = new Date();
 
         function formatDate(date) {
