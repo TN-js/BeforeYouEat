@@ -11,7 +11,7 @@
             background-color: #e6f2e6;
         }
         .container {
-            max-width: 600px;
+            max-width: 412px;
             margin: 0 auto;
             background-color: white;
             position: relative;
@@ -574,10 +574,8 @@
             });
 
             document.querySelectorAll('.edit-button').forEach(button => {
+                button.removeEventListener('touchstart', editMeal); // Ensure no lingering touchstart listeners
                 button.addEventListener('click', () => {
-                    editMeal(button.dataset.mealType, button.dataset.index);
-                });
-                button.addEventListener('touchstart', () => {
                     editMeal(button.dataset.mealType, button.dataset.index);
                 });
             });
