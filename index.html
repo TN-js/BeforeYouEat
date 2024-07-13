@@ -26,35 +26,44 @@
             padding-top: 20px;
         }
         .header {
-            background: linear-gradient(30deg, #b2dfdb, #4caf50);
+            background: url('banner.jpg') no-repeat center center;
+            background-size: cover;
             color: white;
-            padding: 10px;
             text-align: center;
             position: relative;
+            padding: 20px;
         }
         .header .row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+            background: none;
         }
         .header .row.center {
             justify-content: center;
         }
         .header .title {
-            font-size: 24px;
+            font-size: 48px;
             font-weight: bold;
             text-align: center;
             width: 100%;
+            background: none;
+            color: #26441f;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2); /* Optional: add a subtle shadow for better visibility */
         }
         .header .version {
             font-size: 12px;
-            color: white;
-            background-color: #00a000;
-            padding: 2px 5px;
-            border-radius: 5px;
+            color: rgba(255, 255, 255, 0.9);
+            background-color: #26441f;
+            padding: 3px 6px;
+            border-radius: 4px;
             position: absolute;
-            left: 10px;
+            left: 30px;
+        }
+        .banner-image {
+            width: 100%;
+            height: auto;
         }
         .goals, .meals, .exercise, .summary {
             margin-bottom: 20px;
@@ -74,7 +83,7 @@
             font-size: 16px;
         }
         button {
-            background-color: #00a000;
+            background-color: #4CAF50; /* A medium green */
             color: white;
             border: none;
             padding: 10px 15px;
@@ -84,18 +93,19 @@
             width: 100%;
             margin-bottom: 10px;
         }
+
         button:hover {
-            background-color: #007a00;
+            background-color: #327235; /* A slightly darker green for hover effect */
         }
         .meal-slot {
-            background-color: #f9f9f9;
+            background-color: #ebf3e9;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
         }
         .meal-slot h3 {
             margin-top: 0;
-            color: #333;
+            color: #2e312e;
         }
         #editGoalsForm, .meal-form, #exerciseForm {
             display: none;
@@ -107,17 +117,25 @@
             margin-top: 5px;
         }
         .date-navigation button {
-            background: none;
-            border: 2px solid white;
+            background-color: rgba(38, 68, 31, 0.7); /* Dark green with some transparency */
+            border: 2px solid rgba(255, 255, 255, 0.9);
             color: white;
             font-size: 20px;
             cursor: pointer;
             margin: 0 10px;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 15px;
+            transition: all 0.05s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            outline: none;
         }
         .date-navigation button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(32, 58, 27, 0.9); /* A slightly darker green with less transparency for hover effect */
+            border-color: white;
+        }
+        .date-navigation button:active {
+            background-color: rgba(38, 68, 31, 1); /* Solid dark green for active state */
+            transform: translateY(0.5px);
         }
         .date-navigation .today-button {
             font-size: 20px;
@@ -214,6 +232,14 @@
             margin-top: 10px;
             display: none;
         }
+        #currentDateDisplay {
+            font-size: 18px; /* Adjust as needed */
+            font-weight: bold;
+            color: #26441f; /* A dark green color */
+            padding: 5px; /* Optional: add some padding for better visibility */
+            border-radius: 5px; /* Optional: round the corners of the background */
+            display: inline-block; /* Optional: to ensure padding and background work properly */
+        }
     </style>
 </head>
 <body>
@@ -228,7 +254,7 @@
                 <button onclick="changeDate(1)">&#9654;</button>
             </div>
             <div class="row center">
-                <div class="version">v0.1.3</div>
+                <div class="version">v0.1.4</div>
                 <div id="currentDateDisplay"></div>
             </div>
         </div>
@@ -428,6 +454,7 @@
             
             updateDisplay();
             saveToLocalStorage();
+            clearInputs();
             toggleEditGoalsForm();
         }
 
@@ -554,6 +581,11 @@
                     editMeal(button.dataset.mealType, button.dataset.index);
                 });
             });
+
+            document.getElementById('calorieGoalDisplay').textContent = goals.calories;
+            document.getElementById('proteinGoalDisplay').textContent = goals.protein;
+            document.getElementById('carbGoalDisplay').textContent = goals.carbs;
+            document.getElementById('fatGoalDisplay').textContent = goals.fat;
         }
 
         function removeMeal(mealType, index) {
@@ -729,10 +761,17 @@
         }
 
         function clearInputs(mealType) {
-            document.getElementById(`${mealType}Calories`).value = '';
-            document.getElementById(`${mealType}Protein`).value = '';
-            document.getElementById(`${mealType}Carbs`).value = '';
-            document.getElementById(`${mealType}Fat`).value = '';
+            if (mealType) {
+                document.getElementById(`${mealType}Calories`).value = '';
+                document.getElementById(`${mealType}Protein`).value = '';
+                document.getElementById(`${mealType}Carbs`).value = '';
+                document.getElementById(`${mealType}Fat`).value = '';
+            } else {
+                document.getElementById('calorieGoal').value = '';
+                document.getElementById('proteinGoal').value = '';
+                document.getElementById('carbGoal').value = '';
+                document.getElementById('fatGoal').value = '';
+            }
         }
 
         function saveToLocalStorage() {
