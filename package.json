@@ -1,0 +1,16 @@
+{
+  "name": "nutrisnap",
+  "version": "0.1.3",
+  "description": "A webapp that allows the user to log and track their meals by uploading a picture of the meal. The nutritional content is approximated by an LLM and logged automatically.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["nutrition", "meal tracking", "webapp"],
+  "author": "Thomas Norén",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
