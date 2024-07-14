@@ -274,6 +274,18 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: #dc3545; /* Red color */
 }
 
+.exercise-item {
+    justify-content: space-between; /* Ensure space between text and button */
+}
+
+.exercise-item .exercise-info {
+    flex: 1;
+}
+
+.exercise-item .button-area {
+    flex: 0 0 auto;
+}
+
 .progress-bar-container {
     display: flex;
     align-items: center;

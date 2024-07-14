@@ -143,13 +143,9 @@ function updateDisplay() {
 
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
-
-                // Create meal image element only if the image property is not null and valid
-                const imageHtml = meal.image ? `<img src="${meal.image}" class="meal-image" alt="">` : '';
-
                 mealItem.innerHTML = `
-                    <div class="drag-area">&#x22ee;</div>
-                    ${imageHtml}
+                    <div class="drag-area">&#10625;</div>
+                    ${meal.image ? `<img src="${meal.image}" alt="" class="meal-image">` : ''}
                     <div class="meal-info">
                         <h4>${meal.dishName}</h4>
                         <p>Cals: ${meal.calories} | Protein: ${meal.protein}g | Carbs: ${meal.carbs}g | Fat: ${meal.fat}g</p>
@@ -170,9 +166,11 @@ function updateDisplay() {
         const exerciseItem = document.createElement('div');
         exerciseItem.className = 'exercise-item';
         exerciseItem.innerHTML = `
-            <p>Calories burned: ${currentExercise}</p>
+            <div class="exercise-info">
+                <p>Calories burned: ${currentExercise}</p>
+            </div>
             <div class="button-area">
-                <button class="remove-button remove-exercise-button">Remove</button>
+                <button class="remove-button remove-exercise-button">&#128465;</button>
             </div>
         `;
         exerciseItems.appendChild(exerciseItem);
