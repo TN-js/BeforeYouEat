@@ -144,8 +144,8 @@ function updateDisplay() {
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
 
-                // Create meal image element only if the image property is not null
-                const imageHtml = meal.image ? `<img src="${meal.image}" class="meal-image">` : '';
+                // Create meal image element only if the image property is not null and valid
+                const imageHtml = meal.image ? `<img src="${meal.image}" class="meal-image" alt="">` : '';
 
                 mealItem.innerHTML = `
                     <div class="drag-area">&#9776;</div>
