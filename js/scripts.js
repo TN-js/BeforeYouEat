@@ -72,14 +72,14 @@ function saveGoals() {
     toggleEditGoalsForm();
 }
 
-function addMeal(mealType) {
+function addMeal(mealType, existingImage = null) {
     const dishName = document.getElementById(`${mealType}DishName`).value.trim();
     const calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
     const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
     const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
     const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
     const imageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-    const image = imageElement && imageElement.src ? imageElement.src : null;
+    const image = imageElement && imageElement.src ? imageElement.src : existingImage;
 
     if (!dishName && calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
         return;
@@ -238,6 +238,15 @@ function editMeal(mealType, index) {
     document.getElementById(`${mealType}Carbs`).value = meal.carbs;
     document.getElementById(`${mealType}Fat`).value = meal.fat;
 
+    // Display the existing image
+    const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    if (meal.image) {
+        uploadedImage.src = meal.image;
+        uploadedImage.style.display = 'block';
+    } else {
+        uploadedImage.style.display = 'none';
+    }
+
     form.style.display = 'block';
 
     const saveButton = document.querySelector(`.saveMealButton[data-meal-type="${mealType}"]`);
@@ -246,7 +255,7 @@ function editMeal(mealType, index) {
 
     saveButton.onclick = function saveEdited() {
         removeMeal(mealType, index); // Remove the old entry
-        addMeal(mealType); // Add the updated entry
+        addMeal(mealType, meal.image); // Pass the existing image URL to addMeal function
         saveButton.textContent = originalText; // Revert the button text
         saveButton.onclick = function (event) {
             const mealType = event.target.dataset.mealType;
