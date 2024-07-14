@@ -37,7 +37,7 @@ def analyze_image():
                 "content": [
                     {
                         "type": "text",
-                        "text": "Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; protein, carbs, and fat in grams. Try to figure out what the dish is and name it as well. The final output should only write out the name and the full nutrient for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
+                        "text": "Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; protein, carbs, and fat in grams. Try to figure out what the dish is and name it as well. If there is a visible barcode, use that to retrieve the information. The final output should only write out the name and the full nutrient for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
                     },
                     {
                         "type": "image_url",
