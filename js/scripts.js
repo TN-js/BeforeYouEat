@@ -102,6 +102,9 @@ function addMeal(mealType, existingImage = null) {
     saveToLocalStorage();
     clearInputs(mealType);
     toggleMealForm(mealType);
+
+    // Re-initialize modal functionality
+    initializeModal();
 }
 
 function addExercise() {
@@ -262,6 +265,9 @@ function editMeal(mealType, index) {
             addMeal(mealType);
         };
     };
+
+    // Re-initialize modal functionality
+    initializeModal();
 }
 
 function saveEditedMeal(mealType, index) {
@@ -502,6 +508,29 @@ function updateProgressBar(fillId, total, goal) {
     }
 }
 
+function initializeModal() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const blurOverlay = document.getElementById('blurOverlay');
+
+    document.querySelectorAll('.meal-image').forEach(img => {
+        img.addEventListener('click', () => {
+            if (img.src) {
+                modal.style.display = 'flex';
+                modalImg.src = img.src;
+                blurOverlay.style.display = 'block'; // Show blur overlay
+            }
+        });
+    });
+
+    window.onclick = (event) => {
+        if (event.target === modal || event.target === blurOverlay) {
+            modal.style.display = 'none';
+            blurOverlay.style.display = 'none'; // Hide blur overlay
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.getElementById('editGoalsForm').style.display = 'none';
@@ -543,30 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
     document.getElementById('saveExerciseButton').addEventListener('touchstart', addExercise);
 
-    // Modal functionality
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    const blurOverlay = document.getElementById('blurOverlay');
-
-    document.querySelectorAll('.meal-image').forEach(img => {
-        img.addEventListener('click', () => {
-            if (img.src) {
-                modal.style.display = 'flex';
-                modalImg.src = img.src;
-                blurOverlay.style.display = 'block'; // Show blur overlay
-            }
-        });
-    });
-
-    modal.addEventListener('click', () => {
-        modal.style.display = 'none';
-        blurOverlay.style.display = 'none'; // Hide blur overlay
-    });
-
-    window.onclick = (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            blurOverlay.style.display = 'none'; // Hide blur overlay
-        }
-    };
+    // Initialize modal functionality on page load
+    initializeModal();
 });
