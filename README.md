@@ -20,35 +20,16 @@ NutriSnap is a web application that allows users to log and track their meals by
 ## Technologies and Frameworks
 
 - **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Python, Flask, OpenAI's GPT-4o API
-- **Machine Learning**: OpenAI's GPT-4o API (plans for local machine with open-source LLM)
+- **Backend**: Python, Flask, Heroku, OpenAI's GPT-4o API
 
 ## User Interaction
 
-- **Mobile-First Design**: Optimized for mobile with a 9:16 format and large buttons.
+- **Mobile-First Design**: Optimized for mobile users.
 - **Meal Logging**: Users can log meals via photo upload/capture or manual input.
 - **Meal Management**: Edit and drag-and-drop meals between breakfast, lunch, dinner, and snacks slots.
 - **Dietary Goals**: Set and track dietary goals with visual progress bars.
 - **Local Storage**: Logging data is stored locally using localStorage in JavaScript.
 
-## Setup and Installation
+## Demo
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/TN-js/NutriSnap.git
-   cd NutriSnap
-   ```
-
-2. Install the dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Configuration:
-   - Update the OpenAI API key.
-   - Adjust backend settings to point to your server (default points to Heroku).
-
-4. Run the application:
-   ```
-   python app.py
-   ```
+https://tn-js.github.io/NutriSnap/
