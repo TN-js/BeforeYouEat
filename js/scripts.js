@@ -71,20 +71,21 @@ function saveGoals() {
 }
 
 function addMeal(mealType) {
+    const dishName = document.getElementById(`${mealType}DishName`).value.trim();
     const calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
     const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
     const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
     const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
 
-    if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
+    if (!dishName && calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
         return;
     }
 
-    const meal = {calories, protein, carbs, fat};
+    const meal = { dishName, calories, protein, carbs, fat };
     const mealDate = formatDate(currentDate);
 
     if (!meals[mealDate]) {
-        meals[mealDate] = {breakfast: [], lunch: [], dinner: [], snacks: []};
+        meals[mealDate] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
     }
 
     if (!Array.isArray(meals[mealDate][mealType])) {
@@ -119,11 +120,11 @@ function addExercise() {
 }
 
 function updateDisplay() {
-    let totals = {calories: 0, protein: 0, carbs: 0, fat: 0};
+    let totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     let totalExercise = 0;
 
     const mealDate = formatDate(currentDate);
-    const currentMeals = meals[mealDate] || {breakfast: [], lunch: [], dinner: [], snacks: []};
+    const currentMeals = meals[mealDate] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
     const currentExercise = exercise[mealDate] || 0;
 
     for (let mealType in currentMeals) {
@@ -140,7 +141,7 @@ function updateDisplay() {
                 mealItem.className = 'meal-item';
                 mealItem.innerHTML = `
                     <div class="drag-area">&#9776;</div>
-                    <p>Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
+                    <p>Name: ${meal.dishName}, Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
                     <div class="button-area">
                         <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">Edit</button>
                         <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">Remove</button>
@@ -275,14 +276,16 @@ async function handleImageUpload(input, mealType) {
                 console.log('API Response:', data); // Log the response to check values
 
                 // Extract the nutrient values using a regular expression
-                const matches = data.match(/Cals:\s*(\d+),\s*Protein:\s*(\d+)\s*g,\s*Carbs:\s*(\d+)\s*g,\s*Fat:\s*(\d+)\s*g/);
-
+                const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+)\s*g,\s*Carbs:\s*(\d+)\s*g,\s*Fat:\s*(\d+)\s*g/);
+                
                 if (matches) {
+                    const dishName = matches[1];
                     const calories = parseInt(matches[1], 10);
                     const protein = parseInt(matches[2], 10);
                     const carbs = parseInt(matches[3], 10);
                     const fat = parseInt(matches[4], 10);
-
+                    
+                    document.getElementById(`${mealType}DishName`).value = dishName;
                     document.getElementById(`${mealType}Calories`).value = calories;
                     document.getElementById(`${mealType}Protein`).value = protein;
                     document.getElementById(`${mealType}Carbs`).value = carbs;

@@ -145,7 +145,7 @@ label {
     color: #666;
 }
 
-input[type="number"] {
+input[type="text"], input[type="number"] {
     width: calc(100% - 22px);
     padding: 10px;
     margin-bottom: 10px;

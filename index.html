@@ -21,7 +21,7 @@
                 <button onclick="changeDate(1)">&#9654;</button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.1.5</div>
+                <div class="version">v0.1.6</div>
                 <div id="currentDateDisplay"></div>
             </div>
         </div>
@@ -60,6 +60,7 @@
                 <h3>Breakfast</h3>
                 <button onclick="toggleMealForm('breakfast')">Add Breakfast</button>
                 <div id="breakfastForm" class="meal-form">
+                    <input type="text" id="breakfastDishName" placeholder="Dish Name">
                     <input type="number" id="breakfastCalories" placeholder="Calories">
                     <input type="number" id="breakfastProtein" placeholder="Protein (g)">
                     <input type="number" id="breakfastCarbs" placeholder="Carbs (g)">
@@ -72,7 +73,7 @@
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
                     <img id="uploadedImageBreakfast" src="" alt="Uploaded food image">
-                </div>            
+                </div>                            
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
             <div id="lunchSlot" class="meal-slot">
