@@ -50,10 +50,3 @@ Adjust backend settings to point to your server (default points to Heroku).
 Run the application:
 
     python app.py
-
-Contributing
-
-This project is currently not open-source, but future contributions may be considered. Stay tuned for updates.
-License
-
-This project is licensed under the MIT License.
