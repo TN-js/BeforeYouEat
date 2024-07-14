@@ -144,7 +144,7 @@ function updateDisplay() {
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
                 mealItem.innerHTML = `
-                    <div class="drag-area">&#10625;</div>
+                    <div class="drag-area"></div>
                     ${meal.image ? `<img src="${meal.image}" alt="" class="meal-image">` : ''}
                     <div class="meal-info">
                         <h4>${meal.dishName}</h4>

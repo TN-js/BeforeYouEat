@@ -212,10 +212,24 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
 
 .meal-item .drag-area {
     margin-right: 0; /* Remove right margin */
-    width: auto;
-    padding: 10px; /* Ensure padding matches other buttons */
+    margin-bottom: 0;
+    width: 40px; /* Adjust width to be a bit thinner */
+    height: 80px; /* Adjust height to match the combined height of the edit and remove buttons */
+    padding: 0; /* Remove padding to avoid extra space */
     text-align: center; /* Center text */
-    font-size: 20px; /* Increase font size for the drag icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(12, 37, 18, 0.7); /* Match other buttons' background color */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* Match other buttons' border */
+    border-radius: 5px; /* Match other buttons' border radius */
+    cursor: pointer;
+}
+
+.meal-item .drag-area::before {
+    content: "\2630"; /* Unicode for the "hamburger" menu icon */
+    font-size: 24px;
+    color: #ffffff; /* Adjust the color as needed */
 }
 
 .meal-item .meal-image {
