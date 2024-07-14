@@ -217,6 +217,18 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     text-align: center; /* Center text */
 }
 
+.meal-item .meal-image {
+    max-width: 60px;
+    max-height: 60px;
+    border-radius: 5px;
+    margin: 0 10px;
+}
+
+.meal-item .meal-info {
+    flex: 1;
+    text-align: center;
+}
+
 .meal-item p, .exercise-item p {
     margin: 0;
     flex: 1;

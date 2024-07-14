@@ -76,12 +76,14 @@ function addMeal(mealType) {
     const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
     const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
     const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
+    const imageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    const image = imageElement && imageElement.src ? imageElement.src : null;
 
     if (!dishName && calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
         return;
     }
 
-    const meal = { dishName, calories, protein, carbs, fat };
+    const meal = { dishName, calories, protein, carbs, fat, image };
     const mealDate = formatDate(currentDate);
 
     if (!meals[mealDate]) {
@@ -141,7 +143,11 @@ function updateDisplay() {
                 mealItem.className = 'meal-item';
                 mealItem.innerHTML = `
                     <div class="drag-area">&#9776;</div>
-                    <p>Name: ${meal.dishName}, Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
+                    ${meal.image ? `<img src="${meal.image}" alt="Meal Image" class="meal-image">` : ''}
+                    <div class="meal-info">
+                        <p>Name: ${meal.dishName}</p>
+                        <p>Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
+                    </div>
                     <div class="button-area">
                         <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">Edit</button>
                         <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">Remove</button>
