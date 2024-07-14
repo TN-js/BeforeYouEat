@@ -13,7 +13,7 @@ NutriSnap is a web application that allows users to log and track their meals by
 ## How It Works
 
 1. **Upload or Capture Meal Photo**: Users can upload or take a picture of their meal.
-2. **Nutritional Analysis**: The photo is sent to the GPT-4o model with a custom prompt. The model returns the estimated nutritional content in the format: `Cals: a, Protein: b g, Carbs: c g, Fat: d g`.
+2. **Nutritional Analysis**: The photo is sent to the GPT-4o model with a custom prompt. The model returns the estimated nutritional content in the format: `Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`.
 3. **Data Extraction and Logging**: Nutritional values are extracted using a regular expression in the JavaScript script and logged in the app.
 4. **Manual Input**: Users can also manually input the macros for their meals.
 
