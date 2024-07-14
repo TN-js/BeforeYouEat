@@ -330,11 +330,11 @@ async function handleImageUpload(input, mealType) {
                     addMeal(mealType);
                 } else {
                     console.error('Error parsing API response:', data);
-                    alert('Error analyzing image. Please try again.');
+                    alert(`Error analyzing image: ${data}`);
                 }
             } catch (error) {
                 console.error('Error processing image:', error);
-                alert('Error processing image. Please try again.');
+                alert(`Error processing image: ${error.message}`);
             }
         };
         reader.readAsDataURL(file);
