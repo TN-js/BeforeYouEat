@@ -277,13 +277,13 @@ async function handleImageUpload(input, mealType) {
 
                 // Extract the nutrient values using a regular expression
                 const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+)\s*g,\s*Carbs:\s*(\d+)\s*g,\s*Fat:\s*(\d+)\s*g/);
-                
+
                 if (matches) {
                     const dishName = matches[1];
-                    const calories = parseInt(matches[1], 10);
-                    const protein = parseInt(matches[2], 10);
-                    const carbs = parseInt(matches[3], 10);
-                    const fat = parseInt(matches[4], 10);
+                    const calories = parseInt(matches[2], 10);
+                    const protein = parseInt(matches[3], 10);
+                    const carbs = parseInt(matches[4], 10);
+                    const fat = parseInt(matches[5], 10);
                     
                     document.getElementById(`${mealType}DishName`).value = dishName;
                     document.getElementById(`${mealType}Calories`).value = calories;
