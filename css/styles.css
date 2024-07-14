@@ -364,7 +364,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: rgba(0, 0, 0, 0.25); /* Black w/ opacity */
     justify-content: center;
     align-items: center;
-    padding-top: 10vh; /* Add padding to move the image up slightly */
+    padding-top: -20vh; /* Add padding to move the image up slightly */
 }
 
 /* Modal content (image) */
@@ -372,7 +372,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     margin: auto;
     display: block;
     max-width: 80vw;
-    max-height: 80vh;
+    max-height: 100vh;
 }
 
 /* Blur background */
