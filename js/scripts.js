@@ -535,4 +535,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
     document.getElementById('saveExerciseButton').addEventListener('touchstart', addExercise);
+
+    // Modal functionality
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const span = document.getElementsByClassName('close')[0];
+
+    document.querySelectorAll('.meal-image').forEach(img => {
+        img.addEventListener('click', () => {
+            modal.style.display = 'block';
+            modalImg.src = img.src;
+        });
+    });
+
+    span.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
 });
