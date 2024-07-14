@@ -478,6 +478,8 @@ function initDragAndDrop() {
             }
         });
     });
+
+    initializeModal();
 }
 
 function updateProgressBars(totals, exerciseCalories) {
