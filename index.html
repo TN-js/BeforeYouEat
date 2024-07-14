@@ -542,15 +542,25 @@
 
         function clearInputs(mealType) {
             if (mealType) {
-                document.getElementById(`${mealType}Calories`).value = '';
-                document.getElementById(`${mealType}Protein`).value = '';
-                document.getElementById(`${mealType}Carbs}`).value = '';
-                document.getElementById(`${mealType}Fat`).value = '';
+                const calorieInput = document.getElementById(`${mealType}Calories`);
+                const proteinInput = document.getElementById(`${mealType}Protein`);
+                const carbsInput = document.getElementById(`${mealType}Carbs`);
+                const fatInput = document.getElementById(`${mealType}Fat`);
+                
+                if (calorieInput) calorieInput.value = '';
+                if (proteinInput) proteinInput.value = '';
+                if (carbsInput) carbsInput.value = '';
+                if (fatInput) fatInput.value = '';
             } else {
-                document.getElementById('calorieGoal').value = '';
-                document.getElementById('proteinGoal').value = '';
-                document.getElementById('carbGoal').value = '';
-                document.getElementById('fatGoal').value = '';
+                const calorieGoalInput = document.getElementById('calorieGoal');
+                const proteinGoalInput = document.getElementById('proteinGoal');
+                const carbGoalInput = document.getElementById('carbGoal');
+                const fatGoalInput = document.getElementById('fatGoal');
+                
+                if (calorieGoalInput) calorieGoalInput.value = '';
+                if (proteinGoalInput) proteinGoalInput.value = '';
+                if (carbGoalInput) carbGoalInput.value = '';
+                if (fatGoalInput) fatGoalInput.value = '';
             }
         }
 
