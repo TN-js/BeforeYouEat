@@ -1,10 +1,9 @@
-/* styles.css */
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     background-color: #e6f2e6;
 }
+
 .container {
     max-width: 600px;
     margin: 0 auto;
@@ -14,61 +13,138 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
+
 h2 {
     text-align: center;
     color: #333;
     margin-top: 0;
     padding-top: 20px;
 }
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .header {
-    background: url('../images/banner.jpg') no-repeat center center;
-    background-size: cover;
+    background: linear-gradient(45deg, #d4f1d4, #d4f1f9, #e1d4f1, #d4f1d4, #d4f1f9, #e1d4f1);
+    background-size: 300% 300%;
+    animation: gradientAnimation 20s linear infinite;
     color: white;
     text-align: center;
     position: relative;
-    padding: 20px;
+    padding: 20px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
 .header .row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     margin-bottom: 10px;
-    background: none;
 }
-.header .row.center {
-    justify-content: center;
+
+.header .row.bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
+
 .header .title {
-    font-size: 48px;
+    font-size: 64px;
     font-weight: bold;
     text-align: center;
     width: 100%;
     background: none;
-    color: #26441f;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2); /* Optional: add a subtle shadow for better visibility */
+    color: #0c2512;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    font-family: 'Pacifico', cursive;
+    padding-bottom: 20px;
 }
+
 .header .version {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.9);
-    background-color: #26441f;
+    background-color: #0c2512;
     padding: 3px 6px;
     border-radius: 4px;
-    position: absolute;
-    left: 30px;
+    margin: 0; /* Reset margins */
 }
+
+.date-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative; /* Add this to position the date absolutely within the container */
+}
+
+.date-navigation button {
+    background-color: rgba(12, 37, 18, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+    padding: 10px 20px;
+}
+
+.date-navigation button:hover {
+    background-color: rgba(12, 37, 18, 0.9);
+    border-color: white;
+}
+
+.date-navigation button:active {
+    background-color: rgba(12, 37, 18, 1);
+    transform: translateY(1px);
+}
+
+.date-navigation .today-button {
+    font-size: 20px;
+}
+
+#currentDateDisplay {
+    font-size: 18px;
+    font-weight: bold;
+    color: #0c2512;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 0; /* Reset margins */
+    position: absolute; /* Position the date absolutely */
+    left: 50%; /* Move the date to the center */
+    transform: translateX(-50%); /* Center the date */
+}
+
 .banner-image {
     width: 100%;
     height: auto;
 }
+
 .goals, .meals, .exercise, .summary {
     margin-bottom: 20px;
     padding: 0 20px;
 }
+
 label {
     display: block;
     margin-bottom: 5px;
     color: #666;
 }
+
 input[type="number"] {
     width: calc(100% - 22px);
     padding: 10px;
@@ -77,64 +153,48 @@ input[type="number"] {
     border-radius: 5px;
     font-size: 16px;
 }
-button {
-    background-color: #4CAF50; /* A medium green */
+
+button, .image-upload-container label, .meal-item .drag-area {
+    background-color: rgba(12, 37, 18, 0.7); /* Match arrow and today buttons */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* Match arrow and today buttons */
     color: white;
-    border: none;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
     width: 100%;
     margin-bottom: 10px;
+    transition: all 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match arrow and today buttons */
+    outline: none; /* Match arrow and today buttons */
 }
 
-button:hover {
-    background-color: #327235; /* A slightly darker green for hover effect */
+button:hover, .image-upload-container label:hover, .meal-item .drag-area:hover {
+    background-color: rgba(12, 37, 18, 0.9); /* Match arrow and today buttons */
+    border-color: white; /* Match arrow and today buttons */
 }
+
+button:active, .image-upload-container label:active, .meal-item .drag-area:active {
+    background-color: rgba(12, 37, 18, 1); /* Match arrow and today buttons */
+    transform: translateY(1px); /* Match arrow and today buttons */
+}
+
 .meal-slot {
     background-color: #ebf3e9;
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 10px;
 }
+
 .meal-slot h3 {
     margin-top: 0;
     color: #2e312e;
 }
+
 #editGoalsForm, .meal-form, #exerciseForm {
     display: none;
 }
-.date-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-}
-.date-navigation button {
-    background-color: rgba(38, 68, 31, 0.7); /* Dark green with some transparency */
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    margin: 0 10px;
-    border-radius: 5px;
-    padding: 8px 15px;
-    transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    outline: none;
-}
-.date-navigation button:hover {
-    background-color: rgba(32, 58, 27, 0.9); /* A slightly darker green with less transparency for hover effect */
-    border-color: white;
-}
-.date-navigation button:active {
-    background-color: rgba(38, 68, 31, 1); /* Solid dark green for active state */
-    transform: translateY(0.5px);
-}
-.date-navigation .today-button {
-    font-size: 20px;
-}
+
 .meal-item, .exercise-item {
     display: flex;
     align-items: center;
@@ -144,21 +204,24 @@ button:hover {
     border: 1px solid #ddd;
     border-radius: 5px;
 }
+
 .meal-item .drag-area, .meal-item .button-area, .exercise-item .button-area {
     flex: 0 0 20%;
     text-align: center;
 }
+
 .meal-item .drag-area {
-    cursor: grab;
-    background-color: #4caf50;
-    color: white;
-    padding: 10px;
-    margin-right: 10px;
+    margin-right: 0; /* Remove right margin */
+    width: auto; /* Set auto width */
+    padding: 10px; /* Ensure padding matches other buttons */
+    text-align: center; /* Center text */
 }
+
 .meal-item p, .exercise-item p {
     margin: 0;
     flex: 1;
 }
+
 .meal-item .button-area button, .exercise-item .button-area button {
     width: 100%;
     padding: 5px;
@@ -167,69 +230,80 @@ button:hover {
     border: none;
     margin: 5px 0;
 }
+
 .meal-item .button-area .edit-button {
     background-color: green;
 }
+
 .meal-item .button-area .remove-button, .exercise-item .button-area .remove-button {
     background-color: red;
 }
+
 .progress-bar-container {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
 }
+
 .progress-bar-label {
     width: 20%;
     padding-right: 5px;
 }
+
 .progress-bar {
     width: 80%;
-    background-color: #e0f2e9;
     border-radius: 5px;
     overflow: hidden;
     height: 20px;
     display: flex;
     align-items: center;
     position: relative;
+    background-color: #e0f2e9;
 }
+
 .progress-bar-fill {
     height: 100%;
     text-align: right;
     padding-right: 5px;
-    color: white;
+    color: #0c2512; /* Match title color */
     line-height: 20px;
-    background: linear-gradient(30deg, #b2dfdb, #4caf50);
+    background: linear-gradient(45deg, #a3d8a3, #80c8e0, #c8a3d8, #a3d8a3, #80c8e0, #c8a3d8);
+    background-size: 300% 300%;
+    animation: gradientAnimation 20s linear infinite;
+    transition: width 0.5s ease-in-out; /* Smooth width transition */
     z-index: 1;
 }
+
 .progress-bar-overfill {
     background-color: red !important;
 }
+
 .image-upload-container {
     margin-top: 10px;
     display: flex;
     justify-content: center;
-    align-items: center; /* Optional: center vertically */
+    align-items: center;
 }
+
 .image-upload-container input[type="file"] {
     display: none;
 }
+
 .image-upload-container label {
-    background-color: #4caf50;
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
     display: inline-block;
-    margin-right: 5px; /* Add some space between buttons */
+    margin-right: 5px;
 }
-.image-upload-container label:hover {
-    background-color: #45a049;
-}
+
 #uploadedImage {
     max-width: 100%;
     margin-top: 10px;
     display: none;
 }
+
 #uploadedImageBreakfast,
 #uploadedImageLunch,
 #uploadedImageDinner,
@@ -239,13 +313,5 @@ button:hover {
     margin-top: 10px;
     margin-left: auto;
     margin-right: auto;
-    display: block; /* Center the image */
-}
-#currentDateDisplay {
-    font-size: 18px; /* Adjust as needed */
-    font-weight: bold;
-    color: #26441f; /* A dark green color */
-    padding: 5px; /* Optional: add some padding for better visibility */
-    border-radius: 5px; /* Optional: round the corners of the background */
-    display: inline-block; /* Optional: to ensure padding and background work properly */
+    display: block;
 }

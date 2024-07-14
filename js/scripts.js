@@ -468,7 +468,9 @@ function updateProgressBar(fillId, total, goal) {
         progressFill.style.background = 'linear-gradient(to right, #b2dfdb 0%, #4caf50 70%, red 100%)';
     } else {
         progressFill.classList.remove('progress-bar-overfill');
-        progressFill.style.background = 'linear-gradient(30deg, #b2dfdb, #4caf50)';
+        progressFill.style.background = 'linear-gradient(45deg, #a3d8a3, #80c8e0, #c8a3d8, #a3d8a3, #80c8e0, #c8a3d8)';
+        progressFill.style.backgroundSize = '300% 300%';
+        progressFill.style.animation = 'gradientAnimation 20s linear infinite';
     }
 }
 
