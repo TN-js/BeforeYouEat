@@ -34,6 +34,6 @@ NutriSnap is a web application that allows users to log and track their meals by
 
 https://tn-js.github.io/NutriSnap/
 
-##License
+## License
 
 This project is licensed under the MIT License.
