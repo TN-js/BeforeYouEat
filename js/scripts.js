@@ -148,15 +148,15 @@ function updateDisplay() {
                 const imageHtml = meal.image ? `<img src="${meal.image}" class="meal-image" alt="">` : '';
 
                 mealItem.innerHTML = `
-                    <div class="drag-area">&#9776;</div>
+                    <div class="drag-area">&#x22ee;</div>
                     ${imageHtml}
                     <div class="meal-info">
-                        <p>Name: ${meal.dishName}</p>
-                        <p>Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
+                        <h4>${meal.dishName}</h4>
+                        <p>Cals: ${meal.calories} | Protein: ${meal.protein}g | Carbs: ${meal.carbs}g | Fat: ${meal.fat}g</p>
                     </div>
                     <div class="button-area">
-                        <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">Edit</button>
-                        <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">Remove</button>
+                        <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">&#9998;</button>
+                        <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">&#128465;</button>
                     </div>
                 `;
                 mealItems.appendChild(mealItem);
@@ -551,9 +551,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Close the modal and blur overlay when clicking outside the image or on the blur overlay
+    modal.addEventListener('click', () => {
+        modal.style.display = 'none';
+        blurOverlay.style.display = 'none'; // Hide blur overlay
+    });
+
     window.onclick = (event) => {
-        if (event.target === modal || event.target === blurOverlay) {
+        if (event.target === modal) {
             modal.style.display = 'none';
             blurOverlay.style.display = 'none'; // Hide blur overlay
         }

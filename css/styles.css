@@ -198,7 +198,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
 .meal-item, .exercise-item {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     padding: 10px;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -206,15 +206,16 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
 }
 
 .meal-item .drag-area, .meal-item .button-area, .exercise-item .button-area {
-    flex: 0 0 20%;
+    flex: 0 0 5%;
     text-align: center;
 }
 
 .meal-item .drag-area {
     margin-right: 0; /* Remove right margin */
-    width: auto; /* Set auto width */
+    width: auto;
     padding: 10px; /* Ensure padding matches other buttons */
     text-align: center; /* Center text */
+    font-size: 20px; /* Increase font size for the drag icon */
 }
 
 .meal-item .meal-image {
@@ -230,29 +231,47 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
 
 .meal-item .meal-info {
     flex: 1;
-    text-align: center;
+    text-align: left; /* Align text to the left */
+    padding: 0 10px; /* Add padding for better spacing */
+}
+
+.meal-item h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
 }
 
 .meal-item p, .exercise-item p {
     margin: 0;
-    flex: 1;
+    color: #666;
+}
+
+.meal-item .button-area {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .meal-item .button-area button, .exercise-item .button-area button {
-    width: 100%;
-    padding: 5px;
-    font-size: 12px;
+    width: 40px; /* Adjust button width */
+    height: 40px; /* Adjust button height */
+    padding: 0;
+    font-size: 20px; /* Increase font size */
     border-radius: 5px;
     border: none;
-    margin: 5px 0;
+    margin: 0; /* Remove margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .meal-item .button-area .edit-button {
-    background-color: green;
+    background-color: #007bff; /* Blue color */
 }
 
 .meal-item .button-area .remove-button, .exercise-item .button-area .remove-button {
-    background-color: red;
+    background-color: #dc3545; /* Red color */
 }
 
 .progress-bar-container {
@@ -345,7 +364,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: rgba(0, 0, 0, 0.25); /* Black w/ opacity */
     justify-content: center;
     align-items: center;
-    padding-top: -10vh; /* Add padding to move the image up slightly */
+    padding-top: 10vh; /* Add padding to move the image up slightly */
 }
 
 /* Modal content (image) */
@@ -353,7 +372,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     margin: auto;
     display: block;
     max-width: 80vw;
-    max-height: 90vh; /* Adjusted to account for the padding */
+    max-height: 80vh;
 }
 
 /* Blur background */
