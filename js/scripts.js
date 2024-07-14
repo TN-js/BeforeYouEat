@@ -311,14 +311,14 @@ async function handleImageUpload(input, mealType) {
                 console.log('API Response:', data); // Log the response to check values
 
                 // Extract the nutrient values using a regular expression
-                const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+)\s*g,\s*Carbs:\s*(\d+)\s*g,\s*Fat:\s*(\d+)\s*g/);
+                const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
                 if (matches) {
                     const dishName = matches[1];
-                    const calories = parseFloat(matches[2], 10);
-                    const protein = parseFloat(matches[3], 10);
-                    const carbs = parseFloat(matches[4], 10);
-                    const fat = parseFloat(matches[5], 10);
+                    const calories = parseFloat(matches[2]);
+                    const protein = parseFloat(matches[3]);
+                    const carbs = parseFloat(matches[4]);
+                    const fat = parseFloat(matches[5]);
 
                     document.getElementById(`${mealType}DishName`).value = dishName;
                     document.getElementById(`${mealType}Calories`).value = calories;
