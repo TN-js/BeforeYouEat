@@ -345,6 +345,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: rgba(0, 0, 0, 0.25); /* Black w/ opacity */
     justify-content: center;
     align-items: center;
+    padding-top: -10vh; /* Add padding to move the image up slightly */
 }
 
 /* Modal content (image) */
@@ -352,26 +353,17 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     margin: auto;
     display: block;
     max-width: 80vw;
-    max-height: 80vh;
+    max-height: 90vh; /* Adjusted to account for the padding */
 }
 
-/* Animation - zoom in the modal */
-@-webkit-keyframes zoom {
-    from {transform: scale(0)}
-    to {transform: scale(1)}
-}
-
-@keyframes zoom {
-    from {transform: scale(0)}
-    to {transform: scale(1)}
-}
-
+/* Blur background */
 .blur-background {
     filter: blur(5px);
     -webkit-filter: blur(5px);
-    transition: filter 0.1s;
+    transition: filter 0.3s;
 }
 
+/* Blur overlay */
 .blur-overlay {
     display: none;
     position: fixed;
@@ -380,7 +372,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
 }

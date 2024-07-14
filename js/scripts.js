@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal functionality
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
-    const span = document.getElementsByClassName('close')[0];
+    const blurOverlay = document.getElementById('blurOverlay');
 
     document.querySelectorAll('.meal-image').forEach(img => {
         img.addEventListener('click', () => {
@@ -551,12 +551,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    span.onclick = () => {
-        modal.style.display = 'none';
-    };
-
+    // Close the modal and blur overlay when clicking outside the image or on the blur overlay
     window.onclick = (event) => {
-        if (event.target === modal) {
+        if (event.target === modal || event.target === blurOverlay) {
             modal.style.display = 'none';
             blurOverlay.style.display = 'none'; // Hide blur overlay
         }
