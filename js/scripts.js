@@ -543,8 +543,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.meal-image').forEach(img => {
         img.addEventListener('click', () => {
-            modal.style.display = 'block';
-            modalImg.src = img.src;
+            if (img.src) {
+                modal.style.display = 'block';
+                modalImg.src = img.src;
+                body.classList.add('blur-background'); // Add blur to the background
+            }
         });
     });
 
