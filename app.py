@@ -34,7 +34,7 @@ def analyze_image():
         "messages": [
             {
                 "role": "user",
-                "content": f"Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; protein, carbs, and fat in grams. Try to figure out what the dish is and name it as well. The final output should only write out the name and the full nutrient for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'. Here is the image data: data:image/jpeg;base64,{base64_image}"
+                "content": f"Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; protein, carbs, and fat in grams. Try to figure out what the dish is and name it as well. The final output should only write out the name and the full nutrient for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
             }
         ],
         "max_tokens": 300
