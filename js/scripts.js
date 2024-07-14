@@ -540,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const span = document.getElementsByClassName('close')[0];
+    const body = document.body;
 
     document.querySelectorAll('.meal-image').forEach(img => {
         img.addEventListener('click', () => {
@@ -558,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onclick = (event) => {
         if (event.target === modal) {
             modal.style.display = 'none';
+            body.classList.remove('blur-background'); // Remove blur from the background
         }
     };
 });
