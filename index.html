@@ -66,10 +66,10 @@
                 <button onclick="toggleMealForm('breakfast')">Add Breakfast</button>
                 <div id="breakfastForm" class="meal-form">
                     <input type="text" id="breakfastDishName" placeholder="Dish Name">
-                    <input type="number" id="breakfastCalories" placeholder="Calories">
-                    <input type="number" id="breakfastProtein" placeholder="Protein (g)">
-                    <input type="number" id="breakfastCarbs" placeholder="Carbs (g)">
-                    <input type="number" id="breakfastFat" placeholder="Fat (g)">
+                    <input type="number" id="breakfastCalories" step="0.1" placeholder="Calories">
+                    <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
+                    <input type="number" id="breakfastCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
                     <button class="saveMealButton" data-meal-type="breakfast">Save Breakfast</button>
                     <div class="image-upload-container">
                         <label for="breakfastImageUpload">Upload Image</label>
@@ -86,10 +86,10 @@
                 <button onclick="toggleMealForm('lunch')">Add Lunch</button>
                 <div id="lunchForm" class="meal-form">
                     <input type="text" id="lunchDishName" placeholder="Dish Name">
-                    <input type="number" id="lunchCalories" placeholder="Calories">
-                    <input type="number" id="lunchProtein" placeholder="Protein (g)">
-                    <input type="number" id="lunchCarbs" placeholder="Carbs (g)">
-                    <input type="number" id="lunchFat" placeholder="Fat (g)">
+                    <input type="number" id="lunchCalories" step="0.1" placeholder="Calories">
+                    <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
+                    <input type="number" id="lunchCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
                     <button class="saveMealButton" data-meal-type="lunch">Save Lunch</button>
                     <div class="image-upload-container">
                         <label for="lunchImageUpload">Upload Image</label>
@@ -106,10 +106,10 @@
                 <button onclick="toggleMealForm('dinner')">Add Dinner</button>
                 <div id="dinnerForm" class="meal-form">
                     <input type="text" id="dinnerDishName" placeholder="Dish Name">
-                    <input type="number" id="dinnerCalories" placeholder="Calories">
-                    <input type="number" id="dinnerProtein" placeholder="Protein (g)">
-                    <input type="number" id="dinnerCarbs" placeholder="Carbs (g)">
-                    <input type="number" id="dinnerFat" placeholder="Fat (g)">
+                    <input type="number" id="dinnerCalories" step="0.1" placeholder="Calories">
+                    <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
+                    <input type="number" id="dinnerCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
                     <button class="saveMealButton" data-meal-type="dinner">Save Dinner</button>
                     <div class="image-upload-container">
                         <label for="dinnerImageUpload">Upload Image</label>
@@ -126,10 +126,10 @@
                 <button onclick="toggleMealForm('snacks')">Add Snacks</button>
                 <div id="snacksForm" class="meal-form">
                     <input type="text" id="snacksDishName" placeholder="Dish Name">
-                    <input type="number" id="snacksCalories" placeholder="Calories">
-                    <input type="number" id="snacksProtein" placeholder="Protein (g)">
-                    <input type="number" id="snacksCarbs" placeholder="Carbs (g)">
-                    <input type="number" id="snacksFat" placeholder="Fat (g)">
+                    <input type="number" id="snacksCalories" step="0.1" placeholder="Calories">
+                    <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
+                    <input type="number" id="snacksCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
                     <button class="saveMealButton" data-meal-type="snacks">Save Snacks</button>
                     <div class="image-upload-container">
                         <label for="snacksImageUpload">Upload Image</label>
@@ -147,7 +147,7 @@
             <h3>Exercise</h3>
             <button onclick="toggleExerciseForm()">Add Exercise</button>
             <div id="exerciseForm">
-                <input type="number" id="exerciseCalories" placeholder="Calories burned">
+                <input type="number" id="exerciseCalories" step="0.1" placeholder="Calories burned">
                 <button id="saveExerciseButton">Save Exercise</button>
             </div>
             <div id="exerciseItems" class="exercise-items"></div>
@@ -162,16 +162,16 @@
             <button id="editGoalsButton">Edit Goals</button>
             <div id="editGoalsForm">
                 <label for="calorieGoal">Calorie Goal:</label>
-                <input type="number" id="calorieGoal" placeholder="e.g., 2000">
+                <input type="number" id="calorieGoal" step="0.1" placeholder="e.g., 2000">
                 
                 <label for="proteinGoal">Protein Goal (g):</label>
-                <input type="number" id="proteinGoal" placeholder="e.g., 75">
+                <input type="number" id="proteinGoal" step="0.1" placeholder="e.g., 75">
                 
                 <label for="carbGoal">Carb Goal (g):</label>
-                <input type="number" id="carbGoal" placeholder="e.g., 275">
+                <input type="number" id="carbGoal" step="0.1" placeholder="e.g., 275">
                 
                 <label for="fatGoal">Fat Goal (g):</label>
-                <input type="number" id="fatGoal" placeholder="e.g., 67">
+                <input type="number" id="fatGoal" step="0.1" placeholder="e.g., 67">
                 
                 <button id="saveGoalsButton">Save Goals</button>
             </div>
