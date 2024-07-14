@@ -44,8 +44,8 @@ Install the dependencies:
 
 Configuration:
 
-    Update the OpenAI API key.
-    Adjust backend settings to point to your server (default points to Heroku).
+Update the OpenAI API key.
+Adjust backend settings to point to your server (default points to Heroku).
 
 Run the application:
 
