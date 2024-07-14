@@ -1,5 +1,5 @@
 {
-  "name": "nutrisnap",
+  "name": "snapnutrition",
   "version": "0.2.0",
   "description": "A webapp that allows the user to log and track their meals by uploading a picture of the meal. The nutritional content is approximated by an LLM and logged automatically.",
   "main": "index.js",

@@ -298,7 +298,7 @@ async function handleImageUpload(input, mealType) {
                 formData.append('image', blob, 'compressed.jpg');
 
                 // Upload the compressed image to the backend
-                const response = await fetch('https://nutrisnap-06e4cf9c4bb4.herokuapp.com/analyze_image', {
+                const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/analyze_image', {
                     method: 'POST',
                     body: formData
                 });
