@@ -224,6 +224,10 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     margin: 0 10px;
 }
 
+.meal-item .meal-image[src] {
+    display: block; /* Only display when src is present */
+}
+
 .meal-item .meal-info {
     flex: 1;
     text-align: center;

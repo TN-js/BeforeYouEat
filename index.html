@@ -12,7 +12,6 @@
     <div class="container">
         <div class="header">
             <div class="row">
-
                 <div class="title">NutriSnap</div>
             </div>
             <div class="row date-navigation">
@@ -72,7 +71,7 @@
                         <label for="breakfastImageCapture">Capture Image</label>
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
-                    <img id="uploadedImageBreakfast" src="" alt="Uploaded food image">
+                    <img id="uploadedImageBreakfast" class="meal-image" alt="">
                 </div>                            
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
@@ -80,6 +79,7 @@
                 <h3>Lunch</h3>
                 <button onclick="toggleMealForm('lunch')">Add Lunch</button>
                 <div id="lunchForm" class="meal-form">
+                    <input type="text" id="lunchDishName" placeholder="Dish Name">
                     <input type="number" id="lunchCalories" placeholder="Calories">
                     <input type="number" id="lunchProtein" placeholder="Protein (g)">
                     <input type="number" id="lunchCarbs" placeholder="Carbs (g)">
@@ -91,7 +91,7 @@
                         <label for="lunchImageCapture">Capture Image</label>
                         <input type="file" id="lunchImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'lunch')">
                     </div>
-                    <img id="uploadedImageLunch" src="" alt="Uploaded food image">
+                    <img id="uploadedImageLunch" class="meal-image" alt="">
                 </div>
                 <div id="lunchItems" class="meal-items"></div>
             </div>
@@ -99,6 +99,7 @@
                 <h3>Dinner</h3>
                 <button onclick="toggleMealForm('dinner')">Add Dinner</button>
                 <div id="dinnerForm" class="meal-form">
+                    <input type="text" id="dinnerDishName" placeholder="Dish Name">
                     <input type="number" id="dinnerCalories" placeholder="Calories">
                     <input type="number" id="dinnerProtein" placeholder="Protein (g)">
                     <input type="number" id="dinnerCarbs" placeholder="Carbs (g)">
@@ -110,7 +111,7 @@
                         <label for="dinnerImageCapture">Capture Image</label>
                         <input type="file" id="dinnerImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'dinner')">
                     </div>
-                    <img id="uploadedImageDinner" src="" alt="Uploaded food image">
+                    <img id="uploadedImageDinner" class="meal-image" alt="">
                 </div>
                 <div id="dinnerItems" class="meal-items"></div>
             </div>
@@ -118,6 +119,7 @@
                 <h3>Snacks</h3>
                 <button onclick="toggleMealForm('snacks')">Add Snacks</button>
                 <div id="snacksForm" class="meal-form">
+                    <input type="text" id="snacksDishName" placeholder="Dish Name">
                     <input type="number" id="snacksCalories" placeholder="Calories">
                     <input type="number" id="snacksProtein" placeholder="Protein (g)">
                     <input type="number" id="snacksCarbs" placeholder="Carbs (g)">
@@ -129,7 +131,7 @@
                         <label for="snacksImageCapture">Capture Image</label>
                         <input type="file" id="snacksImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'snacks')">
                     </div>
-                    <img id="uploadedImageSnacks" src="" alt="Uploaded food image">
+                    <img id="uploadedImageSnacks" class="meal-image" alt="">
                 </div>
                 <div id="snacksItems" class="meal-items"></div>
             </div>

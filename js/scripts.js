@@ -1,6 +1,6 @@
 let meals = {};
 let exercise = {};
-let goals = {calories: 2000, protein: 75, carbs: 275, fat: 67};
+let goals = { calories: 2000, protein: 75, carbs: 275, fat: 67 };
 let currentDate = new Date();
 
 function formatDate(date) {
@@ -33,6 +33,7 @@ function toggleEditGoalsForm() {
 function toggleMealForm(mealType) {
     const form = document.getElementById(`${mealType}Form`);
     const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    const dishNameInput = document.getElementById(`${mealType}DishName`);
     const calorieInput = document.getElementById(`${mealType}Calories`);
     const proteinInput = document.getElementById(`${mealType}Protein`);
     const carbsInput = document.getElementById(`${mealType}Carbs`);
@@ -46,6 +47,7 @@ function toggleMealForm(mealType) {
     } else {
         form.style.display = 'none';
         // Clear the form fields
+        dishNameInput.value = '';
         calorieInput.value = '';
         proteinInput.value = '';
         carbsInput.value = '';
@@ -63,7 +65,7 @@ function saveGoals() {
     goals.protein = parseInt(document.getElementById('proteinGoal').value) || 116;
     goals.carbs = parseInt(document.getElementById('carbGoal').value) || 289;
     goals.fat = parseInt(document.getElementById('fatGoal').value) || 38;
-    
+
     updateDisplay();
     saveToLocalStorage();
     clearInputs();
@@ -141,9 +143,13 @@ function updateDisplay() {
 
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
+
+                // Create meal image element only if the image property is not null
+                const imageHtml = meal.image ? `<img src="${meal.image}" class="meal-image">` : '';
+
                 mealItem.innerHTML = `
                     <div class="drag-area">&#9776;</div>
-                    ${meal.image ? `<img src="${meal.image}" alt="Meal Image" class="meal-image">` : ''}
+                    ${imageHtml}
                     <div class="meal-info">
                         <p>Name: ${meal.dishName}</p>
                         <p>Calories: ${meal.calories}, Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g</p>
@@ -227,12 +233,13 @@ function editMeal(mealType, index) {
     const mealDate = formatDate(currentDate);
     const meal = meals[mealDate][mealType][index];
     const form = document.getElementById(`${mealType}Form`);
-    
+
+    document.getElementById(`${mealType}DishName`).value = meal.dishName;
     document.getElementById(`${mealType}Calories`).value = meal.calories;
     document.getElementById(`${mealType}Protein`).value = meal.protein;
     document.getElementById(`${mealType}Carbs`).value = meal.carbs;
     document.getElementById(`${mealType}Fat`).value = meal.fat;
-    
+
     form.style.display = 'block';
 
     const saveButton = document.querySelector(`.saveMealButton[data-meal-type="${mealType}"]`);
@@ -243,18 +250,42 @@ function editMeal(mealType, index) {
         removeMeal(mealType, index); // Remove the old entry
         addMeal(mealType); // Add the updated entry
         saveButton.textContent = originalText; // Revert the button text
-        saveButton.onclick = function(event) {
+        saveButton.onclick = function (event) {
             const mealType = event.target.dataset.mealType;
             addMeal(mealType);
         };
     };
 }
 
+function saveEditedMeal(mealType, index) {
+    const dishName = document.getElementById(`${mealType}DishName`).value.trim();
+    const calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
+    const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
+    const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
+    const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
+    const imageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    const image = imageElement && imageElement.src ? imageElement.src : null;
+
+    if (!dishName && calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
+        return;
+    }
+
+    const meal = { dishName, calories, protein, carbs, fat, image };
+    const mealDate = formatDate(currentDate);
+
+    meals[mealDate][mealType][index] = meal;
+
+    updateDisplay();
+    saveToLocalStorage();
+    clearInputs(mealType);
+    document.getElementById(`${mealType}Form`).style.display = 'none';
+}
+
 async function handleImageUpload(input, mealType) {
     const file = input.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = async function(e) {
+        reader.onload = async function (e) {
             try {
                 // Compress the image
                 const compressedImage = await compressImage(e.target.result, 500, 500);
@@ -268,7 +299,7 @@ async function handleImageUpload(input, mealType) {
                 const formData = new FormData();
                 formData.append('image', blob, 'compressed.jpg');
 
-                // Upload the compressed image to the backend 
+                // Upload the compressed image to the backend
                 const response = await fetch('https://nutrisnap-06e4cf9c4bb4.herokuapp.com/analyze_image', {
                     method: 'POST',
                     body: formData
@@ -290,7 +321,7 @@ async function handleImageUpload(input, mealType) {
                     const protein = parseInt(matches[3], 10);
                     const carbs = parseInt(matches[4], 10);
                     const fat = parseInt(matches[5], 10);
-                    
+
                     document.getElementById(`${mealType}DishName`).value = dishName;
                     document.getElementById(`${mealType}Calories`).value = calories;
                     document.getElementById(`${mealType}Protein`).value = protein;
@@ -358,34 +389,15 @@ function dataURLToBlob(dataurl) {
     return new Blob([u8arr], { type: mime });
 }
 
-function saveEditedMeal(mealType, index) {
-    const calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
-    const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
-    const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
-    const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
-
-    if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
-        return;
-    }
-
-    const mealDate = formatDate(currentDate);
-    const meal = {calories, protein, carbs, fat};
-
-    meals[mealDate][mealType][index] = meal;
-
-    updateDisplay();
-    saveToLocalStorage();
-    clearInputs(mealType);
-    document.getElementById(`${mealType}Form`).style.display = 'none';
-}
-
 function clearInputs(mealType) {
     if (mealType) {
+        const dishNameInput = document.getElementById(`${mealType}DishName`);
         const calorieInput = document.getElementById(`${mealType}Calories`);
         const proteinInput = document.getElementById(`${mealType}Protein`);
         const carbsInput = document.getElementById(`${mealType}Carbs`);
         const fatInput = document.getElementById(`${mealType}Fat`);
-        
+
+        if (dishNameInput) dishNameInput.value = '';
         if (calorieInput) calorieInput.value = '';
         if (proteinInput) proteinInput.value = '';
         if (carbsInput) carbsInput.value = '';
@@ -395,7 +407,7 @@ function clearInputs(mealType) {
         const proteinGoalInput = document.getElementById('proteinGoal');
         const carbGoalInput = document.getElementById('carbGoal');
         const fatGoalInput = document.getElementById('fatGoal');
-        
+
         if (calorieGoalInput) calorieGoalInput.value = '';
         if (proteinGoalInput) proteinGoalInput.value = '';
         if (carbGoalInput) carbGoalInput.value = '';
