@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.meal-image').forEach(img => {
         img.addEventListener('click', () => {
             if (img.src) {
-                modal.style.display = 'block';
+                modal.style.display = 'flex';
                 modalImg.src = img.src;
                 blurOverlay.style.display = 'block'; // Show blur overlay
             }
