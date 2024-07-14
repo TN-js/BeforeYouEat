@@ -32,18 +32,14 @@ User Interaction
 
 Setup and Installation
 
-    Clone the repository:
-
-    sh
-
-git clone https://github.com/TN-js/NutriSnap.git
-cd NutriSnap
+Clone the repository:
+    
+    git clone https://github.com/TN-js/NutriSnap.git
+    cd NutriSnap
 
 Install the dependencies:
 
-sh
-
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 Configuration:
 
@@ -51,8 +47,6 @@ Configuration:
     Adjust backend settings to point to your server (default points to Heroku).
 
 Run the application:
-
-sh
 
     python app.py
 
