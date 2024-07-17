@@ -59,6 +59,7 @@ h2 {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    margin: 0;
 }
 
 .header .title {
@@ -80,41 +81,74 @@ h2 {
     padding: 3px 6px;
     border-radius: 4px;
     margin: 0; /* Reset margins */
+    margin-top: 10px;
+}
+
+/* Minimal arrow buttons */
+.nav-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 5px; /* Adjust margin to ensure they are close but not touching */
+    color: #4a5568;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    transition: background-color 0.05s ease;
+    outline: none; /* Ensure no outline on focus */
+}
+
+.nav-button:hover {
+    background: none; /* Remove background on hover */
+}
+
+.nav-button:active {
+    background: none; /* Remove background on hover */
 }
 
 .date-navigation {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center; /* Center the items */
+    align-items: center; /* Align items vertically */
     width: 100%;
-    position: relative; /* Add this to position the date absolutely within the container */
+    gap: 5px;
 }
 
-.date-navigation button {
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    outline: none;
+/* Add new styles for the unified date/today button */
+.date-button {
+    display: flex;
+    align-items: center;
     padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.05s ease;
+    font-size: 16px;
+    color: #4a5568;
+    margin: 0 5px; /* Adjust margin to bring the date button closer to the arrows */
+    width: 55%;
+    height: 40px;
 }
 
-.date-navigation button:hover {
-    background-color: rgba(12, 37, 18, 0.9);
-    border-color: white;
+.date-button:hover {
+    background-color: #f1f1f1;
 }
 
-.date-navigation button:active {
-    background-color: rgba(12, 37, 18, 1);
-    transform: translateY(1px);
+.date-button:active {
+    background-color: #e1e1e1;
 }
 
-.date-navigation .today-button {
-    font-size: 20px;
+.date-button i {
+    margin-right: 10px;
+    color: #4a5568;
 }
 
 #currentDateDisplay {
@@ -154,9 +188,9 @@ input[type="text"], input[type="number"] {
     font-size: 16px;
 }
 
-button, .image-upload-container label, .meal-item .drag-area {
-    background-color: rgba(12, 37, 18, 0.7); /* Match arrow and today buttons */
-    border: 2px solid rgba(255, 255, 255, 0.9); /* Match arrow and today buttons */
+button, .image-upload-container label, .meal-item .drag-area, .modal-content button {
+    background-color: rgba(12, 37, 18, 0.7); /* Match theme color */
+    border: 2px solid rgba(255, 255, 255, 0.9); /* Match theme color */
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
@@ -165,18 +199,18 @@ button, .image-upload-container label, .meal-item .drag-area {
     width: 100%;
     margin-bottom: 10px;
     transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match arrow and today buttons */
-    outline: none; /* Match arrow and today buttons */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match theme color */
+    outline: none; /* Match theme color */
 }
 
-button:hover, .image-upload-container label:hover, .meal-item .drag-area:hover {
-    background-color: rgba(12, 37, 18, 0.9); /* Match arrow and today buttons */
-    border-color: white; /* Match arrow and today buttons */
+button:hover, .image-upload-container label:hover, .meal-item .drag-area:hover, .modal-content button:hover {
+    background-color: rgba(12, 37, 18, 0.9); /* Match theme color */
+    border-color: white; /* Match theme color */
 }
 
-button:active, .image-upload-container label:active, .meal-item .drag-area:active {
-    background-color: rgba(12, 37, 18, 1); /* Match arrow and today buttons */
-    transform: translateY(1px); /* Match arrow and today buttons */
+button:active, .image-upload-container label:active, .meal-item .drag-area:active, .modal-content button:active {
+    background-color: rgba(12, 37, 18, 1); /* Match theme color */
+    transform: translateY(1px); /* Match theme color */
 }
 
 .meal-slot {
@@ -387,140 +421,202 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     overflow: hidden; /* Disable scroll */
-    background-color: rgba(0, 0, 0, 0.25); /* Black w/ opacity */
-    justify-content: center;
-    align-items: center;
-    padding-top: 10vh; /* Add padding to move the content up slightly */
-}
-
-/* Modal container */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: hidden; /* Disable scroll */
     background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
     justify-content: center;
     align-items: center;
     padding-top: 10vh; /* Add padding to move the content up slightly */
 }
 
-/* Modal content */
+/* Modal content for login */
 .modal-content {
     background-color: white;
     margin: auto;
-    padding: 20px;
-    border: 2px solid #ccc;
+    padding: 10px; /* Adjust padding to match the popup menu */
     border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 80%;
     max-width: 400px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.modal-content img {
+/* Ensure consistent styles for all input fields */
+.modal-content input[type="text"],
+.modal-content input[type="password"] {
+    width: calc(100% - 20px); /* Ensure full width minus padding */
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    font-size: 16px;
+}
+
+/* Adjust buttons to match the style of the popup menu */
+.modal-content button, .google-login-button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    background-color: rgba(12, 37, 18, 0.7); /* Match theme color */
+    border: none;
+    color: white;
+    transition: background-color 0.05s ease;
+}
+
+.modal-content button:hover, .google-login-button:hover {
+    background-color: rgba(12, 37, 18, 0.9); /* Slightly lighter shade */
+}
+
+.modal-content button:active, .google-login-button:active {
+    background-color: rgba(12, 37, 18, 1); /* Slightly darker shade */
+}
+
+/* Adjust form titles to match the overall theme */
+.modal-content h2, .modal-content h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #4a5568; /* Match your theme color */
+}
+
+/* Modal content for images */
+.image-modal-content {
+    background-color: transparent;
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    width: auto;
+    max-width: 90%;
+    box-shadow: none;
+}
+
+.image-modal-content img {
     max-width: 100%;
     height: auto;
 }
 
-.modal-content h3 {
-    text-align: center;
-}
-
-.modal-content button {
-    width: 100%;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    color: white;
-    transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    outline: none;
-    margin-bottom: 10px;
-}
-
-.modal-content button:hover {
-    background-color: rgba(12, 37, 18, 0.9);
-    border-color: white;
-}
-
-.modal-content button:active {
-    background-color: rgba(12, 37, 18, 1);
-    transform: translateY(1px);
-}
-
 /* Styles for the menu button */
 .menu-button {
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #4a5568;
     font-size: 24px;
-    transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    outline: none;
-    margin-right: 20px;
+    outline: none; /* Ensure no outline on focus */
 }
 
 .menu-button:hover {
-    background-color: rgba(12, 37, 18, 0.9);
-    border-color: white;
-}
-
-.menu-button:active {
-    background-color: rgba(12, 37, 18, 1);
-    transform: translateY(1px);
+    background: none; /* Remove background on hover */
 }
 
 /* Styles for the menu */
 .menu {
     display: none;
     position: absolute;
-    top: 60px;
-    left: 20px;
     background-color: white;
-    border: 2px solid #ccc;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 10px;
-    width: 200px;
+    width: 150px; /* Adjust width as needed */
+    z-index: 1000; /* Ensure it appears above other elements */
 }
 
-.menu button {
-    width: 100%;
+.menu-item {
+    display: flex;
+    align-items: center;
     padding: 10px;
-    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #4a5568;
+    border-radius: 5px;
+    transition: background-color 0.05s;
+}
+
+.menu-item:hover {
+    background-color: #f1f1f1;
+}
+
+.menu-item i {
+    margin-right: 10px;
+    font-size: 20px;
+    color: #4a5568;
+}
+
+/* Additional styles for login modal links */
+.login-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* Styles for the "Forgot password?" link */
+#forgotPassword {
+    color: #4a5568;
+    text-decoration: none;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold; /* Make the link bold to distinguish it from other text */
+}
+
+#forgotPassword:hover {
+    text-decoration: underline;
+}
+
+/* Styles for the sign-up link */
+.signup-link {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.signup-link a {
+    color: #4a5568;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
+/* Styles for the Google login button */
+.google-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #4285F4;
+    color: white;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    color: white;
-    transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    outline: none;
+    width: 100%;
+    transition: background-color 0.2s ease;
 }
 
-.menu button:hover {
-    background-color: rgba(12, 37, 18, 0.9);
-    border-color: white;
+.google-login-button:hover {
+    background-color: #357ae8;
 }
 
-.menu button:active {
-    background-color: rgba(12, 37, 18, 1);
-    transform: translateY(1px);
+.google-login-button:active {
+    background-color: #2a65c7;
 }
 
-/* Hide the blur background and overlay styles */
-.blur-background,
-.blur-overlay {
-    display: none;
+.google-login-button svg {
+    margin-right: 10px;
 }

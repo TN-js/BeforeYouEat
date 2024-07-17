@@ -513,34 +513,53 @@ function updateProgressBar(fillId, total, goal) {
 function initializeModal() {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
+    const loginContent = document.getElementById('loginModalContent');
 
-    document.querySelectorAll('.meal-image').forEach(img => {
-        img.addEventListener('click', () => {
-            if (img.src) {
-                showImageModal(img.src);
-            }
-        });
+    // Use event delegation on a parent element
+    document.body.addEventListener('click', (event) => {
+        const img = event.target.closest('.meal-image');
+        if (img && img.src) {
+            showImageModal(img.src);
+        }
     });
 
     // Close modal when clicking outside of modal content
     window.addEventListener('click', (event) => {
         if (event.target === modal) {
-            modal.style.display = 'none';
-            modalImg.src = ''; // Clear the image src
+            closeModal();
         }
     });
 }
 
 // Function to show image in modal
 function showImageModal(src) {
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-
-    modalImage.src = src;
-    imageModal.style.display = 'flex';
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const loginContent = document.getElementById('loginModalContent');
+    
+    if (!modal || !modalImg || !loginContent) {
+        console.error('Modal elements not found');
+        return;
+    }
+    
+    modalImg.src = src;
+    modalImg.style.display = 'block';
+    loginContent.style.display = 'none';
+    modal.style.display = 'block';
 }
 
-// Function to initialize modal functionality on page load
+// Function to close the modal
+function closeModal() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const loginContent = document.getElementById('loginModalContent');
+    
+    modal.style.display = 'none';
+    modalImg.src = ''; // Clear the image src
+    modalImg.style.display = 'none';
+    loginContent.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.getElementById('editGoalsForm').style.display = 'none';
@@ -577,9 +596,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toggle menu visibility
     document.getElementById('menuButton').addEventListener('click', function () {
+        var menuButton = document.getElementById('menuButton');
         var menu = document.getElementById('menu');
+        var header = document.querySelector('.header'); // Get the header element
+        var rect = menuButton.getBoundingClientRect(); // Get the position of the button
+        var headerRect = header.getBoundingClientRect(); // Get the position of the header
+
         if (menu.style.display === 'none' || menu.style.display === '') {
             menu.style.display = 'block';
+            menu.style.position = 'absolute';
+            menu.style.left = `${rect.left - headerRect.left}px`;  // Align with the left edge of the menu button relative to the header
+            menu.style.top = `${rect.bottom + window.scrollY}px`;  // Position below the menu button, accounting for scroll position
+            menu.style.zIndex = '1000';  // Ensure it appears above other elements
         } else {
             menu.style.display = 'none';
         }
@@ -595,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Open login modal
-    document.getElementById('loginButton').addEventListener('click', function () {
+    document.querySelector('.menu-item-login').addEventListener('click', function () {
         var imageModal = document.getElementById('imageModal');
         var modalImage = document.getElementById('modalImage');
         var loginModalContent = document.getElementById('loginModalContent');
@@ -610,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var imageModal = document.getElementById('imageModal');
         var loginModalContent = document.getElementById('loginModalContent');
 
-        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && event.target !== document.getElementById('loginButton')) {
+        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && !event.target.classList.contains('menu-item-login')) {
             imageModal.style.display = 'none';
             loginModalContent.style.display = 'none';
         }
@@ -621,11 +649,23 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Google login functionality not implemented yet.');
     });
 
-    // Placeholder for sign up form submission
-    document.getElementById('signUpForm').addEventListener('submit', function (event) {
+    // Placeholder for login form submission
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        alert('Login functionality not implemented yet.');
+    });
+
+    // Placeholder for forgot password link
+    document.getElementById('forgotPassword').addEventListener('click', function (event) {
+        event.preventDefault();
+        alert('Forgot password functionality not implemented yet.');
+    });
+
+    // Placeholder for sign up link
+    document.getElementById('signUpLink').addEventListener('click', function (event) {
         event.preventDefault();
         alert('Sign up functionality not implemented yet.');
-    });   
+    });
 
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
 

@@ -13,6 +13,8 @@
     <link rel="icon" type="image/png" sizes="512x512" href="images/android-chrome-512x512.png">
     <link rel="manifest" href="images/site.webmanifest">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -20,20 +22,32 @@
             <div class="row">
                 <button id="menuButton" class="menu-button">&#9776;</button>
                 <div id="menu" class="menu">
-                    <button id="loginButton">Login</button>
-                </div>            
+                    <div class="menu-item menu-item-login">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </div>
+                    <div class="menu-item menu-item-settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </div>
+                </div>
                 <div class="title">SnapNutrition</div>
             </div>
-            <div class="row date-navigation">
-                <button onclick="changeDate(-1)">&#9664;</button>
-                <button onclick="goToToday()" class="today-button">Today</button>
-                <button onclick="changeDate(1)">&#9654;</button>
+            <div class="date-navigation">
+                <button class="nav-button" onclick="changeDate(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="date-button" onclick="goToToday()">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span id="currentDateDisplay">Wed, Jul 17, 2024</span>
+                </button>
+                <button class="nav-button" onclick="changeDate(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.2.3</div>
+                <div class="version">v0.2.5</div>
                 <div id="currentDateDisplay"></div>
-            </div>
-        </div>
+            </div>            
+        </div>                           
 
         <div class="summary">
             <h2>Daily Summary</h2>
@@ -186,18 +200,33 @@
 
     <!-- Modal Structure for images and login -->
     <div id="imageModal" class="modal">
-        <img class="modal-content" id="modalImage">
-        <div class="modal-content" id="loginModalContent" style="display: none;">
-            <h3>Login</h3>
-            <button id="googleLogin">Login with Google</button>
-            <h3>Sign Up</h3>
-            <form id="signUpForm">
-                <label for="signUpUsername">Username</label>
-                <input type="text" id="signUpUsername" name="signUpUsername" required>
-                <label for="signUpPassword">Password</label>
-                <input type="password" id="signUpPassword" name="signUpPassword" required>
-                <button type="submit">Sign Up</button>
+        <img id="modalImage" class="image-modal-content">
+        <div id="loginModalContent" class="modal-content" style="display: none;">
+            <h3>Log in</h3>
+            <form id="loginForm">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" name="loginUsername" required>
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" name="loginPassword" required>
+                <button type="submit">Log in</button>
             </form>
+            <h3>Or</h3>
+            <button id="googleLogin" class="google-login-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                    <path fill="none" d="M0 0h48v48H0z"></path>
+                </svg>
+                Continue with Google
+            </button>                        
+            <div class="login-links">
+                <a href="#" id="forgotPassword" class="auth-link">Forgot password?</a>
+                <div class="signup-link">
+                    New to SnapNutrition? <a href="#" id="signUpLink" class="auth-link">Sign Up</a>
+                </div>
+            </div>
         </div>
     </div>
 
