@@ -18,6 +18,10 @@
     <div class="container">
         <div class="header">
             <div class="row">
+                <button id="menuButton" class="menu-button">&#9776;</button>
+                <div id="menu" class="menu">
+                    <button id="loginButton">Login</button>
+                </div>            
                 <div class="title">SnapNutrition</div>
             </div>
             <div class="row date-navigation">
@@ -180,9 +184,21 @@
 
     <div id="blurOverlay" class="blur-overlay"></div>
 
-    <!-- Modal Structure -->
+    <!-- Modal Structure for images and login -->
     <div id="imageModal" class="modal">
         <img class="modal-content" id="modalImage">
+        <div class="modal-content" id="loginModalContent" style="display: none;">
+            <h3>Login</h3>
+            <button id="googleLogin">Login with Google</button>
+            <h3>Sign Up</h3>
+            <form id="signUpForm">
+                <label for="signUpUsername">Username</label>
+                <input type="text" id="signUpUsername" name="signUpUsername" required>
+                <label for="signUpPassword">Password</label>
+                <input type="password" id="signUpPassword" name="signUpPassword" required>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>

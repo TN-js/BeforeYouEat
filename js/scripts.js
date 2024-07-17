@@ -513,26 +513,34 @@ function updateProgressBar(fillId, total, goal) {
 function initializeModal() {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
-    const blurOverlay = document.getElementById('blurOverlay');
 
     document.querySelectorAll('.meal-image').forEach(img => {
         img.addEventListener('click', () => {
             if (img.src) {
-                modal.style.display = 'flex';
-                modalImg.src = img.src;
-                blurOverlay.style.display = 'block'; // Show blur overlay
+                showImageModal(img.src);
             }
         });
     });
 
-    window.onclick = (event) => {
-        if (event.target === modal || event.target === blurOverlay) {
+    // Close modal when clicking outside of modal content
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
             modal.style.display = 'none';
-            blurOverlay.style.display = 'none'; // Hide blur overlay
+            modalImg.src = ''; // Clear the image src
         }
-    };
+    });
 }
 
+// Function to show image in modal
+function showImageModal(src) {
+    const imageModal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+
+    modalImage.src = src;
+    imageModal.style.display = 'flex';
+}
+
+// Function to initialize modal functionality on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.getElementById('editGoalsForm').style.display = 'none';
@@ -543,7 +551,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveGoalsButton').addEventListener('click', saveGoals);
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
-        button.removeEventListener('touchstart', addMeal); // Ensure no lingering touchstart listeners
         button.addEventListener('click', (event) => {
             const mealType = event.target.dataset.mealType;
             addMeal(mealType);
@@ -551,28 +558,76 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.remove-button').forEach(button => {
-        button.removeEventListener('touchstart', removeMeal); // Ensure no lingering touchstart listeners
         button.addEventListener('click', () => {
             removeMeal(button.dataset.mealType, button.dataset.index);
         });
     });
 
     document.querySelectorAll('.remove-exercise-button').forEach(button => {
-        button.removeEventListener('touchstart', removeExercise); // Ensure no lingering touchstart listeners
         button.addEventListener('click', () => {
             removeExercise();
         });
     });
 
     document.querySelectorAll('.edit-button').forEach(button => {
-        button.removeEventListener('touchstart', editMeal); // Ensure no lingering touchstart listeners
         button.addEventListener('click', () => {
             editMeal(button.dataset.mealType, button.dataset.index);
         });
     });
 
+    // Toggle menu visibility
+    document.getElementById('menuButton').addEventListener('click', function () {
+        var menu = document.getElementById('menu');
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'block';
+        } else {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function (event) {
+        var menu = document.getElementById('menu');
+        var menuButton = document.getElementById('menuButton');
+        if (!menu.contains(event.target) && event.target !== menuButton) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Open login modal
+    document.getElementById('loginButton').addEventListener('click', function () {
+        var imageModal = document.getElementById('imageModal');
+        var modalImage = document.getElementById('modalImage');
+        var loginModalContent = document.getElementById('loginModalContent');
+
+        modalImage.style.display = 'none';
+        loginModalContent.style.display = 'block';
+        imageModal.style.display = 'flex';
+    });
+
+    // Close login modal when clicking outside
+    document.addEventListener('click', function (event) {
+        var imageModal = document.getElementById('imageModal');
+        var loginModalContent = document.getElementById('loginModalContent');
+
+        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && event.target !== document.getElementById('loginButton')) {
+            imageModal.style.display = 'none';
+            loginModalContent.style.display = 'none';
+        }
+    });
+
+    // Placeholder for Google login
+    document.getElementById('googleLogin').addEventListener('click', function () {
+        alert('Google login functionality not implemented yet.');
+    });
+
+    // Placeholder for sign up form submission
+    document.getElementById('signUpForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        alert('Sign up functionality not implemented yet.');
+    });   
+
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
-    document.getElementById('saveExerciseButton').addEventListener('touchstart', addExercise);
 
     // Initialize modal functionality on page load
     initializeModal();
