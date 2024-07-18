@@ -168,7 +168,7 @@ h2 {
     height: auto;
 }
 
-.goals, .meals, .exercise, .summary {
+.meals, .exercise, .summary {
     margin-bottom: 20px;
     padding: 0 20px;
 }
@@ -225,7 +225,7 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     color: #2e312e;
 }
 
-#editGoalsForm, .meal-form, #exerciseForm {
+.meal-form, #exerciseForm {
     display: none;
 }
 

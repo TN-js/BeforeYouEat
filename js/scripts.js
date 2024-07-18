@@ -25,11 +25,6 @@ function updateDateDisplay() {
     document.getElementById('currentDateDisplay').textContent = currentDate.toDateString();
 }
 
-function toggleEditGoalsForm() {
-    const form = document.getElementById('editGoalsForm');
-    form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
-}
-
 function toggleMealForm(mealType) {
     const form = document.getElementById(`${mealType}Form`);
     const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
@@ -58,18 +53,6 @@ function toggleMealForm(mealType) {
 function toggleExerciseForm() {
     const form = document.getElementById('exerciseForm');
     form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
-}
-
-function saveGoals() {
-    goals.calories = parseInt(document.getElementById('calorieGoal').value) || 2150;
-    goals.protein = parseInt(document.getElementById('proteinGoal').value) || 116;
-    goals.carbs = parseInt(document.getElementById('carbGoal').value) || 289;
-    goals.fat = parseInt(document.getElementById('fatGoal').value) || 38;
-
-    updateDisplay();
-    saveToLocalStorage();
-    clearInputs();
-    toggleEditGoalsForm();
 }
 
 function addMeal(mealType, existingImage = null) {
@@ -205,11 +188,6 @@ function updateDisplay() {
             editMeal(button.dataset.mealType, button.dataset.index);
         });
     });
-
-    document.getElementById('calorieGoalDisplay').textContent = goals.calories;
-    document.getElementById('proteinGoalDisplay').textContent = goals.protein;
-    document.getElementById('carbGoalDisplay').textContent = goals.carbs;
-    document.getElementById('fatGoalDisplay').textContent = goals.fat;
 }
 
 function removeMeal(mealType, index) {
@@ -268,30 +246,6 @@ function editMeal(mealType, index) {
 
     // Re-initialize modal functionality
     initializeModal();
-}
-
-function saveEditedMeal(mealType, index) {
-    const dishName = document.getElementById(`${mealType}DishName`).value.trim();
-    const calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
-    const protein = parseInt(document.getElementById(`${mealType}Protein`).value) || 0;
-    const carbs = parseInt(document.getElementById(`${mealType}Carbs`).value) || 0;
-    const fat = parseInt(document.getElementById(`${mealType}Fat`).value) || 0;
-    const imageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-    const image = imageElement && imageElement.src ? imageElement.src : null;
-
-    if (!dishName && calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
-        return;
-    }
-
-    const meal = { dishName, calories, protein, carbs, fat, image };
-    const mealDate = formatDate(currentDate);
-
-    meals[mealDate][mealType][index] = meal;
-
-    updateDisplay();
-    saveToLocalStorage();
-    clearInputs(mealType);
-    document.getElementById(`${mealType}Form`).style.display = 'none';
 }
 
 async function handleImageUpload(input, mealType) {
@@ -558,16 +512,29 @@ function closeModal() {
     modalImg.src = ''; // Clear the image src
     modalImg.style.display = 'none';
     loginContent.style.display = 'none';
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+// Function to update goals display
+function updateGoalsDisplay(calories, protein, carbs, fat) {
+    if (calories) {
+        document.getElementById('caloriesProgressFill').innerText = `0 / ${calories}`;
+    }
+    if (protein) {
+        document.getElementById('proteinProgressFill').innerText = `0g / ${protein}g`;
+    }
+    if (carbs) {
+        document.getElementById('carbsProgressFill').innerText = `0g / ${carbs}g`;
+    }
+    if (fat) {
+        document.getElementById('fatProgressFill').innerText = `0g / ${fat}g`;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
-    document.getElementById('editGoalsForm').style.display = 'none';
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
-
-    document.getElementById('editGoalsButton').addEventListener('click', toggleEditGoalsForm);
-    document.getElementById('saveGoalsButton').addEventListener('click', saveGoals);
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {
@@ -633,14 +600,20 @@ document.addEventListener('DOMContentLoaded', () => {
         imageModal.style.display = 'flex';
     });
 
-    // Close login modal when clicking outside
+    // Close login and settings modal when clicking outside
     document.addEventListener('click', function (event) {
-        var imageModal = document.getElementById('imageModal');
-        var loginModalContent = document.getElementById('loginModalContent');
+        const imageModal = document.getElementById('imageModal');
+        const loginModalContent = document.getElementById('loginModalContent');
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsModalContent = document.querySelector('#settingsModal .modal-content');
 
         if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && !event.target.classList.contains('menu-item-login')) {
             imageModal.style.display = 'none';
             loginModalContent.style.display = 'none';
+        }
+
+        if (settingsModal.style.display === 'block' && !settingsModalContent.contains(event.target) && !event.target.classList.contains('menu-item-settings')) {
+            settingsModal.style.display = 'none';
         }
     });
 
@@ -668,6 +641,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
+
+    // Show settings modal when settings menu item is clicked
+    document.querySelector('.menu-item-settings').addEventListener('click', () => {
+        document.getElementById('settingsModal').style.display = 'block';
+
+        // Pre-fill the settings form with current goals
+        document.getElementById('dailyCalories').value = goals.calories;
+        document.getElementById('dailyProtein').value = goals.protein;
+        document.getElementById('dailyCarbs').value = goals.carbs;
+        document.getElementById('dailyFat').value = goals.fat;
+    });
+
+    // Handle form submission
+    document.getElementById('settingsForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Retrieve form values
+        const dailyCalories = parseInt(document.getElementById('dailyCalories').value);
+        const dailyProtein = parseInt(document.getElementById('dailyProtein').value);
+        const dailyCarbs = parseInt(document.getElementById('dailyCarbs').value);
+        const dailyFat = parseInt(document.getElementById('dailyFat').value);
+
+        // Update goals
+        goals = {
+            calories: dailyCalories,
+            protein: dailyProtein,
+            carbs: dailyCarbs,
+            fat: dailyFat
+        };
+
+        // Save settings to local storage
+        saveToLocalStorage();
+
+        // Update display with new goals
+        updateGoalsDisplay(goals.calories, goals.protein, goals.carbs, goals.fat);
+
+        // Close modal
+        closeModal();
+    });
 
     // Initialize modal functionality on page load
     initializeModal();

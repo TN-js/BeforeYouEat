@@ -171,29 +171,6 @@
             <div id="exerciseItems" class="exercise-items"></div>
         </div>
 
-        <div class="goals">
-            <h2>Your Goals</h2>
-            <p>Calories: <span id="calorieGoalDisplay">2150</span></p>
-            <p>Protein: <span id="proteinGoalDisplay">116</span>g</p>
-            <p>Carbs: <span id="carbGoalDisplay">289</span>g</p>
-            <p>Fat: <span id="fatGoalDisplay">38</span>g</p>
-            <button id="editGoalsButton">Edit Goals</button>
-            <div id="editGoalsForm">
-                <label for="calorieGoal">Calorie Goal:</label>
-                <input type="number" id="calorieGoal" step="0.1" placeholder="e.g., 2000">
-                
-                <label for="proteinGoal">Protein Goal (g):</label>
-                <input type="number" id="proteinGoal" step="0.1" placeholder="e.g., 75">
-                
-                <label for="carbGoal">Carb Goal (g):</label>
-                <input type="number" id="carbGoal" step="0.1" placeholder="e.g., 275">
-                
-                <label for="fatGoal">Fat Goal (g):</label>
-                <input type="number" id="fatGoal" step="0.1" placeholder="e.g., 67">
-                
-                <button id="saveGoalsButton">Save Goals</button>
-            </div>
-        </div>
     </div>
 
     <div id="blurOverlay" class="blur-overlay"></div>
@@ -225,6 +202,38 @@
                 <a href="#" id="forgotPassword" class="auth-link">Forgot password?</a>
                 <div class="signup-link">
                     New to SnapNutrition? <a href="#" id="signUpLink" class="auth-link">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Settings</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label for="dailyCalories">Daily Calories (kcal)</label>
+                            <input type="number" class="form-control" id="dailyCalories" name="dailyCalories" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyProtein">Daily Protein (g)</label>
+                            <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyCarbs">Daily Carbs (g)</label>
+                            <input type="number" class="form-control" id="dailyCarbs" name="dailyCarbs" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyFat">Daily Fat (g)</label>
+                            <input type="number" class="form-control" id="dailyFat" name="dailyFat" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
                 </div>
             </div>
         </div>
