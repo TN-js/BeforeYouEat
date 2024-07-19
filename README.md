@@ -1,6 +1,6 @@
 # SnapNutrition
 
-SnapNutrition is a web application that allows users to log and track their meals by uploading pictures of their food. The app uses OpenAI's GPT-4o model to approximate the nutritional content of the meals and logs this information automatically.
+SnapNutrition is a web application that allows users to log and track their meals by uploading pictures of their food. The app uses OpenAI's gpt-4o and gpt-4o-mini models to approximate the nutritional content of the meals and logs this information automatically.
 
 ## Features
 
@@ -13,14 +13,14 @@ SnapNutrition is a web application that allows users to log and track their meal
 ## How It Works
 
 1. **Upload or Capture Meal Photo**: Users can upload or take a picture of their meal.
-2. **Nutritional Analysis**: The photo is sent to the GPT-4o model with a custom prompt. The model returns the estimated nutritional content in the format: `Name: [Name of dish] ,Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`.
+2. **Nutritional Analysis**: The photo is sent to the gpt-4o or gpt-4o-mini model with a custom prompt. The model returns the estimated nutritional content in the format: `Name: [Name of dish] ,Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`.
 3. **Data Extraction and Logging**: Nutritional values are extracted using a regular expression in the JavaScript script and logged in the app.
 4. **Manual Input**: Users can also manually input the macros for their meals.
 
 ## Technologies and Frameworks
 
 - **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Python, Flask, Heroku, OpenAI's GPT-4o API
+- **Backend**: Python, Flask, Heroku, OpenAI's gpt-4o and gpt-4o-mini API
 
 ## User Interaction
 
