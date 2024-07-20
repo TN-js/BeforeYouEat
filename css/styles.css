@@ -168,6 +168,40 @@ h2 {
     height: auto;
 }
 
+.meal-name-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.meal-name-group input[type="text"] {
+    flex: 3;
+    margin-right: 10px;
+}
+
+.generateMacrosButton {
+    flex: 1;
+    padding: 5px 10px;  /* Adjust padding if needed */
+    /* font-size: 14px; */
+    background-color: rgba(12, 37, 18, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.generateMacrosButton:hover {
+    background-color: rgba(12, 37, 18, 0.9);
+}
+
+.generateMacrosButton:active {
+    background-color: rgba(12, 37, 18, 1);
+    transform: translateY(1px);
+}
+
 .meals, .exercise, .summary {
     margin-bottom: 20px;
     padding: 0 20px;

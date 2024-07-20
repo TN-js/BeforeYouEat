@@ -248,6 +248,85 @@ function editMeal(mealType, index) {
     initializeModal();
 }
 
+async function generateMacros(eventOrForm) {
+    let form;
+    
+    // Check the type of argument passed to the function
+    if (!eventOrForm) {
+        // If no argument is passed, try to find the form
+        form = document.querySelector('.meal-form');
+        if (!form) {
+            console.error('No form found and no argument passed to generateMacros');
+            return;
+        }
+    } else if (eventOrForm instanceof Event) {
+        eventOrForm.preventDefault();
+        form = eventOrForm.target;
+    } else if (eventOrForm instanceof HTMLFormElement) {
+        form = eventOrForm;
+    } else if (typeof eventOrForm === 'object' && eventOrForm.tagName === 'BUTTON') {
+        // If a button element is passed (e.g., from onclick)
+        form = eventOrForm.closest('.meal-form');
+        if (!form) {
+            console.error('Could not find a form from the provided button');
+            return;
+        }
+    } else {
+        console.error('Invalid argument passed to generateMacros');
+        return;
+    }
+
+    const mealNameInput = form.querySelector('input[type="text"]');
+    const mealName = mealNameInput.value;
+
+    if (mealName) {
+        try {
+            const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/estimate_macros', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ meal_name: mealName })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.text();
+            console.log('API Response:', data);
+
+            const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
+
+            if (matches) {
+                const [, dishName, calories, protein, carbs, fat] = matches;
+
+                form.querySelector('input[type="text"]').value = dishName;
+                form.querySelector('input[placeholder="Calories"]').value = calories;
+                form.querySelector('input[placeholder="Protein (g)"]').value = protein;
+                form.querySelector('input[placeholder="Carbs (g)"]').value = carbs;
+                form.querySelector('input[placeholder="Fat (g)"]').value = fat;
+
+                // Automatically save the meal after generating the macros
+                const saveButton = form.querySelector('.saveMealButton');
+                if (saveButton) {
+                    saveButton.click();
+                } else {
+                    console.warn('Save button not found');
+                }
+            } else {
+                console.error('Error parsing API response:', data);
+                alert(`Error analyzing meal name: ${data}`);
+            }
+        } catch (error) {
+            console.error('Error processing meal name:', error);
+            alert(`Error processing meal name: ${error.message}`);
+        }
+    } else {
+        alert('Please enter a meal name.');
+    }
+}
+
 async function handleImageUpload(input, mealType) {
     const file = input.files[0];
     if (file) {
@@ -535,6 +614,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
+
+    // Find all forms with the class 'meal-form'
+    const mealForms = document.querySelectorAll('.meal-form');
+
+    // Attach the event listener to each form
+    mealForms.forEach(form => {
+        form.addEventListener('submit', generateMacros);
+    });
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {

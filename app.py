@@ -16,6 +16,37 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 if not openai_api_key:
     raise ValueError("No OpenAI API key found. Set the OPENAI_API_KEY environment variable.")
 
+@app.route('/estimate_macros', methods=['POST'])
+def estimate_macros():
+    data = request.json
+    if 'meal_name' not in data:
+        return jsonify({'error': 'No meal name provided'}), 400
+
+    meal_name = data['meal_name']
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {openai_api_key}"
+    }
+
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the calories, protein, carbs, and fat in grams based on common recipes and serving sizes. Use the format: 'Name: {meal_name}, Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
+            }
+        ],
+        "max_tokens": 150
+    }
+
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to estimate macros'}), response.status_code
+
+    result = response.json()
+    return jsonify(result['choices'][0]['message']['content'])
+
 @app.route('/analyze_image', methods=['POST'])
 def analyze_image():
     if 'image' not in request.files:
