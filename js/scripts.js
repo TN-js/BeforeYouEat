@@ -274,11 +274,13 @@ async function handleMealNameInput(mealName, mealType) {
         const matches = data.match(/Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
         if (matches) {
-            const calories = parseFloat(matches[1]);
-            const protein = parseFloat(matches[2]);
-            const carbs = parseFloat(matches[3]);
-            const fat = parseFloat(matches[4]);
+            const dishName = matches[1];
+            const calories = parseFloat(matches[2]);
+            const protein = parseFloat(matches[3]);
+            const carbs = parseFloat(matches[4]);
+            const fat = parseFloat(matches[5]);
 
+            document.getElementById(`${mealType}DishName`).value = dishName;
             document.getElementById(`${mealType}Calories`).value = calories;
             document.getElementById(`${mealType}Protein`).value = protein;
             document.getElementById(`${mealType}Carbs`).value = carbs;

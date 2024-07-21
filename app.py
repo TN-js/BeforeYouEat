@@ -38,7 +38,7 @@ def estimate_macros():
         "messages": [
             {
                 "role": "user",
-                "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the calories, protein, carbs, and fat in grams based on common recipes and serving sizes. The final output should only write out the full nutrients for the whole meal. Remove all other unnecessary information, just output the whole meal's nutrients without any extra words. Use the format: 'Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
+                "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the name of the dish that was inputted (if you suspect it was misspelled or shortened), calories, protein, carbs, and fat in grams based on common recipes and serving sizes. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
             }
         ],
         "max_tokens": 150
