@@ -85,7 +85,7 @@
                 <div id="breakfastForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="breakfastDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros()">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
                     </div>
                     <input type="number" id="breakfastCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
@@ -99,7 +99,8 @@
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
                     <img id="uploadedImageBreakfast" class="meal-image" alt="">
-                </div>                                        
+                </div>
+                                                     
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
             <div id="lunchSlot" class="meal-slot">
@@ -108,7 +109,7 @@
                 <div id="lunchForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros()">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
                     </div>
                     <input type="number" id="lunchCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
@@ -131,7 +132,7 @@
                 <div id="dinnerForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros()">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
                     </div>
                     <input type="number" id="dinnerCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
@@ -154,7 +155,7 @@
                 <div id="snacksForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros()">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
                     </div>
                     <input type="number" id="snacksCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">

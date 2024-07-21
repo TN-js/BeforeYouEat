@@ -6,7 +6,7 @@ from base64 import b64encode
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app)  # This enables CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}})  # This enables CORS for all routes
 
 # Load environment variables from .env file
 load_dotenv()
@@ -94,8 +94,8 @@ def analyze_image():
 def _build_cors_preflight_response():
     response = make_response()
     response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add('Access-Control-Allow-Headers', "*")
-    response.headers.add('Access-Control-Allow-Methods', "*")
+    response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+    response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
     return response
 
 def _corsify_actual_response(response):
