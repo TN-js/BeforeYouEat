@@ -255,7 +255,7 @@ async function handleMealNameInput(mealName, mealType) {
     }
 
     try {
-        const response = await fetch('https://your-backend-url/estimate_macros', {
+        const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/estimate_macros', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
