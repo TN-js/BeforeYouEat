@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import requests
 import os
-from base64 import b64encode
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -45,8 +44,8 @@ def estimate_macros():
                 app.logger.error(f"OpenAI API error: {openai_response.status_code} - {openai_response.text}")
                 return jsonify({'error': 'Failed to estimate macros'}), openai_response.status_code
             result = openai_response.json()
-            response_data = jsonify(result['choices'][0]['message']['content'])
-            return _corsify_actual_response(response_data)
+            response_content = result['choices'][0]['message']['content']
+            return _corsify_actual_response(jsonify(response_content))
         except Exception as e:
             app.logger.error(f"Error in estimate_macros: {str(e)}")
             return jsonify({'error': 'Internal server error'}), 500
@@ -89,7 +88,8 @@ def analyze_image():
         if response.status_code != 200:
             return jsonify({'error': 'Failed to analyze image'}), response.status_code
         result = response.json()
-        return _corsify_actual_response(jsonify(result['choices'][0]['message']['content']))
+        response_content = result['choices'][0]['message']['content']
+        return _corsify_actual_response(jsonify(response_content))
 
 def _build_cors_preflight_response():
     response = make_response()

@@ -270,9 +270,10 @@ async function generateMacros(event) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.text();
+            const data = await response.json(); // Parse the response as JSON
             console.log('API Response:', data);
 
+            // Extract the nutrient values using a regular expression
             const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
             if (matches) {
