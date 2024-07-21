@@ -248,60 +248,51 @@ function editMeal(mealType, index) {
     initializeModal();
 }
 
-async function generateMacros(event) {
-    event.preventDefault(); // Prevent the default form submission behavior
-    const button = event.target; // Get the button that was clicked
-    const form = button.closest('.meal-form'); // Find the closest form
-
-    const mealNameInput = form.querySelector('input[type="text"]');
-    const mealName = mealNameInput.value;
-
-    if (mealName) {
-        try {
-            const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/estimate_macros', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ meal_name: mealName })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json(); // Parse the response as JSON
-            console.log('API Response:', data);
-
-            // Extract the nutrient values using a regular expression
-            const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
-
-            if (matches) {
-                const [, dishName, calories, protein, carbs, fat] = matches;
-
-                form.querySelector('input[type="text"]').value = dishName;
-                form.querySelector('input[placeholder="Calories"]').value = calories;
-                form.querySelector('input[placeholder="Protein (g)"]').value = protein;
-                form.querySelector('input[placeholder="Carbs (g)"]').value = carbs;
-                form.querySelector('input[placeholder="Fat (g)"]').value = fat;
-
-                // Automatically save the meal after generating the macros
-                const saveButton = form.querySelector('.saveMealButton');
-                if (saveButton) {
-                    saveButton.click();
-                } else {
-                    console.warn('Save button not found');
-                }
-            } else {
-                console.error('Error parsing API response:', data);
-                alert(`Error analyzing meal name: ${data}`);
-            }
-        } catch (error) {
-            console.error('Error processing meal name:', error);
-            alert(`Error processing meal name: ${error.message}`);
-        }
-    } else {
+async function handleMealNameInput(mealName, mealType) {
+    if (!mealName) {
         alert('Please enter a meal name.');
+        return;
+    }
+
+    try {
+        const response = await fetch('https://your-backend-url/estimate_macros', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ meal_name: mealName })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data); // Log the response to check values
+
+        // Extract the nutrient values using a regular expression
+        const matches = data.match(/Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
+
+        if (matches) {
+            const calories = parseFloat(matches[1]);
+            const protein = parseFloat(matches[2]);
+            const carbs = parseFloat(matches[3]);
+            const fat = parseFloat(matches[4]);
+
+            document.getElementById(`${mealType}Calories`).value = calories;
+            document.getElementById(`${mealType}Protein`).value = protein;
+            document.getElementById(`${mealType}Carbs`).value = carbs;
+            document.getElementById(`${mealType}Fat`).value = fat;
+
+            // Automatically save the meal after getting the macros
+            addMeal(mealType);
+        } else {
+            console.error('Error parsing API response:', data);
+            alert(`Error estimating macros: ${data}`);
+        }
+    } catch (error) {
+        console.error('Error estimating macros:', error);
+        alert(`Error estimating macros: ${error.message}`);
     }
 }
 
