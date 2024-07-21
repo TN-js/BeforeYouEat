@@ -592,12 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
 
-    // Find all forms with the class 'meal-form'
-    const mealForms = document.querySelectorAll('.meal-form');
-
-    // Attach the event listener to each form
-    mealForms.forEach(form => {
-        form.addEventListener('submit', generateMacros);
+    document.querySelectorAll('.generateMacrosButton').forEach(button => {
+        button.addEventListener('click', generateMacros);
     });
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
