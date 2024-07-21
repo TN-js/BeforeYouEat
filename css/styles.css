@@ -356,6 +356,22 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: #dc3545; /* Red color */
 }
 
+/* Styles for the duplicate button */
+.meal-item .button-area .duplicate-button {
+    background-color: #28a745; /* Darker green color */
+    /* border: 2px solid rgba(255, 255, 255, 0.9); */
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 40px; /* Same size as other buttons */
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .exercise-item {
     justify-content: space-between; /* Ensure space between text and button */
 }

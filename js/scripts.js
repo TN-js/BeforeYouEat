@@ -137,6 +137,7 @@ function updateDisplay() {
                         <p>Cals: ${meal.calories} | Protein: ${meal.protein}g | Carbs: ${meal.carbs}g | Fat: ${meal.fat}g</p>
                     </div>
                     <div class="button-area">
+                        <button class="duplicate-button" data-meal-type="${mealType}" data-index="${index}"><i class="fas fa-copy"></i></button>
                         <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">&#9998;</button>
                         <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">&#128465;</button>
                     </div>
@@ -188,6 +189,23 @@ function updateDisplay() {
             editMeal(button.dataset.mealType, button.dataset.index);
         });
     });
+
+    document.querySelectorAll('.duplicate-button').forEach(button => {
+        button.addEventListener('click', () => {
+            duplicateMeal(button.dataset.mealType, button.dataset.index);
+        });
+    });
+}
+
+// Function to duplicate a meal
+function duplicateMeal(mealType, index) {
+    const mealDate = formatDate(currentDate);
+    const currentMeals = meals[mealDate][mealType];
+    const mealToDuplicate = currentMeals[index];
+    const newMeal = { ...mealToDuplicate, id: Date.now() }; // Ensure new unique ID if needed
+
+    currentMeals.push(newMeal); // Add duplicated meal to the same meal type array
+    updateDisplay(); // Refresh the display to show the new duplicated meal
 }
 
 function removeMeal(mealType, index) {
