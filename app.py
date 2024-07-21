@@ -21,6 +21,11 @@ def estimate_macros():
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
     elif request.method == "POST":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+        
         data = request.json
         if 'meal_name' not in data:
             return jsonify({'error': 'No meal name provided'}), 400
@@ -30,7 +35,7 @@ def estimate_macros():
             "Authorization": f"Bearer {openai_api_key}"
         }
         payload = {
-            "model": "gpt-4o-mini",  # Kept the original model name
+            "model": "gpt-4o-mini",
             "messages": [
                 {
                     "role": "user",
@@ -39,11 +44,17 @@ def estimate_macros():
             ],
             "max_tokens": 150
         }
-        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to estimate macros'}), response.status_code
-        result = response.json()
-        return _corsify_actual_response(jsonify(result['choices'][0]['message']['content']))
+        try:
+            openai_response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            if openai_response.status_code != 200:
+                app.logger.error(f"OpenAI API error: {openai_response.status_code} - {openai_response.text}")
+                return jsonify({'error': 'Failed to estimate macros'}), openai_response.status_code
+            result = openai_response.json()
+            response_data = jsonify(result['choices'][0]['message']['content'])
+            return _corsify_actual_response(response_data)
+        except Exception as e:
+            app.logger.error(f"Error in estimate_macros: {str(e)}")
+            return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/analyze_image', methods=['POST', 'OPTIONS'])
 def analyze_image():
