@@ -271,7 +271,7 @@ async function handleMealNameInput(mealName, mealType) {
         console.log('API Response:', data); // Log the response to check values
 
         // Extract the nutrient values using a regular expression
-        const matches = data.match(/Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
+        const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
         if (matches) {
             const dishName = matches[1];
@@ -585,10 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
-
-    document.querySelectorAll('.generateMacrosButton').forEach(button => {
-        button.addEventListener('click', generateMacros);
-    });
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {
