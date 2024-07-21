@@ -108,7 +108,7 @@
                 <div id="lunchForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('lunchDishName').value, 'lunch')">Generate Macros</button>
                     </div>
                     <input type="number" id="lunchCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
@@ -131,7 +131,7 @@
                 <div id="dinnerForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('dinnerDishName').value, 'dinner')">Generate Macros</button>
                     </div>
                     <input type="number" id="dinnerCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
@@ -154,7 +154,7 @@
                 <div id="snacksForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="generateMacros(event)">Generate Macros</button>
+                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('snacksDishName').value, 'snacks')">Generate Macros</button>
                     </div>
                     <input type="number" id="snacksCalories" step="0.1" placeholder="Calories">
                     <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
