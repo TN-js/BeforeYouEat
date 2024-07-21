@@ -6,7 +6,12 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app, resources={r"/analyze_image": {"origins": "https://tn-js.github.io"}})  # Enable CORS for the specific route
+
+# Enable CORS for the specific routes
+CORS(app, resources={
+    r"/analyze_image": {"origins": "https://tn-js.github.io"},
+    r"/estimate_macros": {"origins": "https://tn-js.github.io"}
+})
 
 # Load environment variables from .env file
 load_dotenv()
