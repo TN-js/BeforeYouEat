@@ -248,33 +248,10 @@ function editMeal(mealType, index) {
     initializeModal();
 }
 
-async function generateMacros(eventOrForm) {
-    let form;
-    
-    // Check the type of argument passed to the function
-    if (!eventOrForm) {
-        // If no argument is passed, try to find the form
-        form = document.querySelector('.meal-form');
-        if (!form) {
-            console.error('No form found and no argument passed to generateMacros');
-            return;
-        }
-    } else if (eventOrForm instanceof Event) {
-        eventOrForm.preventDefault();
-        form = eventOrForm.target;
-    } else if (eventOrForm instanceof HTMLFormElement) {
-        form = eventOrForm;
-    } else if (typeof eventOrForm === 'object' && eventOrForm.tagName === 'BUTTON') {
-        // If a button element is passed (e.g., from onclick)
-        form = eventOrForm.closest('.meal-form');
-        if (!form) {
-            console.error('Could not find a form from the provided button');
-            return;
-        }
-    } else {
-        console.error('Invalid argument passed to generateMacros');
-        return;
-    }
+async function generateMacros(event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+    const button = event.target; // Get the button that was clicked
+    const form = button.closest('.meal-form'); // Find the closest form
 
     const mealNameInput = form.querySelector('input[type="text"]');
     const mealName = mealNameInput.value;

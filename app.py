@@ -21,11 +21,6 @@ def estimate_macros():
     if request.method == "OPTIONS":
         return _build_cors_preflight_response()
     elif request.method == "POST":
-        response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
-        
         data = request.json
         if 'meal_name' not in data:
             return jsonify({'error': 'No meal name provided'}), 400
