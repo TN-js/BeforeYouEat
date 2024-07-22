@@ -262,11 +262,17 @@ function editMeal(mealType, index) {
         };
     };
 
+    // Update generate macros button to handle the index
+    const generateMacrosButton = form.querySelector('.generateMacrosButton');
+    generateMacrosButton.onclick = function generateMacros() {
+        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType, index);
+    };
+
     // Re-initialize modal functionality
     initializeModal();
 }
 
-async function handleMealNameInput(mealName, mealType) {
+async function handleMealNameInput(mealName, mealType, index = null) {
     if (!mealName) {
         alert('Please enter a meal name.');
         return;
@@ -286,9 +292,8 @@ async function handleMealNameInput(mealName, mealType) {
         }
 
         const data = await response.json();
-        console.log('API Response:', data); // Log the response to check values
+        console.log('API Response:', data);
 
-        // Extract the nutrient values using a regular expression
         const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
         if (matches) {
@@ -304,7 +309,10 @@ async function handleMealNameInput(mealName, mealType) {
             document.getElementById(`${mealType}Carbs`).value = carbs;
             document.getElementById(`${mealType}Fat`).value = fat;
 
-            // Automatically save the meal after getting the macros
+            if (index !== null) {
+                removeMeal(mealType, index); // Remove the old entry if index is provided
+            }
+
             addMeal(mealType);
         } else {
             console.error('Error parsing API response:', data);
