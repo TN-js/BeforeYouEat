@@ -112,11 +112,9 @@ function addExercise() {
 function updateDisplay() {
     let totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     let totalExercise = 0;
-
     const mealDate = formatDate(currentDate);
     const currentMeals = meals[mealDate] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
     const currentExercise = exercise[mealDate] || 0;
-
     for (let mealType in currentMeals) {
         const mealItems = document.getElementById(`${mealType}Items`);
         mealItems.innerHTML = '';
@@ -126,11 +124,12 @@ function updateDisplay() {
                 totals.protein += meal.protein;
                 totals.carbs += meal.carbs;
                 totals.fat += meal.fat;
-
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
                 mealItem.innerHTML = `
-                    <div class="drag-area"></div>
+                    <div class="drag-area">
+                        <div class="dot-matrix"></div>
+                    </div>
                     ${meal.image ? `<img src="${meal.image}" alt="" class="meal-image">` : ''}
                     <div class="meal-info">
                         <h4>${meal.dishName}</h4>

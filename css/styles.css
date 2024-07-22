@@ -222,9 +222,9 @@ input[type="text"], input[type="number"] {
     font-size: 16px;
 }
 
-button, .image-upload-container label, .meal-item .drag-area, .modal-content button {
-    background-color: rgba(12, 37, 18, 0.7); /* Match theme color */
-    border: 2px solid rgba(255, 255, 255, 0.9); /* Match theme color */
+button, .image-upload-container label, .modal-content button {
+    background-color: rgba(12, 37, 18, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.9);
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
@@ -233,18 +233,65 @@ button, .image-upload-container label, .meal-item .drag-area, .modal-content but
     width: 100%;
     margin-bottom: 10px;
     transition: all 0.05s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Match theme color */
-    outline: none; /* Match theme color */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
 }
 
-button:hover, .image-upload-container label:hover, .meal-item .drag-area:hover, .modal-content button:hover {
-    background-color: rgba(12, 37, 18, 0.9); /* Match theme color */
-    border-color: white; /* Match theme color */
+button:hover, .image-upload-container label:hover, .modal-content button:hover {
+    background-color: rgba(12, 37, 18, 0.9);
+    border-color: white;
 }
 
-button:active, .image-upload-container label:active, .meal-item .drag-area:active, .modal-content button:active {
-    background-color: rgba(12, 37, 18, 1); /* Match theme color */
-    transform: translateY(1px); /* Match theme color */
+button:active, .image-upload-container label:active, .modal-content button:active {
+    background-color: rgba(12, 37, 18, 1);
+    transform: translateY(1px);
+}
+
+.meal-item .drag-area {
+    width: 24px;
+    height: 24px;
+    cursor: move;
+    display: inline-block;
+    position: relative;
+    margin-right: 10px;
+    vertical-align: middle;
+    touch-action: none; /* Prevents scrolling on touch devices when trying to drag */
+}
+
+.meal-item .drag-area::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+    background-image:
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px),
+        radial-gradient(circle, black 1.5px, transparent 1.5px);
+    background-size: 33.33% 33.33%;
+    background-position:
+        0 0, 50% 0, 100% 0,
+        0 50%, 50% 50%, 100% 50%,
+        0 100%, 50% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    transition: opacity 0.05s ease;
+}
+
+.meal-item .drag-area:hover::before {
+    opacity: 0.7;
+}
+
+.meal-item .drag-area:active::before {
+    opacity: 1;
 }
 
 .meal-slot {
@@ -271,33 +318,6 @@ button:active, .image-upload-container label:active, .meal-item .drag-area:activ
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 5px;
-}
-
-.meal-item .drag-area, .meal-item .button-area, .exercise-item .button-area {
-    flex: 0 0 5%;
-    text-align: center;
-}
-
-.meal-item .drag-area {
-    margin-right: 0; /* Remove right margin */
-    margin-bottom: 0;
-    width: 40px; /* Adjust width to be a bit thinner */
-    height: 80px; /* Adjust height to match the combined height of the edit and remove buttons */
-    padding: 0; /* Remove padding to avoid extra space */
-    text-align: center; /* Center text */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(12, 37, 18, 0.7); /* Match other buttons' background color */
-    border: 2px solid rgba(255, 255, 255, 0.9); /* Match other buttons' border */
-    border-radius: 5px; /* Match other buttons' border radius */
-    cursor: pointer;
-}
-
-.meal-item .drag-area::before {
-    content: "\2630"; /* Unicode for the "hamburger" menu icon */
-    font-size: 24px;
-    color: #ffffff; /* Adjust the color as needed */
 }
 
 .meal-item .meal-image {
