@@ -1,11 +1,11 @@
-# SnapNutrition
+# Before You Eat
 
-SnapNutrition is a web application that allows users to log and track their meals by uploading pictures of their food. The app uses OpenAI's gpt-4o and gpt-4o-mini models to approximate the nutritional content of the meals and logs this information automatically.
+Before You Eat is a web application that allows users to log and track their meals by uploading pictures of their food. The app uses OpenAI's gpt-4o and gpt-4o-mini models to approximate the nutritional content of the meals and logs this information automatically.
 
 ## Features
 
 - **Meal Logging**: Users can upload pictures of their meals or manually input nutritional information.
-- **Nutritional Analysis**: SnapNutrition estimates calories, protein, carbs, and fat content from meal images.
+- **Nutritional Analysis**: Before You Eat estimates calories, protein, carbs, and fat content from meal images.
 - **Automatic Logging**: Nutritional information is extracted and logged automatically.
 - **Dietary Goals**: Users can set and track dietary goals with progress bars.
 - **Meal Management**: Edit and organize logged meals into breakfast, lunch, dinner, and snacks.
@@ -32,7 +32,7 @@ SnapNutrition is a web application that allows users to log and track their meal
 
 ## Demo
 
-https://tn-js.github.io/SnapNutrition/
+https://tn-js.github.io/BeforeYouEat/
 
 ## License
 

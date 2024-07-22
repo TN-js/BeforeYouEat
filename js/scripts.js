@@ -278,7 +278,7 @@ async function handleMealNameInput(mealName, mealType, index = null) {
     }
 
     try {
-        const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/estimate_macros', {
+        const response = await fetch('https://beforeyoueat-0404fc673109.herokuapp.com/estimate_macros', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -342,7 +342,7 @@ async function handleImageUpload(input, mealType) {
                 formData.append('image', blob, 'compressed.jpg');
 
                 // Upload the compressed image to the backend
-                const response = await fetch('https://snapnutrition-603fd21f3990.herokuapp.com/analyze_image', {
+                const response = await fetch('https://beforeyoueat-0404fc673109.herokuapp.com/analyze_image', {
                     method: 'POST',
                     body: formData
                 });
