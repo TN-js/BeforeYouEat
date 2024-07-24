@@ -666,25 +666,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Open login modal
     document.querySelector('.menu-item-login').addEventListener('click', function () {
-        var imageModal = document.getElementById('imageModal');
-        var modalImage = document.getElementById('modalImage');
-        var loginModalContent = document.getElementById('loginModalContent');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const loginModalContent = document.getElementById('loginModalContent');
+        const signupModalContent = document.getElementById('signupModalContent');
 
         modalImage.style.display = 'none';
         loginModalContent.style.display = 'block';
+        signupModalContent.style.display = 'none';
         imageModal.style.display = 'flex';
+    });
+
+    // Switch to signup form
+    document.getElementById('signUpLink').addEventListener('click', function (event) {
+        event.preventDefault();
+        document.getElementById('loginModalContent').style.display = 'none';
+        document.getElementById('signupModalContent').style.display = 'block';
+    });
+
+    // Switch back to login form
+    document.getElementById('backToLoginLink').addEventListener('click', function (event) {
+        event.preventDefault();
+        document.getElementById('signupModalContent').style.display = 'none';
+        document.getElementById('loginModalContent').style.display = 'block';
     });
 
     // Close login and settings modal when clicking outside
     document.addEventListener('click', function (event) {
         const imageModal = document.getElementById('imageModal');
         const loginModalContent = document.getElementById('loginModalContent');
+        const signupModalContent = document.getElementById('signupModalContent');
         const settingsModal = document.getElementById('settingsModal');
         const settingsModalContent = document.querySelector('#settingsModal .modal-content');
 
-        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && !event.target.classList.contains('menu-item-login')) {
+        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && !signupModalContent.contains(event.target) && !event.target.classList.contains('menu-item-login')) {
             imageModal.style.display = 'none';
             loginModalContent.style.display = 'none';
+            signupModalContent.style.display = 'none';
         }
 
         if (settingsModal.style.display === 'block' && !settingsModalContent.contains(event.target) && !event.target.classList.contains('menu-item-settings')) {
@@ -707,12 +725,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('forgotPassword').addEventListener('click', function (event) {
         event.preventDefault();
         alert('Forgot password functionality not implemented yet.');
-    });
-
-    // Placeholder for sign up link
-    document.getElementById('signUpLink').addEventListener('click', function (event) {
-        event.preventDefault();
-        alert('Sign up functionality not implemented yet.');
     });
 
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
