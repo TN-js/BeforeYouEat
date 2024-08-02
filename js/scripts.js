@@ -353,12 +353,8 @@ async function handleImageUpload(input, mealType) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                let data = await response.text(); // Get the response as text
+                const data = await response.json(); // Get the response as JSON
                 console.log('API Response:', data); // Log the response to check values
-
-                // Decode the Unicode escape sequences
-                data = JSON.parse(`"${data.replace(/\"/g, '\\"')}"`);
-                console.log('Decoded API Response:', data); // Log the decoded response
 
                 // Improved regex to better handle special characters
                 const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
