@@ -86,12 +86,20 @@ def analyze_image():
         "max_tokens": 300
     }
 
+    app.logger.debug(f"Payload sent to OpenAI: {payload}")
+
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
     if response.status_code != 200:
+        app.logger.error(f"Failed to analyze image: {response.status_code}")
         return jsonify({'error': 'Failed to analyze image'}), response.status_code
 
     result = response.json()
-    return jsonify(result['choices'][0]['message']['content'])
+    app.logger.debug(f"Response from OpenAI: {result}")
+
+    content = result['choices'][0]['message']['content']
+    app.logger.debug(f"Content received: {content}")
+
+    return jsonify(content)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -332,6 +332,7 @@ async function handleImageUpload(input, mealType) {
             try {
                 // Compress the image
                 const compressedImage = await compressImage(e.target.result, 1000, 1000);
+                console.log('Compressed Image Data:', compressedImage); // Log compressed image data
 
                 const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                 uploadedImage.src = compressedImage;
@@ -352,11 +353,15 @@ async function handleImageUpload(input, mealType) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const data = await response.text(); // Get the response as text
+                let data = await response.text(); // Get the response as text
                 console.log('API Response:', data); // Log the response to check values
 
-                // Extract the nutrient values using a regular expression
-                const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
+                // Decode the Unicode escape sequences
+                data = JSON.parse(`"${data.replace(/\"/g, '\\"')}"`);
+                console.log('Decoded API Response:', data); // Log the decoded response
+
+                // Improved regex to better handle special characters
+                const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
 
                 if (matches) {
                     const dishName = matches[1];
@@ -364,6 +369,8 @@ async function handleImageUpload(input, mealType) {
                     const protein = parseFloat(matches[3]);
                     const carbs = parseFloat(matches[4]);
                     const fat = parseFloat(matches[5]);
+
+                    console.log('Parsed Values:', { dishName, calories, protein, carbs, fat });
 
                     document.getElementById(`${mealType}DishName`).value = dishName;
                     document.getElementById(`${mealType}Calories`).value = calories;
