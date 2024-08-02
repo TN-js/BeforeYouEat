@@ -68,7 +68,7 @@ function addMeal(mealType, existingImage = null) {
         return;
     }
 
-    const meal = { dishName, calories, protein, carbs, fat, image };
+    const meal = { id: Date.now(), dishName, calories, protein, carbs, fat, image }; // Add a unique ID
     const mealDate = formatDate(currentDate);
 
     if (!meals[mealDate]) {
@@ -119,7 +119,7 @@ function updateDisplay() {
         const mealItems = document.getElementById(`${mealType}Items`);
         mealItems.innerHTML = '';
         if (Array.isArray(currentMeals[mealType])) {
-            currentMeals[mealType].forEach((meal, index) => {
+            currentMeals[mealType].forEach((meal) => {
                 totals.calories += meal.calories;
                 totals.protein += meal.protein;
                 totals.carbs += meal.carbs;
@@ -136,9 +136,9 @@ function updateDisplay() {
                         <p>Cals: ${meal.calories} | Protein: ${meal.protein}g | Carbs: ${meal.carbs}g | Fat: ${meal.fat}g</p>
                     </div>
                     <div class="button-area">
-                        <button class="duplicate-button" data-meal-type="${mealType}" data-index="${index}"><i class="fas fa-copy"></i></button>
-                        <button class="edit-button" data-meal-type="${mealType}" data-index="${index}">&#9998;</button>
-                        <button class="remove-button" data-meal-type="${mealType}" data-index="${index}">&#128465;</button>
+                        <button class="duplicate-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fas fa-copy"></i></button>
+                        <button class="edit-button" data-meal-type="${mealType}" data-id="${meal.id}">&#9998;</button>
+                        <button class="remove-button" data-meal-type="${mealType}" data-id="${meal.id}">&#128465;</button>
                     </div>
                 `;
                 mealItems.appendChild(mealItem);
@@ -171,7 +171,7 @@ function updateDisplay() {
     document.querySelectorAll('.remove-button').forEach(button => {
         button.removeEventListener('touchstart', removeMeal); // Ensure no lingering touchstart listeners
         button.addEventListener('click', () => {
-            removeMeal(button.dataset.mealType, button.dataset.index);
+            removeMeal(button.dataset.mealType, button.dataset.id);
         });
     });
 
@@ -185,32 +185,33 @@ function updateDisplay() {
     document.querySelectorAll('.edit-button').forEach(button => {
         button.removeEventListener('touchstart', editMeal); // Ensure no lingering touchstart listeners
         button.addEventListener('click', () => {
-            editMeal(button.dataset.mealType, button.dataset.index);
+            editMeal(button.dataset.mealType, button.dataset.id);
         });
     });
 
     document.querySelectorAll('.duplicate-button').forEach(button => {
         button.addEventListener('click', () => {
-            duplicateMeal(button.dataset.mealType, button.dataset.index);
+            duplicateMeal(button.dataset.mealType, button.dataset.id);
         });
     });
 }
 
 // Function to duplicate a meal
-function duplicateMeal(mealType, index) {
+function duplicateMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
     const currentMeals = meals[mealDate][mealType];
-    const mealToDuplicate = currentMeals[index];
-    const newMeal = { ...mealToDuplicate, id: Date.now() }; // Ensure new unique ID if needed
+    const mealToDuplicate = currentMeals.find(meal => meal.id === parseInt(id));
+    const newMeal = { ...mealToDuplicate, id: Date.now() }; // Ensure new unique ID
 
     currentMeals.push(newMeal); // Add duplicated meal to the same meal type array
     updateDisplay(); // Refresh the display to show the new duplicated meal
+    saveToLocalStorage(); // Save to local storage to persist the duplication
 }
 
-function removeMeal(mealType, index) {
+function removeMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
     if (meals[mealDate] && meals[mealDate][mealType]) {
-        meals[mealDate][mealType].splice(index, 1);
+        meals[mealDate][mealType] = meals[mealDate][mealType].filter(meal => meal.id !== parseInt(id));
     }
     updateDisplay();
     saveToLocalStorage();
@@ -225,9 +226,9 @@ function removeExercise() {
     saveToLocalStorage();
 }
 
-function editMeal(mealType, index) {
+function editMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
-    const meal = meals[mealDate][mealType][index];
+    const meal = meals[mealDate][mealType].find(meal => meal.id === parseInt(id));
     const form = document.getElementById(`${mealType}Form`);
 
     document.getElementById(`${mealType}DishName`).value = meal.dishName;
@@ -252,7 +253,7 @@ function editMeal(mealType, index) {
     saveButton.textContent = 'Save Edit';
 
     saveButton.onclick = function saveEdited() {
-        removeMeal(mealType, index); // Remove the old entry
+        removeMeal(mealType, id); // Remove the old entry
         addMeal(mealType, meal.image); // Pass the existing image URL to addMeal function
         saveButton.textContent = originalText; // Revert the button text
         saveButton.onclick = function (event) {
@@ -264,7 +265,7 @@ function editMeal(mealType, index) {
     // Update generate macros button to handle the index
     const generateMacrosButton = form.querySelector('.generateMacrosButton');
     generateMacrosButton.onclick = function generateMacros() {
-        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType, index);
+        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType);
     };
 
     // Re-initialize modal functionality
