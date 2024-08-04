@@ -262,17 +262,17 @@ function editMeal(mealType, id) {
         };
     };
 
-    // Update generate macros button to handle the index
+    // Update generate macros button to handle the id
     const generateMacrosButton = form.querySelector('.generateMacrosButton');
     generateMacrosButton.onclick = function generateMacros() {
-        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType);
+        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType, id); // Pass the id here
     };
 
     // Re-initialize modal functionality
     initializeModal();
 }
 
-async function handleMealNameInput(mealName, mealType, index = null) {
+async function handleMealNameInput(mealName, mealType, id = null) {
     if (!mealName) {
         alert('Please enter a meal name.');
         return;
@@ -309,8 +309,8 @@ async function handleMealNameInput(mealName, mealType, index = null) {
             document.getElementById(`${mealType}Carbs`).value = carbs;
             document.getElementById(`${mealType}Fat`).value = fat;
 
-            if (index !== null) {
-                removeMeal(mealType, index); // Remove the old entry if index is provided
+            if (id !== null) {
+                removeMeal(mealType, id); // Remove the old entry if id is provided
             }
 
             addMeal(mealType);
