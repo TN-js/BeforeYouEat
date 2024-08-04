@@ -280,7 +280,6 @@ async function handleMealNameInput(mealName, mealType, id = null) {
         alert('Please enter a meal name.');
         return;
     }
-
     try {
         const response = await fetch(`${BACKEND_URL}/estimate_macros`, {
             method: 'POST',
@@ -289,33 +288,26 @@ async function handleMealNameInput(mealName, mealType, id = null) {
             },
             body: JSON.stringify({ meal_name: mealName })
         });
-
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
         const data = await response.json();
         console.log('API Response:', data);
-
-        const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
-
+        const matches = data.match(/Name:\s*(.*?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Protein:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g/);
         if (matches) {
             const dishName = matches[1];
             const calories = parseFloat(matches[2]);
             const protein = parseFloat(matches[3]);
             const carbs = parseFloat(matches[4]);
             const fat = parseFloat(matches[5]);
-
             document.getElementById(`${mealType}DishName`).value = dishName;
-            document.getElementById(`${mealType}Calories`).value = calories;
-            document.getElementById(`${mealType}Protein`).value = protein;
-            document.getElementById(`${mealType}Carbs`).value = carbs;
-            document.getElementById(`${mealType}Fat`).value = fat;
-
+            document.getElementById(`${mealType}Calories`).value = calories.toFixed(1);
+            document.getElementById(`${mealType}Protein`).value = protein.toFixed(1);
+            document.getElementById(`${mealType}Carbs`).value = carbs.toFixed(1);
+            document.getElementById(`${mealType}Fat`).value = fat.toFixed(1);
             if (id !== null) {
                 removeMeal(mealType, id); // Remove the old entry if id is provided
             }
-
             addMeal(mealType);
         } else {
             console.error('Error parsing API response:', data);
@@ -372,10 +364,10 @@ async function handleImageUpload(input, mealType) {
                     console.log('Parsed Values:', { dishName, calories, protein, carbs, fat });
 
                     document.getElementById(`${mealType}DishName`).value = dishName;
-                    document.getElementById(`${mealType}Calories`).value = calories;
-                    document.getElementById(`${mealType}Protein`).value = protein;
-                    document.getElementById(`${mealType}Carbs`).value = carbs;
-                    document.getElementById(`${mealType}Fat`).value = fat;
+                    document.getElementById(`${mealType}Calories`).value = calories.toFixed(1);
+                    document.getElementById(`${mealType}Protein`).value = protein.toFixed(1);
+                    document.getElementById(`${mealType}Carbs`).value = carbs.toFixed(1);
+                    document.getElementById(`${mealType}Fat`).value = fat.toFixed(1);
 
                     // Automatically save the meal after uploading the image
                     addMeal(mealType);
