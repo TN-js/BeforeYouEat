@@ -1,3 +1,6 @@
+// const BACKEND_URL = 'https://beforeyoueat-0404fc673109.herokuapp.com';
+const BACKEND_URL =  'https://beforeyoueat.onrender.com';
+
 let meals = {};
 let exercise = {};
 let goals = { calories: 2000, protein: 75, carbs: 275, fat: 67 };
@@ -279,7 +282,7 @@ async function handleMealNameInput(mealName, mealType, id = null) {
     }
 
     try {
-        const response = await fetch('https://beforeyoueat-0404fc673109.herokuapp.com/estimate_macros', {
+        const response = await fetch(`${BACKEND_URL}/estimate_macros`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -344,7 +347,7 @@ async function handleImageUpload(input, mealType) {
                 formData.append('image', blob, 'compressed.jpg');
 
                 // Upload the compressed image to the backend
-                const response = await fetch('https://beforeyoueat-0404fc673109.herokuapp.com/analyze_image', {
+                const response = await fetch(`${BACKEND_URL}/analyze_image`, {
                     method: 'POST',
                     body: formData
                 });
