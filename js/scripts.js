@@ -525,10 +525,12 @@ function saveToLocalStorage() {
     let exerciseString = JSON.stringify(exercise);
     let goalsString = JSON.stringify(goals);
     let dateString = formatDate(currentDate);
-    let dataToSave = mealsString + exerciseString + goalsString + dateString;
+
+    // Calculate the size of the new data to save
+    let newDataSize = new Blob([mealsString + exerciseString + goalsString + dateString]).size;
 
     // Calculate initial total storage size including new data
-    let totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
+    let totalStorageSize = getTotalStorageSize() + newDataSize;
 
     // Remove the oldest entries if total storage exceeds the target storage limit
     while (totalStorageSize > TARGET_STORAGE) {
@@ -542,8 +544,8 @@ function saveToLocalStorage() {
         exerciseString = JSON.stringify(exercise);
         goalsString = JSON.stringify(goals);
         dateString = formatDate(currentDate);
-        dataToSave = mealsString + exerciseString + goalsString + dateString;
-        totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
+        newDataSize = new Blob([mealsString + exerciseString + goalsString + dateString]).size;
+        totalStorageSize = getTotalStorageSize() + newDataSize;
     }
 
     // Save the data to localStorage
