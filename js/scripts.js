@@ -465,7 +465,7 @@ function saveToLocalStorage() {
         let total = 0;
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += new Blob([localStorage[key]]).size;
+                total += new Blob([localStorage[key]]).size / 2;
             }
         }
         console.log(`Current storage usage: ${total} bytes`);
