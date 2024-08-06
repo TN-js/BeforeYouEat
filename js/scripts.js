@@ -465,7 +465,7 @@ function saveToLocalStorage() {
         let total = 0;
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += (localStorage[key].length * 2); // Multiply by 2 for UTF-16 encoding
+                total += new Blob([localStorage[key]]).size;
             }
         }
         console.log(`Current storage usage: ${total} bytes`);
@@ -524,7 +524,7 @@ function saveToLocalStorage() {
     let dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
 
     // Calculate initial total storage size including new data
-    let totalStorageSize = getTotalStorageSize() + (dataToSave.length * 2); // Multiply by 2 for UTF-16 encoding
+    let totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
 
     // Remove the oldest entries if total storage exceeds the target storage limit
     while (totalStorageSize > TARGET_STORAGE) {
@@ -535,7 +535,7 @@ function saveToLocalStorage() {
         }
         // Recalculate the data to save after removal
         dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
-        totalStorageSize = getTotalStorageSize() + (dataToSave.length * 2);
+        totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
     }
 
     // Save the data to localStorage
