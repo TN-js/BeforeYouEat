@@ -457,6 +457,8 @@ function clearInputs(mealType) {
 
 function saveToLocalStorage() {
     const MAX_STORAGE = 5 * 1024 * 1024; // 5 MB in bytes
+    const BUFFER_PERCENTAGE = 0.1; // 10% buffer
+    const TARGET_STORAGE = MAX_STORAGE * (1 - BUFFER_PERCENTAGE); // 90% of MAX_STORAGE
 
     // Function to calculate total storage size
     function getTotalStorageSize() {
@@ -497,7 +499,7 @@ function saveToLocalStorage() {
         const oldestMeal = getOldestMealEntry();
         if (oldestMeal.date && oldestMeal.mealType) {
             meals[oldestMeal.date][oldestMeal.mealType] = meals[oldestMeal.date][oldestMeal.mealType].filter(meal => meal.id !== oldestMeal.id);
-            
+
             // Clean up empty arrays or objects
             if (meals[oldestMeal.date][oldestMeal.mealType].length === 0) {
                 delete meals[oldestMeal.date][oldestMeal.mealType];
@@ -513,21 +515,27 @@ function saveToLocalStorage() {
 
     // Main logic for saving to localStorage
     let dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
-    
-    while (getTotalStorageSize() + dataToSave.length > MAX_STORAGE) {
+
+    // Calculate initial total storage size including new data
+    let totalStorageSize = getTotalStorageSize() + dataToSave.length * 2; // Multiply by 2 for UTF-16 encoding
+
+    // Remove the oldest entries if total storage exceeds the target storage limit
+    while (totalStorageSize > TARGET_STORAGE) {
         if (!removeOldestMealEntry()) {
             console.error("Unable to free up space in localStorage");
             return; // Exit if we can't free up space
         }
         // Recalculate the data to save after removal
         dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
+        totalStorageSize = getTotalStorageSize() + dataToSave.length * 2;
     }
 
+    // Save the data to localStorage
     localStorage.setItem('meals', JSON.stringify(meals));
     localStorage.setItem('exercise', JSON.stringify(exercise));
     localStorage.setItem('goals', JSON.stringify(goals));
     localStorage.setItem('currentDate', formatDate(currentDate));
-    
+
     console.log("Data saved to localStorage. Current storage usage:", getTotalStorageSize(), "bytes");
 }
 
