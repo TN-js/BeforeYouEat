@@ -730,19 +730,25 @@ document.addEventListener('DOMContentLoaded', () => {
         var menuButton = document.getElementById('menuButton');
         var menu = document.getElementById('menu');
         var header = document.querySelector('.header'); // Get the header element
+    
         var rect = menuButton.getBoundingClientRect(); // Get the position of the button
         var headerRect = header.getBoundingClientRect(); // Get the position of the header
-
+    
+        var buttonLeftOffset = 20; // Left offset of the menu button
+        var buttonTopOffset = 20; // Top offset of the menu button
+    
         if (menu.style.display === 'none' || menu.style.display === '') {
             menu.style.display = 'block';
             menu.style.position = 'absolute';
-            menu.style.left = `${rect.left - headerRect.left}px`;  // Align with the left edge of the menu button relative to the header
-            menu.style.top = `${rect.bottom + window.scrollY}px`;  // Position below the menu button, accounting for scroll position
+            // Dynamically adjust the left position
+            menu.style.left = `${rect.left - headerRect.left - buttonLeftOffset}px`;  // Align with the left edge of the menu button relative to the header
+            // Dynamically adjust the top position
+            menu.style.top = `${rect.bottom + window.scrollY - buttonTopOffset}px`;  // Position below the menu button, accounting for scroll position
             menu.style.zIndex = '1000';  // Ensure it appears above other elements
         } else {
             menu.style.display = 'none';
         }
-    });
+    });    
 
     // Close menu when clicking outside
     document.addEventListener('click', function (event) {

@@ -33,10 +33,33 @@ h2 {
     }
 }
 
+.menu-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #4a5568;
+    font-size: 24px;
+    outline: none;
+    position: absolute; /* Added */
+    left: 20px; /* Added */
+    top: 10px; /* Added */
+}
+
+.menu-button:hover {
+    background: none; /* Remove background on hover */
+}
+
 .header {
     background: linear-gradient(45deg, #d4f1d4, #d4f1f9, #e1d4f1, #d4f1d4, #d4f1f9, #e1d4f1);
     background-size: 300% 300%;
-    animation: gradientAnimation 20s linear infinite;
+    animation: gradientAnimation 10s linear infinite;
     color: white;
     text-align: center;
     position: relative;
@@ -48,10 +71,11 @@ h2 {
 
 .header .row {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
     margin-bottom: 10px;
+    position: relative; /* Added */
 }
 
 .header .row.bottom {
@@ -63,15 +87,16 @@ h2 {
 }
 
 .header .title {
-    font-size: 42px;
+    font-size: 36px;
     font-weight: bold;
     text-align: center;
-    width: 100%;
+    width: calc(100% - 80px); /* Adjusted */
     background: none;
     color: #0c2512;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
     font-family: 'Pacifico', cursive;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
+    margin: 0 auto; /* Added */
 }
 
 .header .version {
@@ -80,8 +105,8 @@ h2 {
     background-color: #0c2512;
     padding: 3px 6px;
     border-radius: 4px;
-    margin: 0; /* Reset margins */
-    margin-top: 10px;
+    margin: 0 20px;
+    margin-top: 18px;
 }
 
 /* Minimal arrow buttons */
@@ -569,27 +594,6 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .image-modal-content img {
     max-width: 100%;
     height: auto;
-}
-
-/* Styles for the menu button */
-.menu-button {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    color: #4a5568;
-    font-size: 24px;
-    outline: none; /* Ensure no outline on focus */
-}
-
-.menu-button:hover {
-    background: none; /* Remove background on hover */
 }
 
 /* Styles for the menu */
