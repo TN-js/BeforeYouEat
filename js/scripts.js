@@ -1,4 +1,3 @@
-// const BACKEND_URL = 'https://beforeyoueat-0404fc673109.herokuapp.com';
 const BACKEND_URL =  'https://beforeyoueat.onrender.com';
 
 let meals = {};
@@ -457,6 +456,71 @@ function clearInputs(mealType) {
 }
 
 function saveToLocalStorage() {
+    const MAX_STORAGE = 5 * 1024 * 1024; // 5 MB in bytes
+
+    // Function to calculate total storage size
+    function getTotalStorageSize() {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += localStorage[key].length * 2; // Multiply by 2 for UTF-16 encoding
+            }
+        }
+        return total;
+    }
+
+    // Function to get the oldest meal entry
+    function getOldestMealEntry() {
+        let oldestDate = null;
+        let oldestMealType = null;
+        let oldestMealId = null;
+
+        for (let date in meals) {
+            for (let mealType in meals[date]) {
+                if (meals[date][mealType].length > 0) {
+                    const mealId = meals[date][mealType][0].id;
+                    if (!oldestDate || date < oldestDate) {
+                        oldestDate = date;
+                        oldestMealType = mealType;
+                        oldestMealId = mealId;
+                    }
+                }
+            }
+        }
+
+        return { date: oldestDate, mealType: oldestMealType, id: oldestMealId };
+    }
+
+    // Function to remove the oldest meal entry
+    function removeOldestMealEntry() {
+        const oldestMeal = getOldestMealEntry();
+        if (oldestMeal.date && oldestMeal.mealType) {
+            meals[oldestMeal.date][oldestMeal.mealType] = meals[oldestMeal.date][oldestMeal.mealType].filter(meal => meal.id !== oldestMeal.id);
+            
+            // Clean up empty arrays or objects
+            if (meals[oldestMeal.date][oldestMeal.mealType].length === 0) {
+                delete meals[oldestMeal.date][oldestMeal.mealType];
+            }
+            if (Object.keys(meals[oldestMeal.date]).length === 0) {
+                delete meals[oldestMeal.date];
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Main logic for saving to localStorage
+    let dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
+    
+    while (getTotalStorageSize() + dataToSave.length > MAX_STORAGE) {
+        if (!removeOldestMealEntry()) {
+            console.error("Unable to free up space in localStorage");
+            return; // Exit if we can't free up space
+        }
+        // Recalculate the data to save after removal
+        dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
+    }
+
     localStorage.setItem('meals', JSON.stringify(meals));
     localStorage.setItem('exercise', JSON.stringify(exercise));
     localStorage.setItem('goals', JSON.stringify(goals));
