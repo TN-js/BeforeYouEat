@@ -529,14 +529,13 @@ function saveToLocalStorage() {
 
     // Calculate the total storage size before adding new data
     let totalStorageSize = getTotalStorageSize();
-    let newDataSize = new Blob([dataToSave]).size; // Correctly account for the size of new data
+    // let newDataSize = new Blob([dataToSave]).size;
 
-    console.log(`New data size: ${newDataSize} bytes`);
     console.log(`Initial total storage size before adding new data: ${totalStorageSize} bytes`);
 
     // Remove the oldest entries if total storage exceeds the target storage limit
-    while (totalStorageSize + newDataSize > TARGET_STORAGE) {
-        console.log(`Total storage size (${totalStorageSize + newDataSize}) exceeds target (${TARGET_STORAGE}). Removing oldest entry...`);
+    while (totalStorageSize > TARGET_STORAGE) {
+        console.log(`Total storage size (${totalStorageSize}) exceeds target (${TARGET_STORAGE}). Removing oldest entry...`);
         if (!removeOldestMealEntry()) {
             console.error("Unable to free up space in localStorage");
             return; // Exit if we can't free up space
