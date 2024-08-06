@@ -466,6 +466,7 @@ function saveToLocalStorage() {
                 total += localStorage[key].length * 2; // Multiply by 2 for UTF-16 encoding
             }
         }
+        console.log(`Current storage usage: ${total} bytes`);
         return total;
     }
 
@@ -504,6 +505,7 @@ function saveToLocalStorage() {
             if (Object.keys(meals[oldestMeal.date]).length === 0) {
                 delete meals[oldestMeal.date];
             }
+            console.log(`Removed oldest meal entry: ${oldestMeal.date}, ${oldestMeal.mealType}, ${oldestMeal.id}`);
             return true;
         }
         return false;
@@ -525,6 +527,8 @@ function saveToLocalStorage() {
     localStorage.setItem('exercise', JSON.stringify(exercise));
     localStorage.setItem('goals', JSON.stringify(goals));
     localStorage.setItem('currentDate', formatDate(currentDate));
+    
+    console.log("Data saved to localStorage. Current storage usage:", getTotalStorageSize(), "bytes");
 }
 
 function loadFromLocalStorage() {
