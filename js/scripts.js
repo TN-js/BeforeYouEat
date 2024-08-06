@@ -515,6 +515,7 @@ function saveToLocalStorage() {
                 delete meals[oldestMeal.date];
             }
             console.log(`Removed oldest meal entry: ${oldestMeal.date}, ${oldestMeal.mealType}, ${oldestMeal.id}`);
+            localStorage.setItem('meals', JSON.stringify(meals)); // Update localStorage with the modified meals
             return true;
         }
         return false;
@@ -525,11 +526,9 @@ function saveToLocalStorage() {
     let exerciseString = JSON.stringify(exercise);
     let goalsString = JSON.stringify(goals);
     let dateString = formatDate(currentDate);
-    let dataToSave = mealsString + exerciseString + goalsString + dateString;
 
     // Calculate the total storage size before adding new data
     let totalStorageSize = getTotalStorageSize();
-    // let newDataSize = new Blob([dataToSave]).size;
 
     console.log(`Initial total storage size before adding new data: ${totalStorageSize} bytes`);
 
