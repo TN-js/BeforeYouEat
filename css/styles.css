@@ -460,7 +460,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     line-height: 20px;
     background: linear-gradient(45deg, #a3d8a3, #80c8e0, #c8a3d8, #a3d8a3, #80c8e0, #c8a3d8);
     background-size: 300% 300%;
-    animation: gradientAnimation 20s linear infinite;
+    animation: gradientAnimation 10s linear infinite;
     transition: width 0.5s ease-in-out; /* Smooth width transition */
     z-index: 1;
 }
