@@ -465,7 +465,7 @@ function saveToLocalStorage() {
         let total = 0;
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += (key.length + localStorage[key].length) * 2; // Calculate based on length of key and value, accounting for 2 bytes per character
+                total += new Blob([key + localStorage[key]]).size;
             }
         }
         console.log(`Current storage usage: ${total} bytes`);
@@ -529,7 +529,7 @@ function saveToLocalStorage() {
 
     // Calculate initial total storage size including new data
     let totalStorageSize = getTotalStorageSize();
-    let newDataSize = new Blob([dataToSave]).size * 2; // Correctly account for 2 bytes per character
+    let newDataSize = new Blob([dataToSave]).size; // Correctly account for 2 bytes per character
     console.log(`New data size: ${newDataSize} bytes`);
     totalStorageSize += newDataSize;
 
@@ -548,7 +548,7 @@ function saveToLocalStorage() {
         goalsString = JSON.stringify(goals);
         dateString = formatDate(currentDate);
         dataToSave = mealsString + exerciseString + goalsString + dateString;
-        newDataSize = new Blob([dataToSave]).size * 2;
+        newDataSize = new Blob([dataToSave]).size;
         console.log(`New data size after removal: ${newDataSize} bytes`);
         totalStorageSize = getTotalStorageSize() + newDataSize;
         console.log(`Recalculated total storage size with new data: ${totalStorageSize} bytes`);
