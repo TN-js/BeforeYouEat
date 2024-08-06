@@ -527,31 +527,23 @@ function saveToLocalStorage() {
     let dateString = formatDate(currentDate);
     let dataToSave = mealsString + exerciseString + goalsString + dateString;
 
-    // Calculate initial total storage size including new data
+    // Calculate the total storage size before adding new data
     let totalStorageSize = getTotalStorageSize();
-    let newDataSize = new Blob([dataToSave]).size; // Correctly account for 2 bytes per character
-    console.log(`New data size: ${newDataSize} bytes`);
-    totalStorageSize += newDataSize;
+    let newDataSize = new Blob([dataToSave]).size; // Correctly account for the size of new data
 
-    console.log(`Initial total storage size with new data: ${totalStorageSize} bytes`);
+    console.log(`New data size: ${newDataSize} bytes`);
+    console.log(`Initial total storage size before adding new data: ${totalStorageSize} bytes`);
 
     // Remove the oldest entries if total storage exceeds the target storage limit
-    while (totalStorageSize > TARGET_STORAGE) {
-        console.log(`Total storage size (${totalStorageSize}) exceeds target (${TARGET_STORAGE}). Removing oldest entry...`);
+    while (totalStorageSize + newDataSize > TARGET_STORAGE) {
+        console.log(`Total storage size (${totalStorageSize + newDataSize}) exceeds target (${TARGET_STORAGE}). Removing oldest entry...`);
         if (!removeOldestMealEntry()) {
             console.error("Unable to free up space in localStorage");
             return; // Exit if we can't free up space
         }
-        // Recalculate the data to save after removal
-        mealsString = JSON.stringify(meals);
-        exerciseString = JSON.stringify(exercise);
-        goalsString = JSON.stringify(goals);
-        dateString = formatDate(currentDate);
-        dataToSave = mealsString + exerciseString + goalsString + dateString;
-        newDataSize = new Blob([dataToSave]).size;
-        console.log(`New data size after removal: ${newDataSize} bytes`);
-        totalStorageSize = getTotalStorageSize() + newDataSize;
-        console.log(`Recalculated total storage size with new data: ${totalStorageSize} bytes`);
+        // Recalculate the total storage size after removal
+        totalStorageSize = getTotalStorageSize();
+        console.log(`Recalculated total storage size after removal: ${totalStorageSize} bytes`);
     }
 
     // Save the data to localStorage
