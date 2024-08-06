@@ -465,7 +465,7 @@ function saveToLocalStorage() {
         let total = 0;
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += localStorage[key].length * 2; // Multiply by 2 for UTF-16 encoding
+                total += localStorage[key].length;
             }
         }
         console.log(`Current storage usage: ${total} bytes`);
@@ -486,6 +486,13 @@ function saveToLocalStorage() {
                         oldestDate = date;
                         oldestMealType = mealType;
                         oldestMealId = mealId;
+                    } else if (date === oldestDate) {
+                        // Compare meal IDs within the same date to find the oldest
+                        const currentOldestMealId = meals[oldestDate][oldestMealType][0].id;
+                        if (mealId < currentOldestMealId) {
+                            oldestMealType = mealType;
+                            oldestMealId = mealId;
+                        }
                     }
                 }
             }
