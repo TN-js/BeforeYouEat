@@ -521,7 +521,11 @@ function saveToLocalStorage() {
     }
 
     // Main logic for saving to localStorage
-    let dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
+    let mealsString = JSON.stringify(meals);
+    let exerciseString = JSON.stringify(exercise);
+    let goalsString = JSON.stringify(goals);
+    let dateString = formatDate(currentDate);
+    let dataToSave = mealsString + exerciseString + goalsString + dateString;
 
     // Calculate initial total storage size including new data
     let totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
@@ -534,15 +538,19 @@ function saveToLocalStorage() {
             return; // Exit if we can't free up space
         }
         // Recalculate the data to save after removal
-        dataToSave = JSON.stringify(meals) + JSON.stringify(exercise) + JSON.stringify(goals) + formatDate(currentDate);
+        mealsString = JSON.stringify(meals);
+        exerciseString = JSON.stringify(exercise);
+        goalsString = JSON.stringify(goals);
+        dateString = formatDate(currentDate);
+        dataToSave = mealsString + exerciseString + goalsString + dateString;
         totalStorageSize = getTotalStorageSize() + new Blob([dataToSave]).size;
     }
 
     // Save the data to localStorage
-    localStorage.setItem('meals', JSON.stringify(meals));
-    localStorage.setItem('exercise', JSON.stringify(exercise));
-    localStorage.setItem('goals', JSON.stringify(goals));
-    localStorage.setItem('currentDate', formatDate(currentDate));
+    localStorage.setItem('meals', mealsString);
+    localStorage.setItem('exercise', exerciseString);
+    localStorage.setItem('goals', goalsString);
+    localStorage.setItem('currentDate', dateString);
 
     console.log("Data saved to localStorage. Current storage usage:", getTotalStorageSize(), "bytes");
 }
