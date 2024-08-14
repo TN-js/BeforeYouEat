@@ -434,15 +434,14 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     display: flex;
     align-items: center;
     margin-bottom: 5px;
+    position: relative;
 }
-
 .progress-bar-label {
     width: 20%;
     padding-right: 5px;
 }
-
 .progress-bar {
-    width: 80%;
+    width: 100%;
     border-radius: 5px;
     overflow: hidden;
     height: 20px;
@@ -450,23 +449,37 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     align-items: center;
     position: relative;
     background-color: #e0f2e9;
+    z-index: 1;
 }
-
 .progress-bar-fill {
     height: 100%;
     text-align: right;
     padding-right: 5px;
-    color: #0c2512; /* Match title color */
+    color: #0c2512;
     line-height: 20px;
-    background: linear-gradient(45deg, #a3d8a3, #80c8e0, #c8a3d8, #a3d8a3, #80c8e0, #c8a3d8);
+    background: linear-gradient(45deg, #b8e6b8, #b8e6f2, #d1b8e6, #b8e6b8, #b8e6f2, #d1b8e6);
     background-size: 300% 300%;
     animation: gradientAnimation 10s linear infinite;
-    transition: width 0.5s ease-in-out; /* Smooth width transition */
-    z-index: 1;
+    transition: width 0.5s ease-in-out;
+    z-index: 2;
 }
-
 .progress-bar-overfill {
-    background-color: red !important;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.4),
+        rgba(255, 255, 255, 0.4) 10px,
+        rgba(255, 255, 255, 1) 10px,
+        rgba(255, 255, 255, 1) 20px
+    );
+    transition: width 0.5s ease-in-out;
+    z-index: 5;
+}
+.progress-bar-text {
+    z-index: 10;
 }
 
 .image-upload-container {

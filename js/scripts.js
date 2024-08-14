@@ -326,7 +326,6 @@ async function handleImageUpload(input, mealType) {
             try {
                 // Compress the image
                 const compressedImage = await compressImage(e.target.result, 500, 500);
-                console.log('Compressed Image Data:', compressedImage); // Log compressed image data
 
                 const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                 uploadedImage.src = compressedImage;
@@ -468,7 +467,6 @@ function saveToLocalStorage() {
                 total += new Blob([key + localStorage[key]]).size;
             }
         }
-        console.log(`Current storage usage: ${total} bytes`);
         return total;
     }
 
@@ -514,7 +512,6 @@ function saveToLocalStorage() {
             if (Object.keys(meals[oldestMeal.date]).length === 0) {
                 delete meals[oldestMeal.date];
             }
-            console.log(`Removed oldest meal entry: ${oldestMeal.date}, ${oldestMeal.mealType}, ${oldestMeal.id}`);
             localStorage.setItem('meals', JSON.stringify(meals)); // Update localStorage with the modified meals
             return true;
         }
@@ -530,18 +527,13 @@ function saveToLocalStorage() {
     // Calculate the total storage size before adding new data
     let totalStorageSize = getTotalStorageSize();
 
-    console.log(`Initial total storage size before adding new data: ${totalStorageSize} bytes`);
-
     // Remove the oldest entries if total storage exceeds the target storage limit
     while (totalStorageSize > TARGET_STORAGE) {
-        console.log(`Total storage size (${totalStorageSize}) exceeds target (${TARGET_STORAGE}). Removing oldest entry...`);
         if (!removeOldestMealEntry()) {
-            console.error("Unable to free up space in localStorage");
             return; // Exit if we can't free up space
         }
         // Recalculate the total storage size after removal
         totalStorageSize = getTotalStorageSize();
-        console.log(`Recalculated total storage size after removal: ${totalStorageSize} bytes`);
     }
 
     // Save the data to localStorage
@@ -549,8 +541,6 @@ function saveToLocalStorage() {
     localStorage.setItem('exercise', exerciseString);
     localStorage.setItem('goals', goalsString);
     localStorage.setItem('currentDate', dateString);
-
-    console.log("Data saved to localStorage. Current storage usage:", getTotalStorageSize(), "bytes");
 }
 
 function loadFromLocalStorage() {
@@ -609,22 +599,26 @@ function updateProgressBars(totals, exerciseCalories) {
 }
 
 function updateProgressBar(fillId, total, goal) {
+    const progressBar = document.getElementById(fillId).closest('.progress-bar');
     const progressFill = document.getElementById(fillId);
-    const percentage = Math.min(100, (total / goal) * 100);
-    const overfill = total > goal;
+    let overfill = progressBar.querySelector('.progress-bar-overfill');
+    if (!overfill) {
+        overfill = document.createElement('div');
+        overfill.className = 'progress-bar-overfill';
+        progressBar.appendChild(overfill);
+    }
 
-    progressFill.style.width = `${percentage}%`;
+    const percentage = (total / goal) * 100;
+    progressFill.style.width = `${Math.min(100, percentage)}%`;
     progressFill.textContent = `${total}${fillId === 'caloriesProgressFill' ? '' : 'g'} / ${goal}${fillId === 'caloriesProgressFill' ? '' : 'g'}`;
-
-    if (overfill) {
-        progressFill.classList.add('progress-bar-overfill');
-        progressFill.style.width = '100%';
-        progressFill.style.background = 'linear-gradient(to right, #b2dfdb 0%, #4caf50 70%, red 100%)';
+    
+    if (percentage > 100) {
+        const overfillPercentage = percentage - 100;
+        overfill.style.width = `${overfillPercentage}%`;
+        overfill.style.display = 'block';
     } else {
-        progressFill.classList.remove('progress-bar-overfill');
-        progressFill.style.background = 'linear-gradient(45deg, #a3d8a3, #80c8e0, #c8a3d8, #a3d8a3, #80c8e0, #c8a3d8)';
-        progressFill.style.backgroundSize = '300% 300%';
-        progressFill.style.animation = 'gradientAnimation 20s linear infinite';
+        overfill.style.width = '0';
+        overfill.style.display = 'none';
     }
 }
 
@@ -656,7 +650,6 @@ function showImageModal(src) {
     const loginContent = document.getElementById('loginModalContent');
     
     if (!modal || !modalImg || !loginContent) {
-        console.error('Modal elements not found');
         return;
     }
     
