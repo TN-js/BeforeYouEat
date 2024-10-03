@@ -389,6 +389,14 @@ async function checkServerStatus() {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
 
+    // Add the blink class to trigger the animation
+    statusIcon.classList.add('blink');
+
+    // Listen for the end of the animation to remove the class
+    statusIcon.addEventListener('animationend', () => {
+        statusIcon.classList.remove('blink');
+    }, { once: true }); // The listener is removed after it fires once
+
     // Set to yellow while checking
     statusIcon.classList.remove('green', 'red');
     statusIcon.classList.add('yellow');
@@ -441,9 +449,9 @@ async function checkServerStatus() {
     } catch (error) {
         // Fetch failed, server is unreachable
         console.error('Error checking server status:', error);
-        statusIcon.classList.remove('yellow');
-        statusIcon.classList.add('red');
-        statusText.textContent = 'Server is unreachable';
+        // statusIcon.classList.remove('yellow');
+        // statusIcon.classList.add('red');
+        // statusText.textContent = 'Server is unreachable';
         isServerOnline = false;
 
         // Start interval checks if not already started

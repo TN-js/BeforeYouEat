@@ -62,24 +62,28 @@ h2 {
     transition: color 0.1s ease;
 }
 
-/* Blinking Animation Styles */
-@keyframes blink-animation {
+/* Enhanced Blinking Animation Keyframes */
+@keyframes enhanced-blink {
     0% {
         transform: scale(1);
         opacity: 1;
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
     }
     50% {
-        transform: scale(1.2);
-        opacity: 0.7;
+        transform: scale(1.5);
+        opacity: 0.5;
+        box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
     }
     100% {
         transform: scale(1);
         opacity: 1;
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
     }
 }
 
+/* Enhanced Blink Animation Class */
 .blink {
-    animation: blink-animation 0.1s ease-in-out;
+    animation: enhanced-blink 0.1s ease-in-out;
 }
 
 @keyframes gradientAnimation {
