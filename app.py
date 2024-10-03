@@ -10,7 +10,8 @@ app = Flask(__name__)
 # Enable CORS for the specific routes
 CORS(app, resources={
     r"/analyze_image": {"origins": "https://tn-js.github.io"},
-    r"/estimate_macros": {"origins": "https://tn-js.github.io"}
+    r"/estimate_macros": {"origins": "https://tn-js.github.io"},
+    r"/health": {"origins": "https://tn-js.github.io"}  # Added health endpoint
 })
 
 # Load environment variables from .env file
@@ -100,6 +101,10 @@ def analyze_image():
     app.logger.debug(f"Content received: {content}")
 
     return jsonify(content)
+
+@app.route('/health', methods=['GET'])  # Health check endpoint
+def health_check():
+    return jsonify({'status': 'live'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

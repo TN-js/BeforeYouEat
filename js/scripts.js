@@ -382,6 +382,38 @@ async function handleImageUpload(input, mealType) {
     }
 }
 
+// Server Status Indicator Logic
+async function checkServerStatus() {
+    const statusIcon = document.getElementById('status-icon');
+    const statusText = document.getElementById('status-text');
+
+    // Set to yellow while checking
+    statusIcon.style.backgroundColor = 'yellow';
+    statusText.textContent = 'Checking server status...';
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/health`, { method: 'GET' });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'live') {
+                statusIcon.style.backgroundColor = 'green';
+                statusText.textContent = 'Server is live';
+            } else {
+                statusIcon.style.backgroundColor = 'red';
+                statusText.textContent = 'Server status unknown';
+            }
+        } else {
+            statusIcon.style.backgroundColor = 'red';
+            statusText.textContent = 'Server is sleeping';
+        }
+    } catch (error) {
+        console.error('Error checking server status:', error);
+        statusIcon.style.backgroundColor = 'red';
+        statusText.textContent = 'Server is unreachable';
+    }
+}
+
 // Function to compress the image
 function compressImage(src, maxWidth, maxHeight) {
     return new Promise((resolve, reject) => {
@@ -858,4 +890,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize modal functionality on page load
     initializeModal();
+
+    // Start server status checks
+    checkServerStatus(); // Initial check
+    setInterval(checkServerStatus, 5000); // Check every 5 seconds
 });

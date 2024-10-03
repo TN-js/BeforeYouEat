@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.2.5">
+    <link rel="stylesheet" href="css/styles.css?v0.2.6">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -31,6 +31,7 @@
                 </div>
                 <div class="title">Before You Eat</div>
             </div>
+
             <div class="date-navigation">
                 <button class="nav-button" onclick="changeDate(-1)">
                     <i class="fas fa-chevron-left"></i>
@@ -44,9 +45,14 @@
                 </button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.2.5</div>
+                <div class="version">v0.2.6</div>
+                <div id="server-status" class="server-status">
+                    <span id="status-icon" class="status-icon"></span>
+                    <span id="status-text" class="status-text">Checking server status...</span>
+                </div>
                 <div id="currentDateDisplay"></div>
             </div>
+            
         </div>
 
         <div class="summary">
@@ -267,6 +273,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.2.5"></script>
+    <script src="js/scripts.js?v0.2.6"></script>
 </body>
 </html>
