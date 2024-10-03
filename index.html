@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.2.42">
+    <link rel="stylesheet" href="css/styles.css?v0.2.5">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -44,7 +44,7 @@
                 </button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.2.42</div>
+                <div class="version">v0.2.5</div>
                 <div id="currentDateDisplay"></div>
             </div>
         </div>
@@ -52,15 +52,15 @@
         <div class="summary">
             <h2>Daily Summary</h2>
             <div class="progress-bar-container">
-                <div class="progress-bar-label">Calories</div>
+                <div class="progress-bar-label">Cals</div>
                 <div class="progress-bar">
                     <div class="progress-bar-fill" id="caloriesProgressFill"><p class="progress-bar-text">0 / 2150</p></div>
                 </div>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar-label">Protein</div>
+                <div class="progress-bar-label">Fat</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="proteinProgressFill">0g / 116g</div>
+                    <div class="progress-bar-fill" id="fatProgressFill">0g / 38g</div>
                 </div>
             </div>
             <div class="progress-bar-container">
@@ -70,9 +70,9 @@
                 </div>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar-label">Fat</div>
+                <div class="progress-bar-label">Protein</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="fatProgressFill">0g / 38g</div>
+                    <div class="progress-bar-fill" id="proteinProgressFill">0g / 116g</div>
                 </div>
             </div>
             <p>Total Exercise: <span id="totalExercise">0</span> calories burned</p>
@@ -87,10 +87,10 @@
                         <input type="text" id="breakfastDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('breakfastDishName').value, 'breakfast')">Generate Macros</button>
                     </div>
-                    <input type="number" id="breakfastCalories" step="0.1" placeholder="Calories">
-                    <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
-                    <input type="number" id="breakfastCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
+                    <input type="number" id="breakfastCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="breakfast">Save Breakfast</button>
                     <div class="image-upload-container">
                         <label for="breakfastImageUpload">Upload Image</label>
@@ -110,10 +110,10 @@
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('lunchDishName').value, 'lunch')">Generate Macros</button>
                     </div>
-                    <input type="number" id="lunchCalories" step="0.1" placeholder="Calories">
-                    <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
-                    <input type="number" id="lunchCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="lunchCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
+                    <input type="number" id="lunchCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="lunch">Save Lunch</button>
                     <div class="image-upload-container">
                         <label for="lunchImageUpload">Upload Image</label>
@@ -133,10 +133,10 @@
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('dinnerDishName').value, 'dinner')">Generate Macros</button>
                     </div>
-                    <input type="number" id="dinnerCalories" step="0.1" placeholder="Calories">
-                    <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
-                    <input type="number" id="dinnerCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="dinnerCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
+                    <input type="number" id="dinnerCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="dinner">Save Dinner</button>
                     <div class="image-upload-container">
                         <label for="dinnerImageUpload">Upload Image</label>
@@ -156,10 +156,10 @@
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('snacksDishName').value, 'snacks')">Generate Macros</button>
                     </div>
-                    <input type="number" id="snacksCalories" step="0.1" placeholder="Calories">
-                    <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
-                    <input type="number" id="snacksCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="snacksCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
+                    <input type="number" id="snacksCarbs" step="0.1" placeholder="Carbs (g)">
+                    <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="snacks">Save Snacks</button>
                     <div class="image-upload-container">
                         <label for="snacksImageUpload">Upload Image</label>
@@ -244,20 +244,20 @@
                 <div class="modal-body">
                     <form id="settingsForm">
                         <div class="form-group">
-                            <label for="dailyCalories">Daily Calories (kcal)</label>
+                            <label for="dailyCalories">Daily Cals (kcal)</label>
                             <input type="number" class="form-control" id="dailyCalories" name="dailyCalories" required>
                         </div>
                         <div class="form-group">
-                            <label for="dailyProtein">Daily Protein (g)</label>
-                            <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
+                            <label for="dailyFat">Daily Fat (g)</label>
+                            <input type="number" class="form-control" id="dailyFat" name="dailyFat" required>
                         </div>
                         <div class="form-group">
                             <label for="dailyCarbs">Daily Carbs (g)</label>
                             <input type="number" class="form-control" id="dailyCarbs" name="dailyCarbs" required>
                         </div>
                         <div class="form-group">
-                            <label for="dailyFat">Daily Fat (g)</label>
-                            <input type="number" class="form-control" id="dailyFat" name="dailyFat" required>
+                            <label for="dailyProtein">Daily Protein (g)</label>
+                            <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Save Settings</button>
                     </form>
@@ -267,6 +267,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.2.42"></script>
+    <script src="js/scripts.js?v0.2.5"></script>
 </body>
 </html>

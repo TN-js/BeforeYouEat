@@ -38,7 +38,7 @@ def estimate_macros():
         "messages": [
             {
                 "role": "user",
-                "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the name of the dish that was inputted (if you suspect it was misspelled or shortened), calories, protein, carbs, and fat in grams based on common recipes and serving sizes. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
+                "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the name of the dish that was inputted (if you suspect it was misspelled or shortened), calories, fat, carbs, and protein in grams based on common recipes and serving sizes. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, fat: b g, Carbs: c g, Protein: d g'."
             }
         ],
         "max_tokens": 150
@@ -72,7 +72,7 @@ def analyze_image():
                 "content": [
                     {
                         "type": "text",
-                        "text": "Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; protein, carbs, and fat in grams. Try to figure out what the dish is and name it as well. If there is a visible barcode, use that to retrieve the information. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Protein: b g, Carbs: c g, Fat: d g'."
+                        "text": "Please estimate how many calories is in this meal. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; fat, carbs, and protein in grams. Try to figure out what the dish is and name it as well. If there is a visible barcode, use that to retrieve the information. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, fat: b g, Carbs: c g, Protein: d g'."
                     },
                     {
                         "type": "image_url",
