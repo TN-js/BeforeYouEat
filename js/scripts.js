@@ -1,5 +1,8 @@
 const BACKEND_URL =  'https://beforeyoueat.onrender.com';
 
+let statusCheckInterval = null; // To store the interval ID
+let isServerOnline = false;    // To track the server's status
+
 let meals = {};
 let exercise = {};
 let goals = { calories: 2000, fat: 67, carbs: 275, protein: 75 };
@@ -382,13 +385,13 @@ async function handleImageUpload(input, mealType) {
     }
 }
 
-// Server Status Indicator Logic
 async function checkServerStatus() {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
 
     // Set to yellow while checking
-    statusIcon.style.backgroundColor = 'yellow';
+    statusIcon.classList.remove('green', 'red');
+    statusIcon.classList.add('yellow');
     statusText.textContent = 'Checking server status...';
 
     try {
@@ -397,20 +400,57 @@ async function checkServerStatus() {
         if (response.ok) {
             const data = await response.json();
             if (data.status === 'live') {
-                statusIcon.style.backgroundColor = 'green';
+                // Server is online
+                statusIcon.classList.remove('yellow');
+                statusIcon.classList.add('green');
                 statusText.textContent = 'Server is live';
+                isServerOnline = true;
+
+                // If an interval is running, clear it since the server is now online
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                    console.log('Server is now online. Stopped status checks.');
+                }
             } else {
-                statusIcon.style.backgroundColor = 'red';
+                // Server responded but status is unknown
+                statusIcon.classList.remove('yellow');
+                statusIcon.classList.add('red');
                 statusText.textContent = 'Server status unknown';
+                isServerOnline = false;
+
+                // Start interval checks if not already started
+                if (!statusCheckInterval) {
+                    statusCheckInterval = setInterval(checkServerStatus, 5000);
+                    console.log('Server status unknown. Started periodic checks.');
+                }
             }
         } else {
-            statusIcon.style.backgroundColor = 'red';
+            // Server responded with an error status
+            statusIcon.classList.remove('yellow');
+            statusIcon.classList.add('red');
             statusText.textContent = 'Server is sleeping';
+            isServerOnline = false;
+
+            // Start interval checks if not already started
+            if (!statusCheckInterval) {
+                statusCheckInterval = setInterval(checkServerStatus, 5000);
+                console.log('Server is sleeping. Started periodic checks.');
+            }
         }
     } catch (error) {
+        // Fetch failed, server is unreachable
         console.error('Error checking server status:', error);
-        statusIcon.style.backgroundColor = 'red';
+        statusIcon.classList.remove('yellow');
+        statusIcon.classList.add('red');
         statusText.textContent = 'Server is unreachable';
+        isServerOnline = false;
+
+        // Start interval checks if not already started
+        if (!statusCheckInterval) {
+            statusCheckInterval = setInterval(checkServerStatus, 5000);
+            console.log('Server is unreachable. Started periodic checks.');
+        }
     }
 }
 
@@ -891,7 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize modal functionality on page load
     initializeModal();
 
-    // Start server status checks
+    // Initialize server status check
     checkServerStatus(); // Initial check
-    setInterval(checkServerStatus, 5000); // Check every 5 seconds
 });
