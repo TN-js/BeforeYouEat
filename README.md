@@ -31,7 +31,7 @@
 - **Backend**: Python, Flask, Render, OpenAI's gpt-4o-mini API for image and text-based meal analysis
 - **Storage**: Browser local storage (no dedicated database or user accounts)
 
-## Demo
+## Live Demo
 
 https://tn-js.github.io/BeforeYouEat/
 
@@ -49,6 +49,13 @@ From left to right:
 ![Image analysis and logging](images/1-upload-image.png)
 
 **Text input and editing**
+
+From left to right:
+
+1. Inputing "Buttered toast with 2 ham slices" in the Add Breakfast slot
+3. The Breakfast slot automatically filled in after pressing the "Generate Macros" button
+3. The edit input field opened up with the dish name being changed from "Buttered Toast with Ham" to "Buttered Toast with Ham and a glass of milk" after having pressed the blue edit button on the "Buttered Toast with Ham" entry in image 2.
+4. The new entry for "Buttered Toast with Ham and a Glass of Milk" with automatically revised macros
 
 ![Text input and editing](images/2-text-input-and-edit.png)
 
