@@ -1,34 +1,30 @@
 # Before You Eat
 
-Before You Eat is a web application that allows users to log and track their meals by uploading pictures of their food. The app uses OpenAI's gpt-4o and gpt-4o-mini models to approximate the nutritional content of the meals and logs this information automatically.
+**Before You Eat** is a mobile-friendly web application that streamlines the process of logging and estimating nutritional content for your meals. With just a couple of taps, you can upload an image of your food—or type its name—and instantly receive approximate calorie, protein, carb, and fat values. Designed for simplicity, the app stores all data locally, making it effortlessly accessible without any account setup.
 
-## Features
+## Key Features
 
-- **Meal Logging**: Users can upload pictures of their meals or manually input nutritional information.
-- **Nutritional Analysis**: Before You Eat estimates calories, protein, carbs, and fat content from meal images.
-- **Automatic Logging**: Nutritional information is extracted and logged automatically.
-- **Dietary Goals**: Users can set and track dietary goals with progress bars.
-- **Meal Management**: Edit and organize logged meals into breakfast, lunch, dinner, and snacks.
+- **Instant Nutritional Estimates**: Upload or snap a photo of your meal, and the app automatically generates estimated macros (calories, fat, carbs, and protein) using OpenAI’s GPT-4o-mini model.
+
+- **Text-Based Meal Input**: Don’t have a photo? Simply type in a dish name and hit "Generate Macros." The app interprets your input—even if misspelled—and provides an estimated macro profile.
+
+- **Daily Goals Tracking**: Set custom macro goals for each day. The app visualizes your progress with intuitive bars, making it easy to see how close you are to meeting your targets.
+
+- **Flexible Meal Organization**: Easily categorize meals under breakfast, lunch, dinner, snacks, or even log exercises. Drag-and-drop entries between these categories for better organization.
+
+- **Local Data Storage**: All logs are saved in your browser’s local storage, providing instant access without any login. The storage system automatically removes older entries when space (approximately 5 MB) runs low, ensuring uninterrupted logging.
 
 ## How It Works
 
-1. **Upload or Capture Meal Photo**: Users can upload or take a picture of their meal.
-2. **Nutritional Analysis**: The photo is sent to the gpt-4o or gpt-4o-mini model with a custom prompt. The model returns the estimated nutritional content in the format: `Name: [Name of dish] ,Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`.
-3. **Data Extraction and Logging**: Nutritional values are extracted using a regular expression in the JavaScript script and logged in the app.
-4. **Manual Input**: Users can also manually input the macros for their meals.
+1. **Capture or Upload an Image**: Tap “Upload” or “Capture” and select your meal photo.
+2. **Nutritional Analysis**: The photo is sent to the GPT-4o-mini model with a custom prompt. The model returns the estimated nutritional content in the format: `Name: [Name of dish] ,Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`. Alternatively, type a dish name and hit “Generate Macros” or manually input values and save.
+3. **Quick Logging**: The extracted nutritional values are automatically added to your daily log.
 
 ## Technologies and Frameworks
 
 - **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Python, Flask, Heroku, OpenAI's gpt-4o and gpt-4o-mini API
-
-## User Interaction
-
-- **Mobile-First Design**: Optimized for mobile users.
-- **Meal Logging**: Users can log meals via photo upload/capture or manual input.
-- **Meal Management**: Edit and drag-and-drop meals between breakfast, lunch, dinner, and snacks slots.
-- **Dietary Goals**: Set and track dietary goals with visual progress bars.
-- **Local Storage**: Logging data is stored locally using localStorage in JavaScript.
+- **Backend**: Python, Flask, Render, OpenAI's gpt-4o-mini API for image and text-based meal analysis
+- **Storage**: Browser local storage (no dedicated database or user accounts)
 
 ## Demo
 
