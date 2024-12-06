@@ -39,7 +39,12 @@ https://tn-js.github.io/BeforeYouEat/
 
 **Uploading an image**
 
-From left to right: Main page, pressing the "Add Breakfast" button, pressing the "Upload Image" button and choosing an image to be uploaded, the main page with the uploaded meal added with automatically logged macros and dish name.
+From left to right:
+
+1. Main page
+2. Pressing the "Add Breakfast" button
+3. Pressing the "Upload Image" button and choosing an image to be uploaded
+4. The main page with the uploaded meal added with automatically logged macros and dish name.
 
 ![Image analysis and logging](images/1-upload-image.png)
 
