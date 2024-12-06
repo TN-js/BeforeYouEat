@@ -18,15 +18,14 @@
 
 1. **Capture or Upload an Image**:
     Tap “Upload” or “Capture” and select your meal photo.
-    ![Capture or Upload an Image](images/step1-upload-image.png)
 
 2. **Nutritional Analysis**:
     The photo is sent to the GPT-4o-mini model with a custom prompt. The model returns the estimated nutritional content in the format: `Name: [Name of dish] ,Cals: a, Protein: b [g], Carbs: c [g], Fat: d [g]`. Alternatively, type a dish name and hit “Generate Macros” or manually input values and save.
-    ![Nutritional Analysis](images/step2-analysis.png)
 
 3. **Quick Logging**:
     The extracted nutritional values are automatically added to your daily log.
-    ![Quick Logging](images/step3-logging.png)
+
+![Capture or Upload an Image](images/step1-upload-image.png)
 
 ## Technologies and Frameworks
 
