@@ -25,7 +25,8 @@
 3. **Quick Logging**:
     The extracted nutritional values are automatically added to your daily log.
 
-![Capture or Upload an Image](images/step1-upload-image.png)
+![Image analysis and logging](images/1-upload-image.png)
+![Text input and editing](images/2-text-input-and-edit.png)
 
 ## Technologies and Frameworks
 
