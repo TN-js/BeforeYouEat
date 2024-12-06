@@ -25,9 +25,6 @@
 3. **Quick Logging**:
     The extracted nutritional values are automatically added to your daily log.
 
-![Image analysis and logging](images/1-upload-image.png)
-![Text input and editing](images/2-text-input-and-edit.png)
-
 ## Technologies and Frameworks
 
 - **Frontend**: HTML, CSS, JavaScript
@@ -37,6 +34,16 @@
 ## Demo
 
 https://tn-js.github.io/BeforeYouEat/
+
+## Images
+
+**Uploading an image**
+
+![Image analysis and logging](images/1-upload-image.png)
+
+**Text input and editing**
+
+![Text input and editing](images/2-text-input-and-edit.png)
 
 ## License
 
