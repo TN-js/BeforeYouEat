@@ -59,12 +59,11 @@ From left to right:
 
 ![Text input and editing](images/2-text-input-and-edit.png)
 
-## Videos
+## Gifs
 
 **Editing an entry with the generate macros button**
 
-[Watch the video](videos/editing-entry.mp4)
-
+![Editing an entry](gifs/editing-entry.gif)
 
 ## License
 
