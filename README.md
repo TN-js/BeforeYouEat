@@ -64,7 +64,7 @@ From left to right:
 **Editing an entry with the generate macros button**
 
 <div align="center">
-  <img src="gifs/editing-entry-resized.gif" alt="Editing an entry" width="400">
+  <img src="gifs/editing-entry.gif" alt="Editing an entry" width="400">
 </div>
 
 ## License
