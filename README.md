@@ -63,7 +63,8 @@ From left to right:
 
 **Editing an entry with the generate macros button**
 
-![Editing an entry](gifs/editing-entry.gif)
+<img src="gifs/editing-entry.gif" alt="Editing an entry" style="width:600px; border:1px solid #ddd; border-radius:5px;">
+
 
 ## License
 
