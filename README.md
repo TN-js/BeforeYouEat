@@ -59,6 +59,15 @@ From left to right:
 
 ![Text input and editing](images/2-text-input-and-edit.png)
 
+## Videos
+
+**Editing an entry with the generate macros button**
+
+<video width="600" controls>
+  <source src="videos/editing-entry.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## License
 
 This project is licensed under the MIT License.
