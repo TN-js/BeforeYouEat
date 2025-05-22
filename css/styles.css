@@ -18,7 +18,6 @@ h2 {
     text-align: center;
     color: #333;
     margin-top: 0;
-    /* padding-top: 20px; */
 }
 
 h3 {
@@ -612,7 +611,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .modal-content {
     background-color: white;
     margin: auto;
-    padding: 10px; /* Adjust padding to match the popup menu */
+    padding: 10px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -633,6 +632,12 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     border-radius: 5px;
     box-sizing: border-box; /* Include padding and border in element's total width and height */
     font-size: 16px;
+}
+
+#googleLoginButtonContainer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 /* Adjust buttons to match the style of the popup menu */

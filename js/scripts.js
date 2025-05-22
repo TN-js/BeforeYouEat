@@ -613,7 +613,7 @@ function initializeGoogleSignIn() {
             const googleButtonContainer = document.getElementById('googleLoginButtonContainer');
             if (googleButtonContainer) {
                 google.accounts.id.renderButton(googleButtonContainer,
-                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left", width: "100%" } // Attempt to set width
+                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left", width: "100%"}
                 );
             } else console.error('Google login button container not found.');
         } catch (error) { console.error("Error initializing Google Sign In:", error); }
