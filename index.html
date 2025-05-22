@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://apis.google.com/js/platform.js?onload=onGooglePlatformLoaded" async defer></script>
+    <!-- Google Identity Services (GIS) Client Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- REMOVED: Old Google Platform Library (if it was here)
+    <script async defer src="https://apis.google.com/js/platform.js?onload=onGooglePlatformLoaded"></script>
+    -->
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.2.11">
+    <link rel="stylesheet" href="css/styles.css?v0.2.12">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -21,7 +25,7 @@
     <div class="container">
         <div class="header">
             <div class="row">
-                <button id="menuButton" class="menu-button">&#9776;</button>
+                <button id="menuButton" class="menu-button">☰</button>
                 <div id="menu" class="menu">
                     <div class="menu-item menu-item-login">
                         <i class="fas fa-sign-in-alt"></i> Login
@@ -52,14 +56,14 @@
                 </button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.2.11</div>
+                <div class="version">v0.2.12</div>
                 <div id="server-status" class="server-status">
                     <span id="status-icon" class="status-icon"></span>
                     <span id="status-text" class="status-text">Checking server status...</span>
                 </div>
-                <div id="currentDateDisplay"></div>
+                <!-- Removed duplicate currentDateDisplay from here as it's in date-navigation -->
             </div>
-            
+
         </div>
 
         <div class="summary">
@@ -90,7 +94,7 @@
             </div>
             <p>Total Exercise: <span id="totalExercise">0</span> calories burned</p>
         </div>
-        
+
         <div class="meals">
             <div id="breakfastSlot" class="meal-slot">
                 <h3>Breakfast</h3>
@@ -98,7 +102,7 @@
                 <div id="breakfastForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="breakfastDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('breakfastDishName').value, 'breakfast')">Generate Macros</button>
+                        <button class="generateMacrosButton">Generate Macros</button> <!-- Removed inline onclick, will be handled by JS -->
                     </div>
                     <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
@@ -112,16 +116,17 @@
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
                     <img id="uploadedImageBreakfast" class="meal-image" alt="">
-                </div>                                  
+                </div>
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
+            <!-- Repeat similar structure for lunch, dinner, snacks, removing inline onclick for generateMacrosButton -->
             <div id="lunchSlot" class="meal-slot">
                 <h3>Lunch</h3>
                 <button onclick="toggleMealForm('lunch')">Add Lunch</button>
                 <div id="lunchForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('lunchDishName').value, 'lunch')">Generate Macros</button>
+                        <button class="generateMacrosButton">Generate Macros</button>
                     </div>
                     <input type="number" id="lunchCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
@@ -144,7 +149,7 @@
                 <div id="dinnerForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('dinnerDishName').value, 'dinner')">Generate Macros</button>
+                        <button class="generateMacrosButton">Generate Macros</button>
                     </div>
                     <input type="number" id="dinnerCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
@@ -167,7 +172,7 @@
                 <div id="snacksForm" class="meal-form">
                     <div class="meal-name-group">
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton" onclick="handleMealNameInput(document.getElementById('snacksDishName').value, 'snacks')">Generate Macros</button>
+                        <button class="generateMacrosButton">Generate Macros</button>
                     </div>
                     <input type="number" id="snacksCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
@@ -185,11 +190,11 @@
                 <div id="snacksItems" class="meal-items"></div>
             </div>
         </div>
-        
+
         <div class="exercise">
             <h3>Exercise</h3>
             <button onclick="toggleExerciseForm()">Add Exercise</button>
-            <div id="exerciseForm">
+            <div id="exerciseForm" style="display: none;"> <!-- Added style to hide initially -->
                 <input type="number" id="exerciseCalories" step="0.1" placeholder="Calories burned">
                 <button id="saveExerciseButton">Save Exercise</button>
             </div>
@@ -202,7 +207,7 @@
 
     <!-- Modal Structure for images and login -->
     <div id="imageModal" class="modal">
-        <img id="modalImage" class="image-modal-content">
+        <img id="modalImage" class="image-modal-content" alt="Meal image"> <!-- Added alt -->
         <div id="loginModalContent" class="modal-content" style="display: none;">
             <h3>Log in</h3>
             <form id="loginForm">
@@ -213,16 +218,9 @@
                 <button type="submit">Log in</button>
             </form>
             <h3>Or</h3>
-            <button id="googleLogin" class="google-login-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                    <path fill="none" d="M0 0h48v48H0z"></path>
-                </svg>
-                Continue with Google
-            </button>
+            <!-- Container for the new Google Sign-In button -->
+            <div id="googleLoginButtonContainer" style="margin-bottom: 10px;"></div>
+            <!-- REMOVED: Old <button id="googleLogin" ...> -->
             <div class="login-links">
                 <a href="#" id="forgotPassword" class="auth-link">Forgot password?</a>
                 <div class="signup-link">
@@ -248,11 +246,13 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal">
+    <div id="settingsModal" class="modal" style="display: none;"> <!-- Added style to hide initially -->
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Settings</h5>
+                    <!-- You might want a close button for modals if not relying on outside click only -->
+                    <!-- <button type="button" class="close-button" onclick="closeModal()">×</button> -->
                 </div>
                 <div class="modal-body">
                     <form id="settingsForm">
@@ -280,6 +280,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.2.11"></script>
+    <script src="js/scripts.js?v0.2.12"></script>
 </body>
 </html>

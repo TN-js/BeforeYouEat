@@ -1,12 +1,10 @@
 const BACKEND_URL =  'https://beforeyoueat.onrender.com';
-
 const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
-// It's good practice to ensure gapi is available before using it.
-// We'll initialize auth2 when gapi is loaded.
-let googleAuth;
 
-let statusCheckInterval = null; // To store the interval ID
-let isServerOnline = false;    // To track the server's status
+// REMOVED: let googleAuth; // No longer needed for GIS client-side
+
+let statusCheckInterval = null;
+let isServerOnline = false;
 
 let meals = {};
 let exercise = {};
@@ -42,16 +40,14 @@ function toggleMealForm(mealType) {
     const calorieInput = document.getElementById(`${mealType}Calories`);
     const fatInput = document.getElementById(`${mealType}Fat`);
     const carbsInput = document.getElementById(`${mealType}Carbs`);
-    const proteinInput = document.getElementById(`${mealType}Protein`);    
+    const proteinInput = document.getElementById(`${mealType}Protein`);
 
     if (form.style.display === 'none' || form.style.display === '') {
         form.style.display = 'block';
-        // Hide the image and clear the src when the form is opened
         uploadedImage.style.display = 'none';
         uploadedImage.src = '';
     } else {
         form.style.display = 'none';
-        // Clear the form fields
         dishNameInput.value = '';
         calorieInput.value = '';
         proteinInput.value = '';
@@ -77,42 +73,30 @@ function addMeal(mealType, existingImage = null) {
     if (!dishName && calories === 0 && fat === 0 && carbs === 0 && protein === 0) {
         return;
     }
-
-    const meal = { id: Date.now(), dishName, calories, fat, carbs, protein, image }; // Add a unique ID
+    const meal = { id: Date.now(), dishName, calories, fat, carbs, protein, image };
     const mealDate = formatDate(currentDate);
-
     if (!meals[mealDate]) {
         meals[mealDate] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
     }
-
     if (!Array.isArray(meals[mealDate][mealType])) {
         meals[mealDate][mealType] = [];
     }
-
     meals[mealDate][mealType].push(meal);
-
     updateDisplay();
     saveToLocalStorage();
     clearInputs(mealType);
     toggleMealForm(mealType);
-
-    // Re-initialize modal functionality
     initializeModal();
 }
 
 function addExercise() {
     const calories = parseInt(document.getElementById('exerciseCalories').value) || 0;
-
-    if (calories === 0) {
-        return;
-    }
-
+    if (calories === 0) return;
     const exerciseDate = formatDate(currentDate);
     if (!exercise[exerciseDate]) {
         exercise[exerciseDate] = 0;
     }
     exercise[exerciseDate] += calories;
-
     updateDisplay();
     saveToLocalStorage();
     document.getElementById('exerciseCalories').value = '';
@@ -121,10 +105,10 @@ function addExercise() {
 
 function updateDisplay() {
     let totals = { calories: 0, fat: 0, carbs: 0, protein: 0 };
-    let totalExercise = 0;
     const mealDate = formatDate(currentDate);
     const currentMeals = meals[mealDate] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
     const currentExercise = exercise[mealDate] || 0;
+
     for (let mealType in currentMeals) {
         const mealItems = document.getElementById(`${mealType}Items`);
         mealItems.innerHTML = '';
@@ -137,9 +121,7 @@ function updateDisplay() {
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
                 mealItem.innerHTML = `
-                    <div class="drag-area">
-                        <div class="dot-matrix"></div>
-                    </div>
+                    <div class="drag-area"><div class="dot-matrix"></div></div>
                     ${meal.image ? `<img src="${meal.image}" alt="" class="meal-image">` : ''}
                     <div class="meal-info">
                         <h4>${meal.dishName}</h4>
@@ -147,10 +129,9 @@ function updateDisplay() {
                     </div>
                     <div class="button-area">
                         <button class="duplicate-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fas fa-copy"></i></button>
-                        <button class="edit-button" data-meal-type="${mealType}" data-id="${meal.id}">&#9998;</button>
-                        <button class="remove-button" data-meal-type="${mealType}" data-id="${meal.id}">&#128465;</button>
-                    </div>
-                `;
+                        <button class="edit-button" data-meal-type="${mealType}" data-id="${meal.id}">✎</button>
+                        <button class="remove-button" data-meal-type="${mealType}" data-id="${meal.id}"></button>
+                    </div>`;
                 mealItems.appendChild(mealItem);
             });
         }
@@ -162,60 +143,37 @@ function updateDisplay() {
         const exerciseItem = document.createElement('div');
         exerciseItem.className = 'exercise-item';
         exerciseItem.innerHTML = `
-            <div class="exercise-info">
-                <p>Calories burned: ${currentExercise}</p>
-            </div>
-            <div class="button-area">
-                <button class="remove-button remove-exercise-button">&#128465;</button>
-            </div>
-        `;
+            <div class="exercise-info"><p>Calories burned: ${currentExercise}</p></div>
+            <div class="button-area"><button class="remove-button remove-exercise-button"></button></div>`;
         exerciseItems.appendChild(exerciseItem);
     }
-
     document.getElementById('totalExercise').textContent = currentExercise;
-
     updateProgressBars(totals, currentExercise);
-
     initDragAndDrop();
 
-    document.querySelectorAll('.remove-button').forEach(button => {
-        button.removeEventListener('touchstart', removeMeal); // Ensure no lingering touchstart listeners
-        button.addEventListener('click', () => {
-            removeMeal(button.dataset.mealType, button.dataset.id);
-        });
+    document.querySelectorAll('.remove-button:not(.remove-exercise-button)').forEach(button => {
+        button.onclick = () => removeMeal(button.dataset.mealType, button.dataset.id);
     });
-
     document.querySelectorAll('.remove-exercise-button').forEach(button => {
-        button.removeEventListener('touchstart', removeExercise); // Ensure no lingering touchstart listeners
-        button.addEventListener('click', () => {
-            removeExercise();
-        });
+        button.onclick = () => removeExercise();
     });
-
     document.querySelectorAll('.edit-button').forEach(button => {
-        button.removeEventListener('touchstart', editMeal); // Ensure no lingering touchstart listeners
-        button.addEventListener('click', () => {
-            editMeal(button.dataset.mealType, button.dataset.id);
-        });
+        button.onclick = () => editMeal(button.dataset.mealType, button.dataset.id);
     });
-
     document.querySelectorAll('.duplicate-button').forEach(button => {
-        button.addEventListener('click', () => {
-            duplicateMeal(button.dataset.mealType, button.dataset.id);
-        });
+        button.onclick = () => duplicateMeal(button.dataset.mealType, button.dataset.id);
     });
 }
 
-// Function to duplicate a meal
 function duplicateMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
-    const currentMeals = meals[mealDate][mealType];
-    const mealToDuplicate = currentMeals.find(meal => meal.id === parseInt(id));
-    const newMeal = { ...mealToDuplicate, id: Date.now() }; // Ensure new unique ID
-
-    currentMeals.push(newMeal); // Add duplicated meal to the same meal type array
-    updateDisplay(); // Refresh the display to show the new duplicated meal
-    saveToLocalStorage(); // Save to local storage to persist the duplication
+    const mealToDuplicate = meals[mealDate][mealType].find(meal => meal.id === parseInt(id));
+    if (mealToDuplicate) {
+        const newMeal = { ...mealToDuplicate, id: Date.now() };
+        meals[mealDate][mealType].push(newMeal);
+        updateDisplay();
+        saveToLocalStorage();
+    }
 }
 
 function removeMeal(mealType, id) {
@@ -239,15 +197,15 @@ function removeExercise() {
 function editMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
     const meal = meals[mealDate][mealType].find(meal => meal.id === parseInt(id));
-    const form = document.getElementById(`${mealType}Form`);
+    if (!meal) return;
 
+    const form = document.getElementById(`${mealType}Form`);
     document.getElementById(`${mealType}DishName`).value = meal.dishName;
     document.getElementById(`${mealType}Calories`).value = meal.calories;
     document.getElementById(`${mealType}Fat`).value = meal.fat;
     document.getElementById(`${mealType}Carbs`).value = meal.carbs;
     document.getElementById(`${mealType}Protein`).value = meal.protein;
 
-    // Display the existing image
     const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
     if (meal.image) {
         uploadedImage.src = meal.image;
@@ -255,30 +213,25 @@ function editMeal(mealType, id) {
     } else {
         uploadedImage.style.display = 'none';
     }
-
     form.style.display = 'block';
 
-    const saveButton = document.querySelector(`.saveMealButton[data-meal-type="${mealType}"]`);
+    const saveButton = form.querySelector(`.saveMealButton`); // Simpler selector
     const originalText = saveButton.textContent;
     saveButton.textContent = 'Save Edit';
 
     saveButton.onclick = function saveEdited() {
-        removeMeal(mealType, id); // Remove the old entry
-        addMeal(mealType, meal.image); // Pass the existing image URL to addMeal function
-        saveButton.textContent = originalText; // Revert the button text
-        saveButton.onclick = function (event) {
-            const mealType = event.target.dataset.mealType;
-            addMeal(mealType);
-        };
-    };
+        // Temporarily remove the old meal, then add the new one
+        // This ensures the ID is updated if macros are re-generated
+        const tempMeals = meals[mealDate][mealType].filter(m => m.id !== parseInt(id));
+        meals[mealDate][mealType] = tempMeals;
 
-    // Update generate macros button to handle the id
-    const generateMacrosButton = form.querySelector('.generateMacrosButton');
-    generateMacrosButton.onclick = function generateMacros() {
-        handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType, id); // Pass the id here
-    };
+        addMeal(mealType, meal.image); // Add as a new meal, potentially with new generated macros
 
-    // Re-initialize modal functionality
+        saveButton.textContent = originalText;
+        saveButton.onclick = () => addMeal(mealType); // Reset to original addMeal
+    };
+     const generateMacrosButton = form.querySelector('.generateMacrosButton');
+     generateMacrosButton.onclick = () => handleMealNameInput(document.getElementById(`${mealType}DishName`).value, mealType, id);
     initializeModal();
 }
 
@@ -290,38 +243,24 @@ async function handleMealNameInput(mealName, mealType, id = null) {
     try {
         const response = await fetch(`${BACKEND_URL}/estimate_macros`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ meal_name: mealName })
         });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        console.log('API Response:', data);
         const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/);
         if (matches) {
-            const dishName = matches[1];
-            const calories = parseFloat(matches[2]);
-            const fat = parseFloat(matches[3]);
-            const carbs = parseFloat(matches[4]);
-            const protein = parseFloat(matches[5]);
-            document.getElementById(`${mealType}DishName`).value = dishName;
-            document.getElementById(`${mealType}Calories`).value = calories.toFixed(1);
-            document.getElementById(`${mealType}Fat`).value = fat.toFixed(1);
-            document.getElementById(`${mealType}Carbs`).value = carbs.toFixed(1);
-            document.getElementById(`${mealType}Protein`).value = protein.toFixed(1);
-            if (id !== null) {
-                removeMeal(mealType, id); // Remove the old entry if id is provided
-            }
-            addMeal(mealType);
+            document.getElementById(`${mealType}DishName`).value = matches[1];
+            document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(1);
+            document.getElementById(`${mealType}Fat`).value = parseFloat(matches[3]).toFixed(1);
+            document.getElementById(`${mealType}Carbs`).value = parseFloat(matches[4]).toFixed(1);
+            document.getElementById(`${mealType}Protein`).value = parseFloat(matches[5]).toFixed(1);
+            // If editing, the save button's onclick handler will deal with saving
+            // If not editing, addMeal would be called by the save button
         } else {
-            console.error('Error parsing API response:', data);
-            alert(`Error estimating macros: ${data}`);
+            alert(`Error estimating macros (parsing): ${data}`);
         }
     } catch (error) {
-        console.error('Error estimating macros:', error);
         alert(`Error estimating macros: ${error.message}`);
     }
 }
@@ -332,57 +271,30 @@ async function handleImageUpload(input, mealType) {
         const reader = new FileReader();
         reader.onload = async function (e) {
             try {
-                // Compress the image
                 const compressedImage = await compressImage(e.target.result, 500, 500);
-
                 const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                 uploadedImage.src = compressedImage;
-                uploadedImage.style.display = 'block'; // Show the image
+                uploadedImage.style.display = 'block';
 
-                // Convert base64 to a Blob
                 const blob = dataURLToBlob(compressedImage);
                 const formData = new FormData();
                 formData.append('image', blob, 'compressed.jpg');
 
-                // Upload the compressed image to the backend
-                const response = await fetch(`${BACKEND_URL}/analyze_image`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json(); // Get the response as JSON
-                console.log('API Response:', data); // Log the response to check values
-
-                // Improved regex to better handle special characters
+                const response = await fetch(`${BACKEND_URL}/analyze_image`, { method: 'POST', body: formData });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
                 const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/);
-
                 if (matches) {
-                    const dishName = matches[1];
-                    const calories = parseFloat(matches[2]);
-                    const fat = parseFloat(matches[3]);
-                    const carbs = parseFloat(matches[4]);
-                    const protein = parseFloat(matches[5]);
-
-                    console.log('Parsed Values:', { dishName, calories, fat, carbs, protein });
-
-                    document.getElementById(`${mealType}DishName`).value = dishName;
-                    document.getElementById(`${mealType}Calories`).value = calories.toFixed(1);
-                    document.getElementById(`${mealType}Fat`).value = fat.toFixed(1);
-                    document.getElementById(`${mealType}Carbs`).value = carbs.toFixed(1);
-                    document.getElementById(`${mealType}Protein`).value = protein.toFixed(1);
-
-                    // Automatically save the meal after uploading the image
-                    addMeal(mealType);
+                    document.getElementById(`${mealType}DishName`).value = matches[1];
+                    document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(1);
+                    document.getElementById(`${mealType}Fat`).value = parseFloat(matches[3]).toFixed(1);
+                    document.getElementById(`${mealType}Carbs`).value = parseFloat(matches[4]).toFixed(1);
+                    document.getElementById(`${mealType}Protein`).value = parseFloat(matches[5]).toFixed(1);
+                    // User will click save button to actually add the meal
                 } else {
-                    console.error('Error parsing API response:', data);
-                    alert(`Error analyzing image: ${data}`);
+                    alert(`Error analyzing image (parsing): ${data}`);
                 }
             } catch (error) {
-                console.error('Error processing image:', error);
                 alert(`Error processing image: ${error.message}`);
             }
         };
@@ -393,83 +305,34 @@ async function handleImageUpload(input, mealType) {
 async function checkServerStatus() {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
-
-    // Add the blink class to trigger the animation
     statusIcon.classList.add('blink');
-
-    // Listen for the end of the animation to remove the class
-    statusIcon.addEventListener('animationend', () => {
-        statusIcon.classList.remove('blink');
-    }, { once: true }); // The listener is removed after it fires once
-
-    // Set to yellow while checking
+    statusIcon.addEventListener('animationend', () => statusIcon.classList.remove('blink'), { once: true });
     statusIcon.classList.remove('green', 'red');
     statusIcon.classList.add('yellow');
-    statusText.textContent = 'Checking server status...';
-
+    statusText.textContent = 'Checking...';
     try {
         const response = await fetch(`${BACKEND_URL}/health`, { method: 'GET' });
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'live') {
-                // Server is online
-                statusIcon.classList.remove('yellow');
-                statusIcon.classList.add('green');
-                statusText.textContent = 'Server is live';
-                isServerOnline = true;
-
-                // If an interval is running, clear it since the server is now online
-                if (statusCheckInterval) {
-                    clearInterval(statusCheckInterval);
-                    statusCheckInterval = null;
-                    console.log('Server is now online. Stopped status checks.');
-                }
-            } else {
-                // Server responded but status is unknown
-                statusIcon.classList.remove('yellow');
-                statusIcon.classList.add('red');
-                statusText.textContent = 'Server status unknown';
-                isServerOnline = false;
-
-                // Start interval checks if not already started
-                if (!statusCheckInterval) {
-                    statusCheckInterval = setInterval(checkServerStatus, 5000);
-                    console.log('Server status unknown. Started periodic checks.');
-                }
-            }
+        const data = await response.json();
+        if (response.ok && data.status === 'live') {
+            statusIcon.classList.replace('yellow','green');
+            statusText.textContent = 'Live';
+            isServerOnline = true;
+            if (statusCheckInterval) { clearInterval(statusCheckInterval); statusCheckInterval = null; }
         } else {
-            // Server responded with an error status
-            statusIcon.classList.remove('yellow');
-            statusIcon.classList.add('red');
-            statusText.textContent = 'Server is sleeping';
+            statusIcon.classList.replace('yellow','red');
+            statusText.textContent = response.ok ? 'Unknown' : 'Sleeping';
             isServerOnline = false;
-
-            // Start interval checks if not already started
-            if (!statusCheckInterval) {
-                statusCheckInterval = setInterval(checkServerStatus, 5000);
-                console.log('Server is sleeping. Started periodic checks.');
-            }
+            if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
         }
     } catch (error) {
-        // Fetch failed, server is unreachable
-        console.error('Error checking server status:', error);
-        // statusIcon.classList.remove('yellow');
-        // statusIcon.classList.add('red');
-        // statusText.textContent = 'Server is unreachable';
+        statusIcon.classList.replace('yellow','red');
+        statusText.textContent = 'Offline';
         isServerOnline = false;
-
-        // Start interval checks if not already started
-        if (!statusCheckInterval) {
-            statusCheckInterval = setInterval(checkServerStatus, 5000);
-            console.log('Server is unreachable. Started periodic checks.');
-        }
+        if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
     }
 }
 
-// Function to compress the image
-function compressImage(src, maxWidth, maxHeight) {
-    return new Promise((resolve, reject) => {
+function compressImage(src, maxWidth, maxHeight) { /* ... (your existing compressImage function) ... */ return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
             let width = img.width;
@@ -493,16 +356,12 @@ function compressImage(src, maxWidth, maxHeight) {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            resolve(canvas.toDataURL('image/jpeg', 0.8)); // Return the data URL
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
         img.onerror = reject;
         img.src = src;
-    });
-}
-
-// Function to convert base64 to Blob
-function dataURLToBlob(dataurl) {
-    const arr = dataurl.split(',');
+    }); }
+function dataURLToBlob(dataurl) { /* ... (your existing dataURLToBlob function) ... */ const arr = dataurl.split(',');
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
@@ -510,11 +369,8 @@ function dataURLToBlob(dataurl) {
     while (n--) {
         u8arr[n] = bstr.charCodeAt(n);
     }
-    return new Blob([u8arr], { type: mime });
-}
-
-function clearInputs(mealType) {
-    if (mealType) {
+    return new Blob([u8arr], { type: mime });}
+function clearInputs(mealType) { /* ... (your existing clearInputs function) ... */ if (mealType) {
         const dishNameInput = document.getElementById(`${mealType}DishName`);
         const calorieInput = document.getElementById(`${mealType}Calories`);
         const fatInput = document.getElementById(`${mealType}Fat`);
@@ -536,182 +392,109 @@ function clearInputs(mealType) {
         if (fatGoalInput) fatGoalInput.value = '';
         if (carbGoalInput) carbGoalInput.value = '';
         if (proteinGoalInput) proteinGoalInput.value = '';
-    }
-}
-
-function saveToLocalStorage() {
-    const MAX_STORAGE = 5 * 1024 * 1024; // 5 MB in bytes
+    }}
+function saveToLocalStorage() { /* ... (your existing saveToLocalStorage function, ensure it's not too long for brevity here) ... */ const MAX_STORAGE = 5 * 1024 * 1024; // 5 MB in bytes
     const BUFFER_PERCENTAGE = 0.1; // 10% buffer
     const TARGET_STORAGE = MAX_STORAGE * (1 - BUFFER_PERCENTAGE); // 90% of MAX_STORAGE
-
-    // Function to calculate total storage size
-    function getTotalStorageSize() {
-        let total = 0;
-        for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key)) {
-                total += new Blob([key + localStorage[key]]).size;
-            }
-        }
-        return total;
-    }
-
-    // Function to get the oldest meal entry
-    function getOldestMealEntry() {
-        let oldestDate = null;
-        let oldestMealType = null;
-        let oldestMealId = null;
-
-        for (let date in meals) {
-            for (let mealType in meals[date]) {
-                if (meals[date][mealType].length > 0) {
-                    const mealId = meals[date][mealType][0].id;
-                    if (!oldestDate || date < oldestDate) {
-                        oldestDate = date;
-                        oldestMealType = mealType;
-                        oldestMealId = mealId;
-                    } else if (date === oldestDate) {
-                        // Compare meal IDs within the same date to find the oldest
-                        const currentOldestMealId = meals[oldestDate][oldestMealType][0].id;
-                        if (mealId < currentOldestMealId) {
-                            oldestMealType = mealType;
-                            oldestMealId = mealId;
-                        }
-                    }
-                }
-            }
-        }
-
-        return { date: oldestDate, mealType: oldestMealType, id: oldestMealId };
-    }
-
-    // Function to remove the oldest meal entry
-    function removeOldestMealEntry() {
-        const oldestMeal = getOldestMealEntry();
-        if (oldestMeal.date && oldestMeal.mealType) {
-            meals[oldestMeal.date][oldestMeal.mealType] = meals[oldestMeal.date][oldestMeal.mealType].filter(meal => meal.id !== oldestMeal.id);
-
-            // Clean up empty arrays or objects
-            if (meals[oldestMeal.date][oldestMeal.mealType].length === 0) {
-                delete meals[oldestMeal.date][oldestMeal.mealType];
-            }
-            if (Object.keys(meals[oldestMeal.date]).length === 0) {
-                delete meals[oldestMeal.date];
-            }
-            localStorage.setItem('meals', JSON.stringify(meals)); // Update localStorage with the modified meals
-            return true;
-        }
-        return false;
-    }
-
-    // Main logic for saving to localStorage
-    let mealsString = JSON.stringify(meals);
-    let exerciseString = JSON.stringify(exercise);
-    let goalsString = JSON.stringify(goals);
-    let dateString = formatDate(currentDate);
-
-    // Calculate the total storage size before adding new data
+    function getTotalStorageSize() { let total = 0; for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) { total += new Blob([key + localStorage[key]]).size; } } return total; }
+    function getOldestMealEntry() { let oldestDate = null; let oldestMealType = null; let oldestMealId = null; for (let date in meals) { for (let mealType in meals[date]) { if (meals[date][mealType].length > 0) { const mealId = meals[date][mealType][0].id; if (!oldestDate || date < oldestDate) { oldestDate = date; oldestMealType = mealType; oldestMealId = mealId; } else if (date === oldestDate) { const currentOldestMealId = meals[oldestDate][oldestMealType][0].id; if (mealId < currentOldestMealId) { oldestMealType = mealType; oldestMealId = mealId; } } } } } return { date: oldestDate, mealType: oldestMealType, id: oldestMealId }; }
+    function removeOldestMealEntry() { const oldestMeal = getOldestMealEntry(); if (oldestMeal.date && oldestMeal.mealType && meals[oldestMeal.date] && meals[oldestMeal.date][oldestMeal.mealType]) { meals[oldestMeal.date][oldestMeal.mealType] = meals[oldestMeal.date][oldestMeal.mealType].filter(meal => meal.id !== oldestMeal.id); if (meals[oldestMeal.date][oldestMeal.mealType].length === 0) { delete meals[oldestMeal.date][oldestMeal.mealType]; } if (Object.keys(meals[oldestMeal.date]).length === 0) { delete meals[oldestMeal.date]; } localStorage.setItem('meals', JSON.stringify(meals)); return true; } return false; }
     let totalStorageSize = getTotalStorageSize();
-
-    // Remove the oldest entries if total storage exceeds the target storage limit
-    while (totalStorageSize > TARGET_STORAGE) {
-        if (!removeOldestMealEntry()) {
-            return; // Exit if we can't free up space
-        }
-        // Recalculate the total storage size after removal
-        totalStorageSize = getTotalStorageSize();
-    }
-
-    // Save the data to localStorage
-    localStorage.setItem('meals', mealsString);
-    localStorage.setItem('exercise', exerciseString);
-    localStorage.setItem('goals', goalsString);
-    localStorage.setItem('currentDate', dateString);
-}
-
-function loadFromLocalStorage() {
-    if (localStorage.getItem('meals')) {
-        meals = JSON.parse(localStorage.getItem('meals'));
-    }
-    if (localStorage.getItem('exercise')) {
-        exercise = JSON.parse(localStorage.getItem('exercise'));
-    }
-    if (localStorage.getItem('goals')) {
-        goals = JSON.parse(localStorage.getItem('goals'));
-    }
-    if (localStorage.getItem('currentDate')) {
-        currentDate = new Date(localStorage.getItem('currentDate'));
-    }
-    updateDateDisplay();
-    updateDisplay();
-}
-
-function initDragAndDrop() {
-    const slots = ['breakfastItems', 'lunchItems', 'dinnerItems', 'snacksItems'];
-
+    while (totalStorageSize > TARGET_STORAGE) { if (!removeOldestMealEntry()) { return; } totalStorageSize = getTotalStorageSize(); }
+    localStorage.setItem('meals', JSON.stringify(meals)); localStorage.setItem('exercise', JSON.stringify(exercise)); localStorage.setItem('goals', JSON.stringify(goals)); localStorage.setItem('currentDate', formatDate(currentDate));}
+function loadFromLocalStorage() { /* ... (your existing loadFromLocalStorage function) ... */ if (localStorage.getItem('meals')) { meals = JSON.parse(localStorage.getItem('meals')); } if (localStorage.getItem('exercise')) { exercise = JSON.parse(localStorage.getItem('exercise')); } if (localStorage.getItem('goals')) { goals = JSON.parse(localStorage.getItem('goals')); } if (localStorage.getItem('currentDate')) { currentDate = new Date(localStorage.getItem('currentDate')); } updateDateDisplay(); updateDisplay(); }
+function initDragAndDrop() { /* ... (your existing initDragAndDrop function) ... */ const slots = ['breakfastItems', 'lunchItems', 'dinnerItems', 'snacksItems'];
     slots.forEach(slotId => {
         const slot = document.getElementById(slotId);
-        new Sortable(slot, {
-            group: 'meals',
-            animation: 150,
-            handle: '.drag-area',
-            onEnd: function (evt) {
-                const mealTypeFrom = evt.from.id.replace('Items', '');
-                const mealTypeTo = evt.to.id.replace('Items', '');
-                const oldIndex = evt.oldIndex;
-                const newIndex = evt.newIndex;
-
-                const mealDate = formatDate(currentDate);
-                const movedMeal = meals[mealDate][mealTypeFrom][oldIndex];
-
-                meals[mealDate][mealTypeFrom].splice(oldIndex, 1);
-                meals[mealDate][mealTypeTo].splice(newIndex, 0, movedMeal);
-
-                saveToLocalStorage();
-                updateDisplay();
-            }
-        });
+        if (slot && typeof Sortable !== 'undefined') { // Check if Sortable is defined
+            new Sortable(slot, {
+                group: 'meals',
+                animation: 150,
+                handle: '.drag-area',
+                onEnd: function (evt) {
+                    const mealTypeFrom = evt.from.id.replace('Items', '');
+                    const mealTypeTo = evt.to.id.replace('Items', '');
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    const mealDate = formatDate(currentDate);
+                    if (meals[mealDate] && meals[mealDate][mealTypeFrom] && meals[mealDate][mealTypeTo]) {
+                        const movedMeal = meals[mealDate][mealTypeFrom].splice(oldIndex, 1)[0];
+                        if (movedMeal) {
+                             meals[mealDate][mealTypeTo].splice(newIndex, 0, movedMeal);
+                        }
+                    }
+                    saveToLocalStorage();
+                    updateDisplay(); // Refresh display to reflect changes
+                }
+            });
+        }
     });
+    initializeModal(); }
 
-    initializeModal();
+// --- NEW Google Identity Services (GIS) Functions ---
+
+// Helper function to decode JWT (for client-side display only, NOT for security validation)
+function decodeJwtResponse(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Error decoding JWT", e);
+        return null;
+    }
 }
 
-function handleGoogleSignIn(googleUser) {
-    const profile = googleUser.getBasicProfile();
-    const id_token = googleUser.getAuthResponse().id_token; // Important for backend verification later
+function handleGoogleCredentialResponse(response) {
+    console.log("Google Sign-In Response:", response);
+    if (response.credential) {
+        const idTokenPayload = decodeJwtResponse(response.credential);
+        console.log("Decoded ID Token Payload:", idTokenPayload);
 
-    const userInfo = {
-        id: profile.getId(),
-        name: profile.getName(),
-        givenName: profile.getGivenName(),
-        familyName: profile.getFamilyName(),
-        imageUrl: profile.getImageUrl(),
-        email: profile.getEmail(),
-        id_token: id_token
-    };
+        if (idTokenPayload) {
+            const userInfo = {
+                id: idTokenPayload.sub, // Subject (user's Google ID)
+                name: idTokenPayload.name,
+                givenName: idTokenPayload.given_name,
+                familyName: idTokenPayload.family_name,
+                imageUrl: idTokenPayload.picture,
+                email: idTokenPayload.email,
+                id_token: response.credential // The raw ID token
+            };
 
-    localStorage.setItem('googleUser', JSON.stringify(userInfo));
-    updateUIAfterSignIn(userInfo);
-    closeModal(); // Assumes closeModal() hides the #imageModal
+            localStorage.setItem('googleUser', JSON.stringify(userInfo));
+            updateUIAfterSignIn(userInfo);
+            closeModal();
+        } else {
+            alert('Could not decode Google user information.');
+        }
+    } else {
+        console.error('Google Sign-In failed, no credential received.');
+        alert('Google Sign-In failed. Please try again.');
+    }
 }
 
 function updateUIAfterSignIn(userInfo) {
-    if (!userInfo) { // If called without specific userInfo, try to load from localStorage
+    if (!userInfo) {
         const storedUser = localStorage.getItem('googleUser');
         if (storedUser) {
             userInfo = JSON.parse(storedUser);
         } else {
-            // No user info, ensure logged out state
             updateUIAfterSignOut();
             return;
         }
     }
 
     const userInfoDiv = document.getElementById('userInfo');
-    userInfoDiv.innerHTML = ''; // Clear previous content
+    userInfoDiv.innerHTML = '';
 
     if (userInfo.imageUrl) {
         const profilePic = document.createElement('img');
         profilePic.src = userInfo.imageUrl;
+        profilePic.alt = userInfo.name || 'User';
         profilePic.style.width = '30px';
         profilePic.style.height = '30px';
         profilePic.style.borderRadius = '50%';
@@ -719,57 +502,37 @@ function updateUIAfterSignIn(userInfo) {
         userInfoDiv.appendChild(profilePic);
     }
     const userNameSpan = document.createElement('span');
-    userNameSpan.textContent = userInfo.name;
+    userNameSpan.textContent = userInfo.name || userInfo.email; // Fallback to email if name is not present
     userInfoDiv.appendChild(userNameSpan);
     userInfoDiv.style.display = 'flex';
 
-    document.querySelector('.menu-item-login').style.display = 'none';
-    document.getElementById('logoutButton').style.display = 'block';
-    // Ensure menu itself is accessible if hidden
-    document.getElementById('menu').style.display = ''; // Or manage as per existing menu logic
+    const loginMenuItem = document.querySelector('.menu-item-login');
+    if (loginMenuItem) loginMenuItem.style.display = 'none';
+
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) logoutButton.style.display = 'block';
+
+    // document.getElementById('menu').style.display = ''; // Consider if this is needed
 }
 
-// This function will be called when the Google Platform Library is loaded
-function onGooglePlatformLoaded() {
-    console.log('Google Platform Library loaded, initializing Auth2...');
-    gapi.load('auth2', function() {
-        gapi.auth2.init({
-            client_id: GOOGLE_CLIENT_ID,
-        }).then(function(authInstance) {
-            console.log('Google Auth2 initialized');
-            googleAuth = authInstance;
-
-            const googleLoginButton = document.getElementById('googleLogin');
-            if (googleLoginButton) {
-                googleAuth.attachClickHandler(googleLoginButton, {},
-                    handleGoogleSignIn,
-                    function(error) {
-                        console.error('Google Sign-In error', JSON.stringify(error, undefined, 2));
-                        alert('Error signing in with Google: ' + JSON.stringify(error));
-                    }
-                );
-            } else {
-                console.error('googleLogin button not found during auth init');
-            }
-            
-            checkLoginStateOnLoad(); // Check login state once auth is ready
-
-        }).catch(function(error) {
-            console.error('Error initializing Google Auth2:', error);
-        });
-    });
-}
 
 function handleGoogleSignOut() {
-    if (googleAuth) {
-        googleAuth.signOut().then(() => {
-            localStorage.removeItem('googleUser');
-            updateUIAfterSignOut();
-        });
-    } else { // Fallback if googleAuth isn't initialized
-        localStorage.removeItem('googleUser');
-        updateUIAfterSignOut();
+    localStorage.removeItem('googleUser');
+    updateUIAfterSignOut();
+
+    // If you used google.accounts.id.prompt() and want to disable One Tap for the current session:
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
     }
+    console.log("User signed out from the app.");
+    // Optionally, you can revoke the token if you have the user's email,
+    // but this is more for if they want to choose a different account next time.
+    // const userEmail = userInfo?.email; // if you have access to it
+    // if (userEmail && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+    //    google.accounts.id.revoke(userEmail, done => {
+    //        console.log('Consent revoked: ' + done.successful);
+    //    });
+    // }
 }
 
 function updateUIAfterSignOut() {
@@ -777,32 +540,40 @@ function updateUIAfterSignOut() {
     userInfoDiv.innerHTML = '';
     userInfoDiv.style.display = 'none';
 
-    document.querySelector('.menu-item-login').style.display = 'block';
-    document.getElementById('logoutButton').style.display = 'none';
+    const loginMenuItem = document.querySelector('.menu-item-login');
+    if (loginMenuItem) loginMenuItem.style.display = 'block';
+
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) logoutButton.style.display = 'none';
 }
 
 function checkLoginStateOnLoad() {
     const storedUser = localStorage.getItem('googleUser');
     if (storedUser) {
-        const userInfo = JSON.parse(storedUser);
-        // Optional: Could verify token with gapi.auth2.getAuthInstance().currentUser.get().reloadAuthResponse()
-        // For now, directly update UI based on localStorage
-        updateUIAfterSignIn(userInfo);
+        try {
+            const userInfo = JSON.parse(storedUser);
+            updateUIAfterSignIn(userInfo);
+        } catch (e) {
+            console.error("Error parsing stored user info:", e);
+            localStorage.removeItem('googleUser'); // Clear corrupted data
+            updateUIAfterSignOut();
+        }
     } else {
         updateUIAfterSignOut();
     }
 }
 
-function updateProgressBars(totals, exerciseCalories) {
-    const effectiveCaloriesGoal = goals.calories + exerciseCalories;
+// REMOVED: onGooglePlatformLoaded function
+
+// --- End of GIS Functions ---
+
+
+function updateProgressBars(totals, exerciseCalories) { /* ... (your existing updateProgressBars function) ... */ const effectiveCaloriesGoal = goals.calories + exerciseCalories;
     updateProgressBar('caloriesProgressFill', totals.calories, effectiveCaloriesGoal);
     updateProgressBar('fatProgressFill', totals.fat, goals.fat);
     updateProgressBar('carbsProgressFill', totals.carbs, goals.carbs);
-    updateProgressBar('proteinProgressFill', totals.protein, goals.protein);
-}
-
-function updateProgressBar(fillId, total, goal) {
-    const progressBar = document.getElementById(fillId).closest('.progress-bar');
+    updateProgressBar('proteinProgressFill', totals.protein, goals.protein); }
+function updateProgressBar(fillId, total, goal) { /* ... (your existing updateProgressBar function) ... */ const progressBar = document.getElementById(fillId).closest('.progress-bar');
     const progressFill = document.getElementById(fillId);
     let overfill = progressBar.querySelector('.progress-bar-overfill');
     if (!overfill) {
@@ -811,7 +582,7 @@ function updateProgressBar(fillId, total, goal) {
         progressBar.appendChild(overfill);
     }
 
-    const percentage = (total / goal) * 100;
+    const percentage = goal > 0 ? (total / goal) * 100 : 0; // Avoid division by zero
     progressFill.style.width = `${Math.min(100, percentage)}%`;
     progressFill.textContent = `${total}${fillId === 'caloriesProgressFill' ? '' : 'g'} / ${goal}${fillId === 'caloriesProgressFill' ? '' : 'g'}`;
     
@@ -822,33 +593,28 @@ function updateProgressBar(fillId, total, goal) {
     } else {
         overfill.style.width = '0';
         overfill.style.display = 'none';
-    }
-}
-
-function initializeModal() {
-    const modal = document.getElementById('imageModal');
+    }}
+function initializeModal() { /* ... (your existing initializeModal function) ... */ const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const loginContent = document.getElementById('loginModalContent');
 
     // Use event delegation on a parent element
     document.body.addEventListener('click', (event) => {
         const img = event.target.closest('.meal-image');
-        if (img && img.src) {
+        if (img && img.src && modal.style.display !== 'flex' /* Only if not login modal */) {
             showImageModal(img.src);
         }
     });
 
-    // Close modal when clicking outside of modal content
     window.addEventListener('click', (event) => {
         if (event.target === modal) {
-            closeModal();
+             // Check if login content is visible, if so, don't close on simple modal click
+            if (loginContent.style.display === 'none' || loginContent.style.display === '') {
+                closeModal();
+            }
         }
-    });
-}
-
-// Function to show image in modal
-function showImageModal(src) {
-    const modal = document.getElementById('imageModal');
+    });}
+function showImageModal(src) { /* ... (your existing showImageModal function) ... */ const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const loginContent = document.getElementById('loginModalContent');
     
@@ -858,26 +624,23 @@ function showImageModal(src) {
     
     modalImg.src = src;
     modalImg.style.display = 'block';
-    loginContent.style.display = 'none';
-    modal.style.display = 'block';
+    loginContent.style.display = 'none'; // Ensure login form is hidden
+    modal.style.display = 'block'; // Use block for image modal, flex for login
 }
-
-// Function to close the modal
-function closeModal() {
-    const modal = document.getElementById('imageModal');
+function closeModal() { /* ... (your existing closeModal function) ... */ const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const loginContent = document.getElementById('loginModalContent');
+    const signupContent = document.getElementById('signupModalContent'); // Ensure signup is also hidden
     
     modal.style.display = 'none';
-    modalImg.src = ''; // Clear the image src
+    modalImg.src = '';
     modalImg.style.display = 'none';
     loginContent.style.display = 'none';
-    document.getElementById('settingsModal').style.display = 'none';
-}
+    if (signupContent) signupContent.style.display = 'none';
 
-// Function to update goals display
-function updateGoalsDisplay(calories, fat, carbs, protein) {
-    if (calories) {
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) settingsModal.style.display = 'none';}
+function updateGoalsDisplay(calories, fat, carbs, protein) { /* ... (your existing updateGoalsDisplay function) ... */ if (calories) {
         document.getElementById('caloriesProgressFill').innerText = `0 / ${calories}`;
     }
     if (fat) {
@@ -888,196 +651,186 @@ function updateGoalsDisplay(calories, fat, carbs, protein) {
     }
     if (protein) {
         document.getElementById('proteinProgressFill').innerText = `0g / ${protein}g`;
+    }}
+
+function initializeGoogleSignIn() {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        console.log("Initializing Google Identity Services...");
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse
+        });
+
+        const googleButtonContainer = document.getElementById('googleLoginButtonContainer');
+        if (googleButtonContainer) {
+            google.accounts.id.renderButton(
+                googleButtonContainer,
+                { theme: "outline", size: "large", type: "standard", text: "signin_with" } // Customize as needed
+            );
+        } else {
+            console.error('Google login button container not found.');
+        }
+        // google.accounts.id.prompt(); // Optional: For One Tap sign-in
+    } else {
+        // GIS library not loaded yet, try again shortly
+        console.warn("Google Identity Services client not ready, will retry initialization.");
+        setTimeout(initializeGoogleSignIn, 500); // Retry after a short delay
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromLocalStorage(); // Existing function
-    // Other non-Google related initializations can remain here
-    // e.g., document.querySelectorAll('.saveMealButton').forEach(...) etc.
+    loadFromLocalStorage();
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
 
-    // The Google Auth initialization is now triggered by onGooglePlatformLoaded
+    // Initialize Google Sign-In using GIS
+    initializeGoogleSignIn(); // Call the new GIS initialization
+    checkLoginStateOnLoad();  // Check if user was already logged in
 
-    // Attach sign out handler (can still be here or moved to onGooglePlatformLoaded if preferred,
-    // but it's safer to attach only after elements are certainly in DOM)
     const logoutBtn = document.getElementById('logoutButton');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleGoogleSignOut);
-    } else {
-        console.error('logoutButton not found in DOMContentLoaded');
     }
-    
-    // Ensure other initial setup calls are made
-    initializeModal(); // If this initializes parts of the login modal, ensure it's robust
-    checkServerStatus(); // Existing function call
-    
-    // Note: The original code for attaching Google Sign-In and calling checkLoginStateOnLoad
-    // has been moved to onGooglePlatformLoaded.
-    // The event listener for 'googleLogin' (the placeholder one) should already be removed.
+
+    initializeModal();
+    checkServerStatus();
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {
-            const mealType = event.target.dataset.mealType;
+            const mealType = button.closest('.meal-form').id.replace('Form', ''); // More robust way to get mealType
             addMeal(mealType);
         });
     });
 
-    document.querySelectorAll('.remove-button').forEach(button => {
-        button.addEventListener('click', () => {
-            removeMeal(button.dataset.mealType, button.dataset.index);
-        });
-    });
-
-    document.querySelectorAll('.remove-exercise-button').forEach(button => {
-        button.addEventListener('click', () => {
-            removeExercise();
-        });
-    });
-
-    document.querySelectorAll('.edit-button').forEach(button => {
-        button.addEventListener('click', () => {
-            editMeal(button.dataset.mealType, button.dataset.index);
-        });
-    });
+    // ... (your other event listeners for remove, edit, menu, modal interactions etc. should largely remain the same)
+    // Make sure their selectors are still valid after HTML changes.
 
     // Toggle menu visibility
     document.getElementById('menuButton').addEventListener('click', function () {
         var menuButton = document.getElementById('menuButton');
         var menu = document.getElementById('menu');
-        var header = document.querySelector('.header'); // Get the header element
-    
-        var rect = menuButton.getBoundingClientRect(); // Get the position of the button
-        var headerRect = header.getBoundingClientRect(); // Get the position of the header
-    
-        var buttonLeftOffset = 20; // Left offset of the menu button
-        var buttonTopOffset = 20; // Top offset of the menu button
-    
+        var header = document.querySelector('.header');
+        var rect = menuButton.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var buttonLeftOffset = 20;
+        var buttonTopOffset = 20;
         if (menu.style.display === 'none' || menu.style.display === '') {
             menu.style.display = 'block';
             menu.style.position = 'absolute';
-            // Dynamically adjust the left position
-            menu.style.left = `${rect.left - headerRect.left - buttonLeftOffset}px`;  // Align with the left edge of the menu button relative to the header
-            // Dynamically adjust the top position
-            menu.style.top = `${rect.bottom + window.scrollY - buttonTopOffset}px`;  // Position below the menu button, accounting for scroll position
-            menu.style.zIndex = '1000';  // Ensure it appears above other elements
+            menu.style.left = `${rect.left - headerRect.left - buttonLeftOffset}px`;
+            menu.style.top = `${rect.bottom + window.scrollY - buttonTopOffset}px`;
+            menu.style.zIndex = '1000';
         } else {
-            menu.style.display = 'none';
-        }
-    });    
-
-    // Close menu when clicking outside
-    document.addEventListener('click', function (event) {
-        var menu = document.getElementById('menu');
-        var menuButton = document.getElementById('menuButton');
-        if (!menu.contains(event.target) && event.target !== menuButton) {
             menu.style.display = 'none';
         }
     });
 
-    // Open login modal
+    document.addEventListener('click', function (event) {
+        var menu = document.getElementById('menu');
+        var menuButton = document.getElementById('menuButton');
+        if (menu && menuButton && !menu.contains(event.target) && event.target !== menuButton) {
+            menu.style.display = 'none';
+        }
+
+        // Combined modal closing logic
+        const imageModal = document.getElementById('imageModal');
+        const loginModalContent = document.getElementById('loginModalContent');
+        const signupModalContent = document.getElementById('signupModalContent');
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsModalContent = settingsModal ? settingsModal.querySelector('.modal-content') : null;
+
+        // Close image modal (non-login part)
+        if (imageModal && imageModal.style.display !== 'none' && event.target === imageModal &&
+            (!loginModalContent || loginModalContent.style.display === 'none') &&
+            (!signupModalContent || signupModalContent.style.display === 'none')) {
+            closeModal();
+        }
+
+        // Close login/signup modal (if imageModal is used for it)
+        if (imageModal && imageModal.style.display === 'flex' &&
+            (!loginModalContent || !loginModalContent.contains(event.target)) &&
+            (!signupModalContent || !signupModalContent.contains(event.target)) &&
+            !event.target.closest('.menu-item-login') && // Don't close if clicking the login menu item
+            event.target !== imageModal.querySelector('#googleLoginButtonContainer') && // Don't close if clicking inside GIS button
+            !event.target.closest('#googleLoginButtonContainer iframe')) { // Also check for iframe
+            // closeModal(); // This might be too aggressive, let users click the X or outside specifically for login
+        }
+
+
+        if (settingsModal && settingsModal.style.display === 'block' &&
+            settingsModalContent && !settingsModalContent.contains(event.target) &&
+            !event.target.classList.contains('menu-item-settings')) {
+            closeModal(); // closeModal will also hide settingsModal
+        }
+    });
+
     document.querySelector('.menu-item-login').addEventListener('click', function () {
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
         const loginModalContent = document.getElementById('loginModalContent');
         const signupModalContent = document.getElementById('signupModalContent');
 
-        modalImage.style.display = 'none';
-        loginModalContent.style.display = 'block';
-        signupModalContent.style.display = 'none';
-        imageModal.style.display = 'flex';
+        if (modalImage) modalImage.style.display = 'none';
+        if (loginModalContent) loginModalContent.style.display = 'block';
+        if (signupModalContent) signupModalContent.style.display = 'none';
+        if (imageModal) imageModal.style.display = 'flex'; // Use flex if your login modal is designed for it
     });
 
-    // Switch to signup form
-    document.getElementById('signUpLink').addEventListener('click', function (event) {
-        event.preventDefault();
-        document.getElementById('loginModalContent').style.display = 'none';
-        document.getElementById('signupModalContent').style.display = 'block';
-    });
+    const signUpLink = document.getElementById('signUpLink');
+    if (signUpLink) {
+        signUpLink.addEventListener('click', function (event) {
+            event.preventDefault();
+            document.getElementById('loginModalContent').style.display = 'none';
+            document.getElementById('signupModalContent').style.display = 'block';
+        });
+    }
 
-    // Switch back to login form
-    document.getElementById('backToLoginLink').addEventListener('click', function (event) {
-        event.preventDefault();
-        document.getElementById('signupModalContent').style.display = 'none';
-        document.getElementById('loginModalContent').style.display = 'block';
-    });
+    const backToLoginLink = document.getElementById('backToLoginLink');
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', function (event) {
+            event.preventDefault();
+            document.getElementById('signupModalContent').style.display = 'none';
+            document.getElementById('loginModalContent').style.display = 'block';
+        });
+    }
+    
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            alert('Standard email/password login not implemented yet.');
+        });
+    }
 
-    // Close login and settings modal when clicking outside
-    document.addEventListener('click', function (event) {
-        const imageModal = document.getElementById('imageModal');
-        const loginModalContent = document.getElementById('loginModalContent');
-        const signupModalContent = document.getElementById('signupModalContent');
-        const settingsModal = document.getElementById('settingsModal');
-        const settingsModalContent = document.querySelector('#settingsModal .modal-content');
+    const forgotPassword = document.getElementById('forgotPassword');
+    if (forgotPassword) {
+        forgotPassword.addEventListener('click', function (event) {
+            event.preventDefault();
+            alert('Forgot password functionality not implemented yet.');
+        });
+    }
 
-        if (imageModal.style.display === 'flex' && !loginModalContent.contains(event.target) && !signupModalContent.contains(event.target) && !event.target.classList.contains('menu-item-login')) {
-            imageModal.style.display = 'none';
-            loginModalContent.style.display = 'none';
-            signupModalContent.style.display = 'none';
-        }
-
-        if (settingsModal.style.display === 'block' && !settingsModalContent.contains(event.target) && !event.target.classList.contains('menu-item-settings')) {
-            settingsModal.style.display = 'none';
-        }
-    });
-
-    // Placeholder for login form submission
-    document.getElementById('loginForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        alert('Login functionality not implemented yet.');
-    });
-
-    // Placeholder for forgot password link
-    document.getElementById('forgotPassword').addEventListener('click', function (event) {
-        event.preventDefault();
-        alert('Forgot password functionality not implemented yet.');
-    });
 
     document.getElementById('saveExerciseButton').addEventListener('click', addExercise);
-
-    // Show settings modal when settings menu item is clicked
     document.querySelector('.menu-item-settings').addEventListener('click', () => {
         document.getElementById('settingsModal').style.display = 'block';
-
-        // Pre-fill the settings form with current goals
         document.getElementById('dailyCalories').value = goals.calories;
         document.getElementById('dailyFat').value = goals.fat;
         document.getElementById('dailyCarbs').value = goals.carbs;
         document.getElementById('dailyProtein').value = goals.protein;
     });
-
-    // Handle form submission
     document.getElementById('settingsForm').addEventListener('submit', function (e) {
         e.preventDefault();
-
-        // Retrieve form values
-        const dailyCalories = parseInt(document.getElementById('dailyCalories').value);
-        const dailyFat = parseInt(document.getElementById('dailyFat').value);
-        const dailyCarbs = parseInt(document.getElementById('dailyCarbs').value);
-        const dailyProtein = parseInt(document.getElementById('dailyProtein').value);
-
-        // Update goals
         goals = {
-            calories: dailyCalories,
-            fat: dailyFat,
-            carbs: dailyCarbs,
-            protein: dailyProtein
+            calories: parseInt(document.getElementById('dailyCalories').value) || 0,
+            fat: parseInt(document.getElementById('dailyFat').value) || 0,
+            carbs: parseInt(document.getElementById('dailyCarbs').value) || 0,
+            protein: parseInt(document.getElementById('dailyProtein').value) || 0
         };
-
-        // Save settings to local storage
         saveToLocalStorage();
-
-        // Update display with new goals
         updateGoalsDisplay(goals.calories, goals.fat, goals.carbs, goals.protein);
-
-        // Close modal
+        updateDisplay(); // Also call updateDisplay to refresh progress bars with current totals
         closeModal();
     });
-
-    // Initialize modal functionality on page load
-    initializeModal();
-
-    // Initialize server status check
-    checkServerStatus(); // Initial check
 });
