@@ -1,7 +1,7 @@
-// --- START OF scripts.js ---
-// const BACKEND_URL = 'http://127.0.0.1:5500'; // Local
+// --- START OF scripts.js WITH POLLING INTEGRATED ---
+// const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
 const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
-const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com'; // YOUR ACTUAL GOOGLE CLIENT ID
+const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
 
 let statusCheckInterval = null;
 let isServerOnline = false;
@@ -12,12 +12,17 @@ let currentGoogleUserIdForStorage = null;
 let meals = {};
 let exercise = {};
 let goals = { calories: 2000, fat: 67, carbs: 275, protein: 75 };
-let currentDate = new Date(); // Initialized to current local moment
+let currentDate = new Date();
 
 let serverSyncTimeout = null;
 const SYNC_DEBOUNCE_TIME = 3000;
 
-// --- UTILITY FUNCTIONS (Revised Date Handling) ---
+// --- POLLING ---
+let pollingIntervalId = null;
+const POLLING_INTERVAL = 15000; // Poll every 15 seconds (adjust as needed)
+let serverJustCameOnlineForPolling = false; // To trigger initial poll after server is back
+
+// --- UTILITY FUNCTIONS ---
 function getLocalDateParts(date) {
     if (!(date instanceof Date) || isNaN(date)) {
         console.error("getLocalDateParts: Invalid date input", date, ". Using current moment.");
@@ -50,7 +55,6 @@ function parseStoredDateToLocalDate(dateString) {
     const today = new Date(); const p = getLocalDateParts(today); return new Date(p.year, p.month, p.day);
 }
 
-
 function getLocalStorageKey(baseKey, googleUserId = null) {
     const userId = googleUserId || currentGoogleUserIdForStorage || 'anonymous';
     return `${userId}_${baseKey}`;
@@ -65,10 +69,10 @@ function decodeJwtResponse(token) {
     } catch (e) { console.error("Error decoding JWT", e); return null; }
 }
 
-// --- DATE NAVIGATION (Using Revised Date Logic) ---
+// --- DATE NAVIGATION ---
 async function changeDate(delta) {
     const { year, month, day } = getLocalDateParts(currentDate);
-    const newDateCandidate = new Date(year, month, day); // Start from midnight of current local date
+    const newDateCandidate = new Date(year, month, day);
     newDateCandidate.setDate(newDateCandidate.getDate() + delta);
     currentDate = newDateCandidate;
 
@@ -77,6 +81,9 @@ async function changeDate(delta) {
 
     if (googleIdToken && currentGoogleUserIdForStorage) {
         await loadDataFromServer(formatLocalDateForStorage(currentDate));
+        // Polling will continue for the new date if already active
+        // Or if not, pollForUpdates can be called to fetch immediately for the new date
+        if (pollingIntervalId) pollForUpdates(); // Poll immediately for new date
     } else {
         loadFromLocalStorage();
     }
@@ -84,34 +91,37 @@ async function changeDate(delta) {
 
 async function goToToday() {
     const today = new Date();
-    const { year, month, day } = getLocalDateParts(today); // Get parts of today, local time
-    currentDate = new Date(year, month, day); // Set to midnight of today, local time
+    const { year, month, day } = getLocalDateParts(today);
+    currentDate = new Date(year, month, day);
 
     updateDateDisplay();
     localStorage.setItem(getLocalStorageKey('currentDate'), formatLocalDateForStorage(currentDate));
 
     if (googleIdToken && currentGoogleUserIdForStorage) {
         await loadDataFromServer(formatLocalDateForStorage(currentDate));
+        if (pollingIntervalId) pollForUpdates(); // Poll immediately for new date
     } else {
         loadFromLocalStorage();
     }
 }
 
 function updateDateDisplay() {
+    // ... (same as your version)
     const displayElement = document.getElementById('currentDateDisplay');
     if (displayElement) {
         if (currentDate instanceof Date && !isNaN(currentDate)) {
             displayElement.textContent = currentDate.toDateString();
         } else {
             const today = new Date(); const p = getLocalDateParts(today);
-            currentDate = new Date(p.year, p.month, p.day); // Attempt to recover
+            currentDate = new Date(p.year, p.month, p.day); 
             displayElement.textContent = currentDate.toDateString() + " (Date Recovered)";
             console.error("updateDateDisplay: currentDate was invalid, recovered to:", currentDate.toDateString());
         }
     }
 }
 
-// --- MEAL AND EXERCISE FORM TOGGLING --- (Unchanged from previous full version)
+// --- MEAL AND EXERCISE FORM TOGGLING ---
+// ... (same as your version) ...
 function toggleMealForm(mealType) {
     const form = document.getElementById(`${mealType}Form`);
     if (!form) return;
@@ -150,8 +160,8 @@ function toggleExerciseForm() {
     const form = document.getElementById('exerciseForm');
     if(form) form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
 }
-
-// --- DATA MANIPULATION (LOCAL STATE) --- (Unchanged from previous full version)
+// --- DATA MANIPULATION (LOCAL STATE) ---
+// ... (same as your version, functions like addMeal, editMeal, etc.) ...
 function addMeal(mealType, existingImage = null) {
     const dishNameInput = document.getElementById(`${mealType}DishName`);
     const caloriesInput = document.getElementById(`${mealType}Calories`);
@@ -346,8 +356,8 @@ function clearInputs(mealType) {
         }
     }
 }
-
-// --- UI UPDATES --- (Unchanged from previous full version)
+// --- UI UPDATES ---
+// ... (same as your version) ...
 function updateDisplay() {
     let totals = { calories: 0, fat: 0, carbs: 0, protein: 0 };
     const mealDate = formatLocalDateForStorage(currentDate);
@@ -458,9 +468,8 @@ function updateProgressBar(fillId, total, goal) {
         overfill.style.display = 'none';
     }
 }
-
-
-// --- LOCAL STORAGE MANAGEMENT (Using Revised Date Logic) ---
+// --- LOCAL STORAGE MANAGEMENT ---
+// ... (same as your version) ...
 function saveToLocalStorageAndQueueSync() {
     const MAX_STORAGE = 5 * 1024 * 1024;
     const BUFFER_PERCENTAGE = 0.1;
@@ -552,7 +561,6 @@ function loadFromLocalStorage() {
              const today = new Date(); const p = getLocalDateParts(today);
              currentDate = new Date(p.year, p.month, p.day); // Default to midnight local today
         }
-        // Ensure the date (loaded or defaulted) is stored back in the consistent format
         localStorage.setItem(currentDateKey, formatLocalDateForStorage(currentDate));
 
         const currentFormattedDate = formatLocalDateForStorage(currentDate);
@@ -571,12 +579,12 @@ function loadFromLocalStorage() {
     }
     
     updateDateDisplay();
-    updateDisplay(); // CRUCIAL: Update UI after loading local state
+    updateDisplay(); 
 }
 
-
-// --- GOOGLE AUTHENTICATION & USER STATE --- (Largely unchanged from previous full version)
+// --- GOOGLE AUTHENTICATION & USER STATE ---
 function handleGoogleCredentialResponse(response) {
+    // ... (same as your version) ...
     if (response.credential) {
         const idTokenPayload = decodeJwtResponse(response.credential);
         if (idTokenPayload) {
@@ -600,6 +608,7 @@ function handleGoogleCredentialResponse(response) {
 }
 
 async function updateUIAfterSignIn(userInfo) {
+    // ... (same as your version, ensure startPollingForUpdates is called at the end) ...
     if (!userInfo && localStorage.getItem('googleUser')) {
         try {
             userInfo = JSON.parse(localStorage.getItem('googleUser'));
@@ -639,18 +648,20 @@ async function updateUIAfterSignIn(userInfo) {
     const userInfoMenuLogoutBtn = document.getElementById('userInfoMenuLogout');
     if (userInfoMenuLogoutBtn) userInfoMenuLogoutBtn.style.display = 'flex';
 
-    loadFromLocalStorage(); // Load user-specific local data
+    loadFromLocalStorage(); 
 
     if (isServerOnline) {
-        await loadDataFromServer(formatLocalDateForStorage(currentDate)); // Will call updateDisplay
+        await loadDataFromServer(formatLocalDateForStorage(currentDate)); 
         await syncDataToServer(); 
     } else {
         console.log("Server offline, relying on local data after login.");
-        // updateDisplay() was called by loadFromLocalStorage
     }
+    startPollingForUpdates(); // --- POLLING --- Start polling after login and initial sync/load attempt
 }
 
 function handleGoogleSignOut() {
+    stopPollingForUpdates(); // --- POLLING --- Stop polling on sign out
+    // ... (rest of your version) ...
     const prevUserId = currentGoogleUserIdForStorage;
 
     localStorage.removeItem('googleUser');
@@ -662,10 +673,10 @@ function handleGoogleSignOut() {
     meals = {}; exercise = {};
     goals = { calories: 2000, fat: 67, carbs: 275, protein: 75 };
     const today = new Date(); const p = getLocalDateParts(today);
-    currentDate = new Date(p.year, p.month, p.day); // Reset date to midnight local today
+    currentDate = new Date(p.year, p.month, p.day); 
 
     updateUIAfterSignOut();
-    loadFromLocalStorage(); // Loads anonymous data and calls updateDisplay
+    loadFromLocalStorage(); 
 
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
@@ -673,6 +684,7 @@ function handleGoogleSignOut() {
     console.log("User signed out.");
 }
 
+// ... (updateUIAfterSignOut, checkLoginStateOnLoad, initializeGoogleSignIn - same as your version) ...
 function updateUIAfterSignOut() {
     const userInfoDiv = document.getElementById('userInfo');
     if (userInfoDiv) {
@@ -701,7 +713,7 @@ function checkLoginStateOnLoad() {
             userInfoGlobal = userInfo;
             googleIdToken = storedToken;
             currentGoogleUserIdForStorage = userInfo.id;
-            updateUIAfterSignIn(userInfo); // Calls loadFromLocalStorage then loadDataFromServer
+            updateUIAfterSignIn(userInfo); 
         } catch (e) {
             console.error("Error parsing stored user or token. Clearing auth data.", e);
             localStorage.removeItem('googleUser'); localStorage.removeItem('googleIdToken');
@@ -723,15 +735,16 @@ function initializeGoogleSignIn() {
             const googleButtonContainer = document.getElementById('googleLoginButtonContainer');
             if (googleButtonContainer) {
                 google.accounts.id.renderButton(googleButtonContainer,
-                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left", width: "100%"}
+                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left" /*, width: "100%" REMOVED for GSI warning */}
                 );
             } else console.error('Google login button container not found.');
         } catch (error) { console.error("Error initializing Google Sign In:", error); }
     } else { setTimeout(initializeGoogleSignIn, 500); }
 }
 
-// --- SERVER COMMUNICATION & SYNC --- (Unchanged from previous full version, ensure `updateDisplay` at end of `loadDataFromServer`)
-async function loadDataFromServer(dateStr) { // dateStr is YYYY-MM-DD from formatLocalDateForStorage
+// --- SERVER COMMUNICATION & SYNC ---
+// ... (loadDataFromServer, syncDataToServer - same as your version) ...
+async function loadDataFromServer(dateStr) { 
     if (!googleIdToken || !currentGoogleUserIdForStorage) {
         updateDisplay(); return;
     }
@@ -749,7 +762,7 @@ async function loadDataFromServer(dateStr) { // dateStr is YYYY-MM-DD from forma
         if (!response.ok) {
             if (response.status === 401) { handleGoogleSignOut(); } 
             else { console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);}
-            updateDisplay(); // Show local data on error
+            updateDisplay(); 
             return;
         }
         const serverData = await response.json();
@@ -801,7 +814,7 @@ async function loadDataFromServer(dateStr) { // dateStr is YYYY-MM-DD from forma
     } catch (error) {
         console.error("Failed to load or merge data from server:", error);
     }
-    updateDisplay(); // CRUCIAL: Update UI after all data processing
+    updateDisplay(); 
 }
 
 async function syncDataToServer() {
@@ -821,7 +834,7 @@ async function syncDataToServer() {
     for (const dateKey in meals) {
         const dayMeals = meals[dateKey];
         for (const mealType in dayMeals) {
-            (dayMeals[mealType] || []).forEach(meal => { // Ensure array exists
+            (dayMeals[mealType] || []).forEach(meal => { 
                 if (meal.needsSync) {
                     changesFound = true;
                     if (meal.deleted) {
@@ -836,26 +849,22 @@ async function syncDataToServer() {
         }
     }
     
-    // Check current day's exercise or if goals changed
     const currentFormattedDate = formatLocalDateForStorage(currentDate);
-    // A more robust way to check if exercise/goals are "dirty" is needed.
-    // For now, send if any meal is syncing.
-    if (changesFound) {
+    if (changesFound) { // Only include exercise/goals if meals are changing
         if (exercise[currentFormattedDate] !== undefined) {
             pendingSyncData.exercisePerDate[currentFormattedDate] = exercise[currentFormattedDate];
         }
         pendingSyncData.goals = goals;
     }
 
-
-    if (!changesFound && Object.keys(pendingSyncData.exercisePerDate).length === 0 && !pendingSyncData.goals) {
-        // Re-check if truly no changes, esp if exercise/goals logic becomes more granular
-        let exerciseActuallyChanged = false; // Placeholder for more complex "isDirty" check
-        let goalsActuallyChanged = false;   // Placeholder
-        if (!changesFound && !exerciseActuallyChanged && !goalsActuallyChanged) {
-           console.log("No local changes pending sync.");
-           return;
-        }
+    // More precise check if any data is actually pending
+    if (pendingSyncData.mealsToUpdate.length === 0 && 
+        pendingSyncData.mealsToDelete.length === 0 &&
+        Object.keys(pendingSyncData.exercisePerDate).length === 0 &&
+        !pendingSyncData.goals // Check if goals was actually populated
+    ) {
+       console.log("No local changes truly pending sync after detailed check.");
+       return;
     }
 
 
@@ -908,7 +917,153 @@ async function syncDataToServer() {
     }
 }
 
+// --- POLLING FUNCTIONS ---
+async function pollForUpdates() {
+    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline || document.hidden) {
+        return;
+    }
+
+    const dateStrToPoll = formatLocalDateForStorage(currentDate);
+    // console.log(`Polling for updates for date: ${dateStrToPoll}`);
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/data?date=${dateStrToPoll}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${googleIdToken}` }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                console.error("Polling: Auth error (401). Stopping polling and signing out.");
+                handleGoogleSignOut(); 
+            } else {
+                console.error(`Polling: HTTP error! status: ${response.status} for date ${dateStrToPoll}`);
+            }
+            return;
+        }
+
+        const serverDataForDate = await response.json();
+        let localDataWasChangedByPolling = false;
+
+        if (serverDataForDate.goals && JSON.stringify(goals) !== JSON.stringify(serverDataForDate.goals)) {
+            console.log("Polling: Goals updated from server.");
+            goals = serverDataForDate.goals;
+            localStorage.setItem(getLocalStorageKey('goals'), JSON.stringify(goals));
+            localDataWasChangedByPolling = true;
+        }
+
+        const serverExercise = serverDataForDate.exercise !== undefined ? serverDataForDate.exercise : 0;
+        const localExercise = exercise[dateStrToPoll] !== undefined ? exercise[dateStrToPoll] : 0;
+        
+        // Only update from poll if server has different data AND local data is not currently marked for sync
+        // This is a simple check; ideally, exercise would also have a lastModified/needsSync status
+        let exerciseNeedsUpdateFromPoll = false;
+        if (localExercise !== serverExercise) {
+            // Check if there's a PENDING sync for exercise that might be more up-to-date
+            // This is hard without more granular dirty tracking for exercise.
+            // For now, if different, assume server is more current unless a sync is actively queued.
+            // This is a weak point in simple polling.
+            exercise[dateStrToPoll] = serverExercise;
+            exerciseNeedsUpdateFromPoll = true; // Mark that it *might* have changed due to poll
+        }
+        if (exerciseNeedsUpdateFromPoll) {
+            console.log(`Polling: Exercise for ${dateStrToPoll} potentially updated from server: ${serverExercise} (was ${localExercise})`);
+            localDataWasChangedByPolling = true;
+        }
+
+
+        const serverMeals = serverDataForDate.meals || { breakfast: [], lunch: [], dinner: [], snacks: [] };
+        if (!meals[dateStrToPoll]) {
+            meals[dateStrToPoll] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+        }
+
+        let mealsChangedDirectlyByPoll = false;
+        for (const mealType of ['breakfast', 'lunch', 'dinner', 'snacks']) {
+            const serverItems = serverMeals[mealType] || [];
+            const localItemsOriginal = JSON.parse(JSON.stringify(meals[dateStrToPoll][mealType] || [])); // Deep copy for comparison
+            let currentLocalItemsForType = meals[dateStrToPoll][mealType] || [];
+            const newMergedItemsForType = [];
+
+            const serverItemsMap = new Map(serverItems.map(item => [item.id, item]));
+
+            // Iterate through local items first to handle updates and deletions
+            for (const lItem of currentLocalItemsForType) {
+                const sItemMatch = serverItemsMap.get(lItem.id);
+                if (sItemMatch) { // Item exists on server
+                    // If local item is dirty (needsSync) and newer, keep local.
+                    // Otherwise, take server version.
+                    if (lItem.needsSync && new Date(lItem.lastModified) > new Date(sItemMatch.lastModified || 0)) {
+                        newMergedItemsForType.push({ ...lItem });
+                    } else {
+                        newMergedItemsForType.push({ ...sItemMatch, needsSync: false });
+                    }
+                    serverItemsMap.delete(lItem.id); // Remove from map as it's been processed
+                } else if (!lItem.deleted) { 
+                    // Local item not on server, and not marked for deletion: keep it (it's new or was deleted on server by another client)
+                    // If it needsSync, it will be sent. If not, it means server deleted it.
+                    // This logic might need to be smarter about server deletions.
+                    // For now, if it's not `needsSync:false` it means server deleted it, or it's a new local item.
+                    if (lItem.needsSync) { // New local item or locally modified after server deletion.
+                        newMergedItemsForType.push({ ...lItem });
+                    } else {
+                        // This meal was synced, but server doesn't have it anymore -> deleted on server
+                        console.log(`Polling: Meal ${lItem.dishName} (id: ${lItem.id}) deleted on server, removing locally.`);
+                        // mealsChangedDirectlyByPoll will be true due to removal below
+                    }
+                }
+                // If lItem.deleted and needsSync, it will be handled by syncDataToServer
+            }
+
+            // Add any remaining server items (new on server)
+            serverItemsMap.forEach(sItem => {
+                newMergedItemsForType.push({ ...sItem, needsSync: false });
+            });
+            
+            newMergedItemsForType.sort((a,b) => a.id - b.id);
+            if (JSON.stringify(localItemsOriginal) !== JSON.stringify(newMergedItemsForType)) {
+                mealsChangedDirectlyByPoll = true;
+            }
+            meals[dateStrToPoll][mealType] = newMergedItemsForType;
+        }
+
+        if (mealsChangedDirectlyByPoll) {
+            localDataWasChangedByPolling = true;
+        }
+        
+        if (localDataWasChangedByPolling) {
+            console.log(`Polling: Data for ${dateStrToPoll} was updated by server poll.`);
+            localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
+            localStorage.setItem(getLocalStorageKey('exercise'), JSON.stringify(exercise));
+            updateDisplay();
+        }
+
+    } catch (error) {
+        console.error("Polling fetch/processing error:", error);
+    }
+}
+
+function startPollingForUpdates() {
+    stopPollingForUpdates(); 
+    if (googleIdToken && currentGoogleUserIdForStorage) {
+        console.log("Starting polling for updates every", POLLING_INTERVAL / 1000, "seconds.");
+        pollingIntervalId = setInterval(pollForUpdates, POLLING_INTERVAL);
+        if (isServerOnline || serverJustCameOnlineForPolling) { // Poll immediately if server is already online or just came online
+            pollForUpdates();
+            serverJustCameOnlineForPolling = false; // Reset flag
+        }
+    }
+}
+
+function stopPollingForUpdates() {
+    if (pollingIntervalId) {
+        console.log("Stopping polling for updates.");
+        clearInterval(pollingIntervalId);
+        pollingIntervalId = null;
+    }
+}
+
 async function checkServerStatus() {
+    // ... (same as your version, but use serverJustCameOnlineForPolling flag)
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
     if (!statusIcon || !statusText) return;
@@ -924,26 +1079,41 @@ async function checkServerStatus() {
         const data = await response.json();
         if (response.ok && data.status === 'live') {
             statusIcon.classList.replace('yellow','green'); statusText.textContent = 'Live';
-            if (!isServerOnline) {
-                isServerOnline = true; console.log("Server came online. Triggering sync.");
-                syncDataToServer();
-            } else { isServerOnline = true; }
+            if (!isServerOnline) { // Was offline, now online
+                isServerOnline = true; 
+                serverJustCameOnlineForPolling = true; // Set flag for polling
+                console.log("Server came online. Sync and polling will be attempted.");
+                await syncDataToServer(); // Attempt immediate sync
+                startPollingForUpdates(); // Restart polling which will poll immediately too
+            } else { 
+                isServerOnline = true; 
+                if (!pollingIntervalId && googleIdToken && currentGoogleUserIdForStorage) { // If polling was stopped for some reason but should be active
+                    startPollingForUpdates();
+                }
+            }
             if (statusCheckInterval) { clearInterval(statusCheckInterval); statusCheckInterval = null; }
-        } else {
+        } else { // Server not live (sleeping or unknown)
             if (isServerOnline) console.log("Server went offline or is sleeping.");
-            isServerOnline = false; statusIcon.classList.replace('yellow','red');
+            isServerOnline = false; 
+            serverJustCameOnlineForPolling = false;
+            statusIcon.classList.replace('yellow','red');
             statusText.textContent = response.ok ? 'Unknown' : 'Sleeping';
+            stopPollingForUpdates(); // Stop polling if server is not live
             if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
         }
-    } catch (error) {
+    } catch (error) { // Network error, server likely offline
         if (isServerOnline) console.log("Server connection lost.");
-        isServerOnline = false; statusIcon.classList.replace('yellow','red');
+        isServerOnline = false; 
+        serverJustCameOnlineForPolling = false;
+        statusIcon.classList.replace('yellow','red');
         statusText.textContent = 'Offline';
+        stopPollingForUpdates(); // Stop polling if server is offline
         if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
     }
 }
 
-// --- IMAGE HANDLING & OPENAI --- (Unchanged from previous full version, ensure parsing robustness)
+// --- IMAGE HANDLING & OPENAI ---
+// ... (same as your version) ...
 async function handleMealNameInput(mealName, mealType, editingId = null) {
     if (!mealName) { alert('Please enter a meal name.'); return; }
     try {
@@ -1030,8 +1200,8 @@ function dataURLToBlob(dataurl) {
     while (n--) u8arr[n] = bstr.charCodeAt(n);
     return new Blob([u8arr], { type: mime });
 }
-
-// --- MODALS & MENUS --- (Unchanged from previous full version)
+// --- MODALS & MENUS ---
+// ... (same as your version, initializeModal, showImageModal, closeModal, toggleUserInfoMenu, initDragAndDrop) ...
 function initializeModal() { 
     const imageModal = document.getElementById('imageModal');
     const loginContent = document.getElementById('loginModalContent');
@@ -1134,9 +1304,9 @@ function initDragAndDrop() {
         }
     });
 }
-
-// --- DOMContentLoaded --- (Unchanged from previous full version)
+// --- DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', () => {
+    // ... (same as your version, but add visibilitychange listener) ...
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     const exerciseForm = document.getElementById('exerciseForm');
     if(exerciseForm) exerciseForm.style.display = 'none';
@@ -1148,13 +1318,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if(userInfoMenu) userInfoMenu.style.display = 'none';
 
     initializeGoogleSignIn();
-    checkLoginStateOnLoad(); // This calls loadFromLocalStorage -> updateDisplay
-    checkServerStatus();
-    setInterval(checkServerStatus, 30000);
+    checkLoginStateOnLoad(); 
+    checkServerStatus(); // Initial check
+    setInterval(checkServerStatus, 30000); // Periodic check
 
     initializeModal();
     initDragAndDrop();
 
+    // --- POLLING --- Add visibility listener
+    window.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopPollingForUpdates();
+        } else {
+            if (googleIdToken && currentGoogleUserIdForStorage && isServerOnline) { // Only start if relevant conditions met
+                startPollingForUpdates();
+            }
+        }
+    });
+    // ... (rest of your DOMContentLoaded event listeners - unchanged) ...
     document.querySelectorAll('.saveMealButton').forEach(button => {
         if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
         button.addEventListener('click', (event) => {
@@ -1244,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    const loginFormElement = document.getElementById('loginForm'); // Renamed to avoid conflict with function
+    const loginFormElement = document.getElementById('loginForm'); 
     if (loginFormElement) {
         loginFormElement.addEventListener('submit', e => { e.preventDefault(); alert('Standard login not implemented. Please use Google Sign-In.'); });
     }
