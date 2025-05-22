@@ -698,7 +698,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 10px;
     width: 150px; /* Adjust width as needed */
-    z-index: 1000; /* Ensure it appears above other elements */
+    z-index: 2000; /* Ensure it appears above other elements */
 }
 
 .menu-item {
@@ -786,7 +786,6 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     display: none; /* Initially hidden; JS toggles to 'flex' */
     align-items: center; /* This was in inline style, good to keep */
     cursor: pointer; /* This was in inline style, good to keep */
-    z-index: 2000;
 }
 
 /* ADDED: Style for the profile picture image itself */
