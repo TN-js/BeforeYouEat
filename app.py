@@ -1,4 +1,4 @@
-# --- START OF app.py (ULTRA-SIMPLIFIED PATHING FOR SQLITE) ---
+# --- START OF app.py ---
 from flask import Flask, request, jsonify
 import requests
 import os
@@ -230,6 +230,13 @@ def analyze_image():
 
 @app.route('/health', methods=['GET'])
 def health_check(): return jsonify({'status': 'live'}), 200
+
+@app.cli.command("create-db")
+def create_db_command():
+    """Creates the database tables."""
+    with app.app_context(): # Ensure we are in app context
+        db.create_all()
+    print("Database tables created successfully!")
 
 
 # --- Main Execution & DB Setup (SIMPLIFIED AND MORE DIRECT FOR LOCAL) ---
