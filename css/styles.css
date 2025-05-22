@@ -18,7 +18,12 @@ h2 {
     text-align: center;
     color: #333;
     margin-top: 0;
-    padding-top: 20px;
+    /* padding-top: 20px; */
+}
+
+h3 {
+    padding: 0;
+    margin: 0;
 }
 
 /* Server Status Indicator Styles */
@@ -139,6 +144,7 @@ h2 {
     justify-content: center;
     align-items: center;
     width: 100%;
+    margin-top: 10px;
     margin-bottom: 10px;
     position: relative; /* Added */
 }
@@ -160,8 +166,8 @@ h2 {
     color: #0c2512;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
     font-family: 'Pacifico', cursive;
-    padding-bottom: 10px;
-    margin: 0 auto; /* Added */
+    /* padding-bottom: 10px; */
+    margin: 0 auto;
 }
 
 .header .version {
@@ -293,6 +299,7 @@ h2 {
 }
 
 .meals, .exercise, .summary {
+    margin-top: 20px;
     margin-bottom: 20px;
     padding: 0 20px;
 }
@@ -608,7 +615,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     padding: 10px; /* Adjust padding to match the popup menu */
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 80%;
+    width: 100%;
     max-width: 400px;
     z-index: 1000;
     display: flex;
@@ -619,7 +626,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 /* Ensure consistent styles for all input fields */
 .modal-content input[type="text"],
 .modal-content input[type="password"] {
-    width: calc(100% - 20px); /* Ensure full width minus padding */
+    width: 100%;
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
@@ -705,6 +712,9 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     margin-right: 10px;
     font-size: 20px;
     color: #4a5568;
+    width: 25px;
+    display: flex;
+    text-align: center;
 }
 
 /* Additional styles for login modal links */
@@ -715,13 +725,11 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     margin-top: 20px;
 }
 
-/* Styles for the "Forgot password?" link */
 #forgotPassword {
-    color: #4a5568;
+    color: #007bff;
     text-decoration: none;
-    margin-top: 10px;
+    margin-bottom: 10px;
     font-size: 14px;
-    font-weight: bold; /* Make the link bold to distinguish it from other text */
 }
 
 #forgotPassword:hover {
@@ -730,36 +738,20 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 
 /* Styles for the sign-up link */
 .signup-link {
-    margin-top: 10px;
+    margin-top: 0;
     font-size: 14px;
     color: #4a5568;
+    text-align: center; /* Center this text */
 }
 
 .signup-link a {
-    color: #4a5568;
+    color: #007bff;
     text-decoration: none;
     font-weight: bold;
 }
 
 .signup-link a:hover {
     text-decoration: underline;
-}
-
-/* Styles for the Google login button */
-.google-login-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    margin-top: 10px;
-    background-color: #4285F4;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-    transition: background-color 0.2s ease;
 }
 
 .google-login-button:hover {

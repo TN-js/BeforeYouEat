@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Google Identity Services (GIS) Client Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- REMOVED: Old Google Platform Library (if it was here)
-    <script async defer src="https://apis.google.com/js/platform.js?onload=onGooglePlatformLoaded"></script>
-    -->
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.2.12">
+    <link rel="stylesheet" href="css/styles.css?v0.2.13">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -18,7 +14,6 @@
     <link rel="icon" type="image/png" sizes="512x512" href="images/android-chrome-512x512.png">
     <link rel="manifest" href="images/site.webmanifest">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -26,21 +21,21 @@
         <div class="header">
             <div class="row">
                 <button id="menuButton" class="menu-button">☰</button>
-                <div id="menu" class="menu">
-                    <div class="menu-item menu-item-login">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </div>
-                    <div class="menu-item menu-item-logout" id="logoutButton" style="display: none;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </div>
-                    <div class="menu-item menu-item-settings">
-                        <i class="fas fa-cog"></i> Settings
-                    </div>
-                </div>
                 <div class="title">Before You Eat</div>
-            <div id="userInfo" style="display: none; margin-left: auto; align-items: center;">
-                <!-- User profile picture and name will go here -->
+                <div id="userInfo" style="display: none; align-items: center;">
+                    <!-- User profile picture will go here -->
+                </div>
             </div>
+            <div id="menu" class="menu" style="display: none;">
+                <div class="menu-item menu-item-login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </div>
+                <div class="menu-item menu-item-logout" id="logoutButton" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+                <div class="menu-item menu-item-settings">
+                    <i class="fas fa-cog"></i> Settings
+                </div>
             </div>
 
             <div class="date-navigation">
@@ -49,21 +44,19 @@
                 </button>
                 <button class="date-button" onclick="goToToday()">
                     <i class="fas fa-calendar-alt"></i>
-                    <span id="currentDateDisplay">Wed, Jul 17, 2024</span>
+                    <span id="currentDateDisplay">Date</span> <!-- JS will update this -->
                 </button>
                 <button class="nav-button" onclick="changeDate(1)">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
             <div class="row bottom">
-                <div class="version">v0.2.12</div>
+                <div class="version">v0.2.13</div>
                 <div id="server-status" class="server-status">
-                    <span id="status-icon" class="status-icon"></span>
-                    <span id="status-text" class="status-text">Checking server status...</span>
+                    <span id="status-icon" class="status-icon yellow"></span>
+                    <span id="status-text" class="status-text">Checking...</span>
                 </div>
-                <!-- Removed duplicate currentDateDisplay from here as it's in date-navigation -->
             </div>
-
         </div>
 
         <div class="summary">
@@ -71,38 +64,39 @@
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Cals</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="caloriesProgressFill"><p class="progress-bar-text">0 / 2150</p></div>
+                    <div class="progress-bar-fill" id="caloriesProgressFill">0 / 2000</div>
                 </div>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Fat</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="fatProgressFill">0g / 38g</div>
+                    <div class="progress-bar-fill" id="fatProgressFill">0g / 67g</div>
                 </div>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Carbs</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="carbsProgressFill">0g / 289g</div>
+                    <div class="progress-bar-fill" id="carbsProgressFill">0g / 275g</div>
                 </div>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Protein</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="proteinProgressFill">0g / 116g</div>
+                    <div class="progress-bar-fill" id="proteinProgressFill">0g / 75g</div>
                 </div>
             </div>
             <p>Total Exercise: <span id="totalExercise">0</span> calories burned</p>
         </div>
 
         <div class="meals">
+            <!-- Breakfast -->
             <div id="breakfastSlot" class="meal-slot">
                 <h3>Breakfast</h3>
                 <button onclick="toggleMealForm('breakfast')">Add Breakfast</button>
-                <div id="breakfastForm" class="meal-form">
+                <div id="breakfastForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="breakfastDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton">Generate Macros</button> <!-- Removed inline onclick, will be handled by JS -->
+                        <button class="generateMacrosButton">Generate Macros</button>
                     </div>
                     <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
@@ -115,15 +109,15 @@
                         <label for="breakfastImageCapture">Capture Image</label>
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
-                    <img id="uploadedImageBreakfast" class="meal-image" alt="">
+                    <img id="uploadedImageBreakfast" class="meal-image" alt="Uploaded breakfast image" style="display: none;">
                 </div>
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
-            <!-- Repeat similar structure for lunch, dinner, snacks, removing inline onclick for generateMacrosButton -->
+            <!-- Lunch -->
             <div id="lunchSlot" class="meal-slot">
                 <h3>Lunch</h3>
                 <button onclick="toggleMealForm('lunch')">Add Lunch</button>
-                <div id="lunchForm" class="meal-form">
+                <div id="lunchForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton">Generate Macros</button>
@@ -139,14 +133,15 @@
                         <label for="lunchImageCapture">Capture Image</label>
                         <input type="file" id="lunchImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'lunch')">
                     </div>
-                    <img id="uploadedImageLunch" class="meal-image" alt="">
+                    <img id="uploadedImageLunch" class="meal-image" alt="Uploaded lunch image" style="display: none;">
                 </div>
                 <div id="lunchItems" class="meal-items"></div>
             </div>
+            <!-- Dinner -->
             <div id="dinnerSlot" class="meal-slot">
                 <h3>Dinner</h3>
                 <button onclick="toggleMealForm('dinner')">Add Dinner</button>
-                <div id="dinnerForm" class="meal-form">
+                <div id="dinnerForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton">Generate Macros</button>
@@ -162,14 +157,15 @@
                         <label for="dinnerImageCapture">Capture Image</label>
                         <input type="file" id="dinnerImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'dinner')">
                     </div>
-                    <img id="uploadedImageDinner" class="meal-image" alt="">
+                    <img id="uploadedImageDinner" class="meal-image" alt="Uploaded dinner image" style="display: none;">
                 </div>
                 <div id="dinnerItems" class="meal-items"></div>
             </div>
+            <!-- Snacks -->
             <div id="snacksSlot" class="meal-slot">
                 <h3>Snacks</h3>
                 <button onclick="toggleMealForm('snacks')">Add Snacks</button>
-                <div id="snacksForm" class="meal-form">
+                <div id="snacksForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton">Generate Macros</button>
@@ -185,7 +181,7 @@
                         <label for="snacksImageCapture">Capture Image</label>
                         <input type="file" id="snacksImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'snacks')">
                     </div>
-                    <img id="uploadedImageSnacks" class="meal-image" alt="">
+                    <img id="uploadedImageSnacks" class="meal-image" alt="Uploaded snacks image" style="display: none;">
                 </div>
                 <div id="snacksItems" class="meal-items"></div>
             </div>
@@ -194,20 +190,17 @@
         <div class="exercise">
             <h3>Exercise</h3>
             <button onclick="toggleExerciseForm()">Add Exercise</button>
-            <div id="exerciseForm" style="display: none;"> <!-- Added style to hide initially -->
+            <div id="exerciseForm" style="display: none;">
                 <input type="number" id="exerciseCalories" step="0.1" placeholder="Calories burned">
                 <button id="saveExerciseButton">Save Exercise</button>
             </div>
             <div id="exerciseItems" class="exercise-items"></div>
         </div>
-
     </div>
 
-    <div id="blurOverlay" class="blur-overlay"></div>
-
-    <!-- Modal Structure for images and login -->
-    <div id="imageModal" class="modal">
-        <img id="modalImage" class="image-modal-content" alt="Meal image"> <!-- Added alt -->
+    <div id="imageModal" class="modal" style="display: none;">
+        <img id="modalImage" class="image-modal-content" alt="Meal full view" style="display: none;">
+        
         <div id="loginModalContent" class="modal-content" style="display: none;">
             <h3>Log in</h3>
             <form id="loginForm">
@@ -218,9 +211,7 @@
                 <button type="submit">Log in</button>
             </form>
             <h3>Or</h3>
-            <!-- Container for the new Google Sign-In button -->
-            <div id="googleLoginButtonContainer" style="margin-bottom: 10px;"></div>
-            <!-- REMOVED: Old <button id="googleLogin" ...> -->
+            <div id="googleLoginButtonContainer"></div>
             <div class="login-links">
                 <a href="#" id="forgotPassword" class="auth-link">Forgot password?</a>
                 <div class="signup-link">
@@ -228,6 +219,7 @@
                 </div>
             </div>
         </div>
+
         <div id="signupModalContent" class="modal-content" style="display: none;">
             <h3>Sign Up</h3>
             <form id="signUpForm">
@@ -245,41 +237,36 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none;"> <!-- Added style to hide initially -->
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Settings</h5>
-                    <!-- You might want a close button for modals if not relying on outside click only -->
-                    <!-- <button type="button" class="close-button" onclick="closeModal()">×</button> -->
-                </div>
-                <div class="modal-body">
-                    <form id="settingsForm">
-                        <div class="form-group">
-                            <label for="dailyCalories">Daily Cals (kcal)</label>
-                            <input type="number" class="form-control" id="dailyCalories" name="dailyCalories" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="dailyFat">Daily Fat (g)</label>
-                            <input type="number" class="form-control" id="dailyFat" name="dailyFat" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="dailyCarbs">Daily Carbs (g)</label>
-                            <input type="number" class="form-control" id="dailyCarbs" name="dailyCarbs" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="dailyProtein">Daily Protein (g)</label>
-                            <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Settings</button>
-                    </form>
-                </div>
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Settings</h5>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label for="dailyCalories">Daily Cals (kcal)</label>
+                        <input type="number" class="form-control" id="dailyCalories" name="dailyCalories" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyFat">Daily Fat (g)</label>
+                        <input type="number" class="form-control" id="dailyFat" name="dailyFat" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyCarbs">Daily Carbs (g)</label>
+                        <input type="number" class="form-control" id="dailyCarbs" name="dailyCarbs" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyProtein">Daily Protein (g)</label>
+                        <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.2.12"></script>
+    <script src="js/scripts.js?v0.2.13"></script>
 </body>
 </html>
