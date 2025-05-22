@@ -4,3 +4,7 @@ favicon-maker.html
 unrelated/
 burger.jpg
 css/styles2.css
+instance/
+venv/
+__pycache__/
+*.pyc
