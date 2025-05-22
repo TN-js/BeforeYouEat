@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <title>Before You Eat</title>
     <link rel="stylesheet" href="css/styles.css?v0.2.9">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
@@ -25,11 +26,17 @@
                     <div class="menu-item menu-item-login">
                         <i class="fas fa-sign-in-alt"></i> Login
                     </div>
+                    <div class="menu-item menu-item-logout" id="logoutButton" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </div>
                     <div class="menu-item menu-item-settings">
                         <i class="fas fa-cog"></i> Settings
                     </div>
                 </div>
                 <div class="title">Before You Eat</div>
+            <div id="userInfo" style="display: none; margin-left: auto; align-items: center;">
+                <!-- User profile picture and name will go here -->
+            </div>
             </div>
 
             <div class="date-navigation">

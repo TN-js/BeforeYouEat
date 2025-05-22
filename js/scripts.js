@@ -1,5 +1,10 @@
 const BACKEND_URL =  'https://beforeyoueat.onrender.com';
 
+const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
+// It's good practice to ensure gapi is available before using it.
+// We'll initialize auth2 when gapi is loaded.
+let googleAuth;
+
 let statusCheckInterval = null; // To store the interval ID
 let isServerOnline = false;    // To track the server's status
 
@@ -670,6 +675,93 @@ function initDragAndDrop() {
     initializeModal();
 }
 
+function handleGoogleSignIn(googleUser) {
+    const profile = googleUser.getBasicProfile();
+    const id_token = googleUser.getAuthResponse().id_token; // Important for backend verification later
+
+    const userInfo = {
+        id: profile.getId(),
+        name: profile.getName(),
+        givenName: profile.getGivenName(),
+        familyName: profile.getFamilyName(),
+        imageUrl: profile.getImageUrl(),
+        email: profile.getEmail(),
+        id_token: id_token
+    };
+
+    localStorage.setItem('googleUser', JSON.stringify(userInfo));
+    updateUIAfterSignIn(userInfo);
+    closeModal(); // Assumes closeModal() hides the #imageModal
+}
+
+function updateUIAfterSignIn(userInfo) {
+    if (!userInfo) { // If called without specific userInfo, try to load from localStorage
+        const storedUser = localStorage.getItem('googleUser');
+        if (storedUser) {
+            userInfo = JSON.parse(storedUser);
+        } else {
+            // No user info, ensure logged out state
+            updateUIAfterSignOut();
+            return;
+        }
+    }
+
+    const userInfoDiv = document.getElementById('userInfo');
+    userInfoDiv.innerHTML = ''; // Clear previous content
+
+    if (userInfo.imageUrl) {
+        const profilePic = document.createElement('img');
+        profilePic.src = userInfo.imageUrl;
+        profilePic.style.width = '30px';
+        profilePic.style.height = '30px';
+        profilePic.style.borderRadius = '50%';
+        profilePic.style.marginRight = '10px';
+        userInfoDiv.appendChild(profilePic);
+    }
+    const userNameSpan = document.createElement('span');
+    userNameSpan.textContent = userInfo.name;
+    userInfoDiv.appendChild(userNameSpan);
+    userInfoDiv.style.display = 'flex';
+
+    document.querySelector('.menu-item-login').style.display = 'none';
+    document.getElementById('logoutButton').style.display = 'block';
+    // Ensure menu itself is accessible if hidden
+    document.getElementById('menu').style.display = ''; // Or manage as per existing menu logic
+}
+
+function handleGoogleSignOut() {
+    if (googleAuth) {
+        googleAuth.signOut().then(() => {
+            localStorage.removeItem('googleUser');
+            updateUIAfterSignOut();
+        });
+    } else { // Fallback if googleAuth isn't initialized
+        localStorage.removeItem('googleUser');
+        updateUIAfterSignOut();
+    }
+}
+
+function updateUIAfterSignOut() {
+    const userInfoDiv = document.getElementById('userInfo');
+    userInfoDiv.innerHTML = '';
+    userInfoDiv.style.display = 'none';
+
+    document.querySelector('.menu-item-login').style.display = 'block';
+    document.getElementById('logoutButton').style.display = 'none';
+}
+
+function checkLoginStateOnLoad() {
+    const storedUser = localStorage.getItem('googleUser');
+    if (storedUser) {
+        const userInfo = JSON.parse(storedUser);
+        // Optional: Could verify token with gapi.auth2.getAuthInstance().currentUser.get().reloadAuthResponse()
+        // For now, directly update UI based on localStorage
+        updateUIAfterSignIn(userInfo);
+    } else {
+        updateUIAfterSignOut();
+    }
+}
+
 function updateProgressBars(totals, exerciseCalories) {
     const effectiveCaloriesGoal = goals.calories + exerciseCalories;
     updateProgressBar('caloriesProgressFill', totals.calories, effectiveCaloriesGoal);
@@ -772,6 +864,44 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
+
+    // Initialize Google Auth
+    gapi.load('auth2', function() {
+        gapi.auth2.init({
+            client_id: GOOGLE_CLIENT_ID,
+            // scope: 'profile email' // default scopes, can be explicit
+        }).then(function(authInstance) {
+            console.log('Google Auth2 initialized');
+            googleAuth = authInstance; // Store the GoogleAuth object
+
+            // Attach click handler for Google Sign-In button
+            // Check if the button exists before attaching
+            const googleLoginButton = document.getElementById('googleLogin');
+            if (googleLoginButton) {
+                googleAuth.attachClickHandler(googleLoginButton, {},
+                    handleGoogleSignIn,
+                    function(error) {
+                        console.error('Google Sign-In error', JSON.stringify(error, undefined, 2));
+                        alert('Error signing in with Google: ' + JSON.stringify(error));
+                    }
+                );
+            } else {
+                console.error('googleLogin button not found');
+            }
+            
+            // Initial check of login state
+            checkLoginStateOnLoad();
+
+        }).catch(function(error) {
+            console.error('Error initializing Google Auth2:', error);
+        });
+    });
+
+    // Attach sign out handler
+    const logoutBtn = document.getElementById('logoutButton');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleGoogleSignOut);
+    }
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {
@@ -876,11 +1006,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsModal.style.display === 'block' && !settingsModalContent.contains(event.target) && !event.target.classList.contains('menu-item-settings')) {
             settingsModal.style.display = 'none';
         }
-    });
-
-    // Placeholder for Google login
-    document.getElementById('googleLogin').addEventListener('click', function () {
-        alert('Google login functionality not implemented yet.');
     });
 
     // Placeholder for login form submission
