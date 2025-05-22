@@ -1113,41 +1113,79 @@ async function checkServerStatus() {
 }
 
 // --- IMAGE HANDLING & OPENAI ---
-// ... (same as your version) ...
-async function handleMealNameInput(mealName, mealType, editingId = null) {
-    if (!mealName) { alert('Please enter a meal name.'); return; }
+async function handleMealNameInput(mealName, mealType, editingId = null) { // Keep editingId if you might support AI for edits
+    if (!mealName) {
+        alert('Please enter a meal name.');
+        return;
+    }
     try {
         const response = await fetch(`${BACKEND_URL}/estimate_macros`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ meal_name: mealName })
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
         const data = await response.json();
         const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+        
         const formPrefix = mealType;
+        let populatedSuccessfully = false;
         if (matches) {
             document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
             document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
             document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
             document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
             document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+            populatedSuccessfully = true;
         } else {
             const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
-            if (nameMatchOnly && nameMatchOnly[1]) document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
+            if (nameMatchOnly && nameMatchOnly[1]) {
+                document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
+                // Note: only name is populated here, calories etc., might be 0 or previous values
+                // You might decide not to auto-save if only the name is populated and macros are missing.
+                // For now, we'll proceed if name is there.
+                populatedSuccessfully = true; 
+            }
             console.warn(`Could not parse full macros from AI text response: ${data}`);
+            // alert(`Could not fully parse macros. Please check. AI said: ${data.substring(0,150)}...`); // Maybe too intrusive
         }
-    } catch (error) { alert(`Error estimating macros: ${error.message}`); console.error("Error in handleMealNameInput:", error); }
+
+        // --- AUTOMATICALLY SAVE IF POPULATED ---
+        if (populatedSuccessfully) {
+            const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
+            if (saveButton && saveButton.dataset.editingId) {
+                // If in edit mode, click the "Save Edit" button programmatically
+                // This will trigger its specific onclick handler that updates the existing meal.
+                console.log(`AI populated fields for editing meal ${mealType}. Triggering save edit.`);
+                saveButton.click(); 
+                // The edit handler should already call toggleMealForm.
+            } else if (saveButton) {
+                // If in add mode (no editingId), call addMeal directly
+                console.log(`AI populated fields for new meal ${mealType}. Triggering add meal.`);
+                addMeal(mealType); 
+                // addMeal already calls toggleMealForm to close and clear.
+            }
+        }
+        // --- END OF AUTOMATIC SAVE ---
+
+    } catch (error) {
+        alert(`Error estimating macros: ${error.message}`);
+        console.error("Error in handleMealNameInput:", error);
+    }
 }
 
 async function handleImageUpload(input, mealType) {
-     const file = input.files[0];
+    const file = input.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = async function (e) {
             try {
                 const compressedImage = await compressImage(e.target.result, 500, 500);
                 const uploadedImageDisplay = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-                if (uploadedImageDisplay) { uploadedImageDisplay.src = compressedImage; uploadedImageDisplay.style.display = 'block'; }
+                if (uploadedImageDisplay) {
+                    uploadedImageDisplay.src = compressedImage;
+                    uploadedImageDisplay.style.display = 'block';
+                }
 
                 const blob = dataURLToBlob(compressedImage);
                 const formData = new FormData(); formData.append('image', blob, 'compressed.jpg');
@@ -1156,21 +1194,48 @@ async function handleImageUpload(input, mealType) {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
                 const data = await response.json();
                 const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+                
                 const formPrefix = mealType;
+                let populatedSuccessfully = false;
                 if (matches) {
                     document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
                     document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
                     document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
                     document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
                     document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+                    populatedSuccessfully = true;
                 } else {
                     const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
-                     if (nameMatchOnly && nameMatchOnly[1]) document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
+                    if (nameMatchOnly && nameMatchOnly[1]) {
+                        document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
+                        populatedSuccessfully = true; // As above, consider if this is enough to auto-save
+                    }
                     console.warn(`Could not parse full macros from AI image analysis: ${data}`);
+                    // alert(`Could not fully parse macros from image. Please check. AI said: ${data.substring(0,150)}...`);
                 }
-            } catch (error) { alert(`Error processing image: ${error.message}`); console.error("Error in handleImageUpload:", error); }
+
+                // --- AUTOMATICALLY SAVE IF POPULATED ---
+                if (populatedSuccessfully) {
+                    const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
+                    if (saveButton && saveButton.dataset.editingId) {
+                        // If in edit mode
+                        console.log(`AI (image) populated fields for editing meal ${mealType}. Triggering save edit.`);
+                        saveButton.click();
+                    } else if (saveButton) {
+                        // If in add mode
+                        console.log(`AI (image) populated fields for new meal ${mealType}. Triggering add meal.`);
+                        addMeal(mealType);
+                    }
+                }
+                // --- END OF AUTOMATIC SAVE ---
+
+            } catch (error) {
+                alert(`Error processing image: ${error.message}`);
+                console.error("Error in handleImageUpload:", error);
+            }
         };
         reader.readAsDataURL(file);
+        input.value = null; // Reset file input to allow uploading the same image again if needed
     }
 }
 
