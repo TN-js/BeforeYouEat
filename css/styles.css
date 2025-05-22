@@ -786,6 +786,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     display: none; /* Initially hidden; JS toggles to 'flex' */
     align-items: center; /* This was in inline style, good to keep */
     cursor: pointer; /* This was in inline style, good to keep */
+    z-index: 2000;
 }
 
 /* ADDED: Style for the profile picture image itself */
@@ -802,5 +803,4 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     border-bottom: 1px solid #eee; /* Visually separates email from logout */
     text-align: center;
     word-break: break-all; /* Prevents long emails from breaking layout */
-    z-index: 2000;
 }
