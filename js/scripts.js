@@ -3,6 +3,7 @@ const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.goo
 
 let statusCheckInterval = null;
 let isServerOnline = false;
+let userInfoGlobal = null; // To store logged-in user's info
 
 let meals = {};
 let exercise = {};
@@ -50,7 +51,6 @@ function toggleMealForm(mealType) {
             uploadedImage.style.display = 'none';
             uploadedImage.src = '';
         }
-        // Reset save button text if it was "Save Edit"
         const saveButton = form.querySelector('.saveMealButton');
         if (saveButton && saveButton.dataset.originalText) {
             saveButton.textContent = saveButton.dataset.originalText;
@@ -89,15 +89,12 @@ function addMeal(mealType, existingImage = null) {
     const protein = proteinInput ? (parseInt(proteinInput.value) || 0) : 0;
 
     const imageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-    // Use existingImage if passed (from edit), otherwise try to get it from the form if visible
     let image = existingImage;
     if (!image && imageElement && imageElement.src && imageElement.style.display !== 'none') {
         image = imageElement.src;
     }
 
-
     if (!dishName && calories === 0 && fat === 0 && carbs === 0 && protein === 0) {
-        // Don't add an empty meal, maybe provide feedback or just return
         return;
     }
     const meal = { id: Date.now(), dishName, calories, fat, carbs, protein, image };
@@ -112,8 +109,8 @@ function addMeal(mealType, existingImage = null) {
     meals[mealDate][mealType].push(meal);
     updateDisplay();
     saveToLocalStorage();
-    clearInputs(mealType); // Clear after saving
-    toggleMealForm(mealType); // This will hide the form
+    clearInputs(mealType);
+    toggleMealForm(mealType);
 }
 
 function addExercise() {
@@ -140,7 +137,7 @@ function updateDisplay() {
     ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(mealType => {
         const mealItemsContainer = document.getElementById(`${mealType}Items`);
         if (!mealItemsContainer) return;
-        mealItemsContainer.innerHTML = ''; // Clear previous items
+        mealItemsContainer.innerHTML = '';
 
         const currentMealsOfType = currentMealsForDate[mealType] || [];
         if (Array.isArray(currentMealsOfType)) {
@@ -206,7 +203,7 @@ function duplicateMeal(mealType, id) {
     if (!meals[mealDate] || !meals[mealDate][mealType]) return;
     const mealToDuplicate = meals[mealDate][mealType].find(meal => meal.id === parseInt(id));
     if (mealToDuplicate) {
-        const newMeal = { ...mealToDuplicate, id: Date.now() }; // New ID
+        const newMeal = { ...mealToDuplicate, id: Date.now() };
         meals[mealDate][mealType].push(newMeal);
         updateDisplay();
         saveToLocalStorage();
@@ -217,12 +214,6 @@ function removeMeal(mealType, id) {
     const mealDate = formatDate(currentDate);
     if (meals[mealDate] && meals[mealDate][mealType]) {
         meals[mealDate][mealType] = meals[mealDate][mealType].filter(meal => meal.id !== parseInt(id));
-        if (meals[mealDate][mealType].length === 0) {
-            // delete meals[mealDate][mealType]; // Optional: clean up empty meal type arrays
-        }
-        // if (Object.keys(meals[mealDate]).length === 0) {
-            // delete meals[mealDate]; // Optional: clean up empty date objects
-        // }
     }
     updateDisplay();
     saveToLocalStorage();
@@ -231,7 +222,7 @@ function removeMeal(mealType, id) {
 function removeExercise() {
     const exerciseDate = formatDate(currentDate);
     if (exercise[exerciseDate]) {
-        exercise[exerciseDate] = 0; // Or delete exercise[exerciseDate];
+        exercise[exerciseDate] = 0;
     }
     updateDisplay();
     saveToLocalStorage();
@@ -263,29 +254,25 @@ function editMeal(mealType, id) {
         }
     }
     
-    if (form.style.display === 'none' || form.style.display === '') { // Ensure form is visible
+    if (form.style.display === 'none' || form.style.display === '') {
         form.style.display = 'block';
     }
-
 
     const saveButton = form.querySelector(`.saveMealButton`);
     if (!saveButton) return;
 
-    if (!saveButton.dataset.originalText) { // Store original text if not already stored
+    if (!saveButton.dataset.originalText) {
         saveButton.dataset.originalText = saveButton.textContent;
     }
     saveButton.textContent = 'Save Edit';
-    saveButton.dataset.editingId = id; // Store editing ID
+    saveButton.dataset.editingId = id;
 
-    // The actual save logic is now part of the generic event listener for saveMealButton
-    // when it detects data-editing-id. Or, you can keep a specific onclick here.
-    // For clarity, let's use a specific one for edit:
     saveButton.onclick = function() {
         const editingId = saveButton.dataset.editingId;
         if (!editingId) return;
 
         const mealIndex = meals[mealDate][mealType].findIndex(m => m.id === parseInt(editingId));
-        if (mealIndex === -1) return; // Meal not found
+        if (mealIndex === -1) return;
 
         meals[mealDate][mealType][mealIndex].dishName = document.getElementById(`${mealType}DishName`).value.trim();
         meals[mealDate][mealType][mealIndex].calories = parseInt(document.getElementById(`${mealType}Calories`).value) || 0;
@@ -297,25 +284,19 @@ function editMeal(mealType, id) {
         if (currentImageElement && currentImageElement.style.display !== 'none' && currentImageElement.src) {
             meals[mealDate][mealType][mealIndex].image = currentImageElement.src;
         } else if (!currentImageElement || currentImageElement.style.display === 'none') {
-            // If image was cleared or not shown, remove it from data too
             meals[mealDate][mealType][mealIndex].image = null; 
         }
-        // else keep existing image if no change
-
 
         updateDisplay();
         saveToLocalStorage();
         
-        toggleMealForm(mealType); // Hide form
-        saveButton.textContent = saveButton.dataset.originalText; // Restore text
-        delete saveButton.dataset.editingId; // Clear editing state
-        // Re-attach general save listener if specific onclick overwrote it.
-        // This is handled by the general listener in DOMContentLoaded not being removed.
+        toggleMealForm(mealType);
+        saveButton.textContent = saveButton.dataset.originalText;
+        delete saveButton.dataset.editingId;
     };
 }
 
-
-async function handleMealNameInput(mealName, mealType, editingId = null) { // Added editingId
+async function handleMealNameInput(mealName, mealType, editingId = null) {
     if (!mealName) {
         alert('Please enter a meal name.');
         return;
@@ -331,14 +312,10 @@ async function handleMealNameInput(mealName, mealType, editingId = null) { // Ad
         const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/);
         if (matches) {
             document.getElementById(`${mealType}DishName`).value = matches[1];
-            document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(0); // Whole numbers for Cals
+            document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(0);
             document.getElementById(`${mealType}Fat`).value = parseFloat(matches[3]).toFixed(1);
             document.getElementById(`${mealType}Carbs`).value = parseFloat(matches[4]).toFixed(1);
             document.getElementById(`${mealType}Protein`).value = parseFloat(matches[5]).toFixed(1);
-            
-            // If NOT editing (i.e., adding a new meal and generating macros),
-            // user would then click "Save [MealType]" which calls addMeal().
-            // If editing, these values are now in the form, user clicks "Save Edit".
         } else {
             alert(`Error estimating macros (parsing): ${data}`);
         }
@@ -370,7 +347,7 @@ async function handleImageUpload(input, mealType) {
                 const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/);
                 if (matches) {
                     document.getElementById(`${mealType}DishName`).value = matches[1];
-                    document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(0); // Whole numbers
+                    document.getElementById(`${mealType}Calories`).value = parseFloat(matches[2]).toFixed(0);
                     document.getElementById(`${mealType}Fat`).value = parseFloat(matches[3]).toFixed(1);
                     document.getElementById(`${mealType}Carbs`).value = parseFloat(matches[4]).toFixed(1);
                     document.getElementById(`${mealType}Protein`).value = parseFloat(matches[5]).toFixed(1);
@@ -469,8 +446,6 @@ function clearInputs(mealType) {
                 img.style.display = 'none';
             }
         }
-    } else { // For goal inputs if any, not currently in your forms directly cleared this way
-        // ...
     }
 }
 
@@ -478,8 +453,8 @@ function saveToLocalStorage() {
     const MAX_STORAGE = 5 * 1024 * 1024;
     const BUFFER_PERCENTAGE = 0.1;
     const TARGET_STORAGE = MAX_STORAGE * (1 - BUFFER_PERCENTAGE);
-    function getTotalStorageSize() { let total = 0; for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) { total += (localStorage[key].length + key.length) * 2; } } return total; } // Approximation
-    function getOldestMealEntry() { let oldestDate = null; let oldestMealType = null; let oldestMealId = null; const dates = Object.keys(meals).sort(); for (const date of dates) { for (const mealType in meals[date]) { if (meals[date][mealType].length > 0) { return { date, mealType, id: meals[date][mealType][0].id }; } } } return null; }
+    function getTotalStorageSize() { let total = 0; for (let key in localStorage) { if (localStorage.hasOwnProperty(key)) { total += (localStorage[key].length + key.length) * 2; } } return total; }
+    function getOldestMealEntry() { const dates = Object.keys(meals).sort(); for (const date of dates) { for (const mealType in meals[date]) { if (meals[date][mealType].length > 0) { return { date, mealType, id: meals[date][mealType][0].id }; } } } return null; }
     function removeOldestMealEntry() { const oldest = getOldestMealEntry(); if (oldest && meals[oldest.date] && meals[oldest.date][oldest.mealType]) { meals[oldest.date][oldest.mealType].shift(); if (meals[oldest.date][oldest.mealType].length === 0) delete meals[oldest.date][oldest.mealType]; if (Object.keys(meals[oldest.date]).length === 0) delete meals[oldest.date]; return true; } return false; }
     try {
         let currentSize = getTotalStorageSize();
@@ -528,7 +503,6 @@ function initDragAndDrop() {
     });
 }
 
-// --- Google Identity Services (GIS) Functions ---
 function decodeJwtResponse(token) {
     try {
         const base64Url = token.split('.')[1];
@@ -558,22 +532,32 @@ function handleGoogleCredentialResponse(response) {
 function updateUIAfterSignIn(userInfo) {
     if (!userInfo) {
         const storedUser = localStorage.getItem('googleUser');
-        if (storedUser) { try { userInfo = JSON.parse(storedUser); } catch (e) { updateUIAfterSignOut(); return; } }
-        else { updateUIAfterSignOut(); return; }
+        if (storedUser) {
+            try { userInfo = JSON.parse(storedUser); }
+            catch (e) { updateUIAfterSignOut(); return; }
+        } else {
+            updateUIAfterSignOut(); return;
+        }
     }
+
+    userInfoGlobal = userInfo;
+
     const userInfoDiv = document.getElementById('userInfo');
     if (!userInfoDiv) return;
+
     userInfoDiv.innerHTML = '';
     if (userInfo.imageUrl) {
         const profilePic = document.createElement('img');
-        profilePic.src = userInfo.imageUrl; profilePic.alt = 'User';
-        profilePic.style.width = '35px'; profilePic.style.height = '35px';
-        profilePic.style.borderRadius = '50%';
-        // profilePic.style.marginRight = '0px'; // Name is hidden, so no margin needed
+        profilePic.src = userInfo.imageUrl;
+        profilePic.alt = 'User';
         userInfoDiv.appendChild(profilePic);
     }
-    // userNameSpan creation and appending is removed to hide the name.
+    
     userInfoDiv.style.display = 'flex';
+
+    userInfoDiv.removeEventListener('click', toggleUserInfoMenu);
+    userInfoDiv.addEventListener('click', toggleUserInfoMenu);
+
     const loginMenuItem = document.querySelector('.menu-item-login');
     if (loginMenuItem) loginMenuItem.style.display = 'none';
     const logoutButton = document.getElementById('logoutButton');
@@ -590,12 +574,69 @@ function handleGoogleSignOut() {
 }
 
 function updateUIAfterSignOut() {
+    userInfoGlobal = null;
+
     const userInfoDiv = document.getElementById('userInfo');
-    if(userInfoDiv) { userInfoDiv.innerHTML = ''; userInfoDiv.style.display = 'none'; }
+    if (userInfoDiv) {
+        userInfoDiv.innerHTML = '';
+        userInfoDiv.style.display = 'none';
+        userInfoDiv.removeEventListener('click', toggleUserInfoMenu);
+    }
+
+    const userInfoMenu = document.getElementById('userInfoMenu');
+    if (userInfoMenu) {
+        userInfoMenu.style.display = 'none';
+    }
+
     const loginMenuItem = document.querySelector('.menu-item-login');
     if (loginMenuItem) loginMenuItem.style.display = 'flex';
     const logoutButton = document.getElementById('logoutButton');
     if (logoutButton) logoutButton.style.display = 'none';
+}
+
+function toggleUserInfoMenu(event) {
+    event.stopPropagation();
+
+    const userInfoMenu = document.getElementById('userInfoMenu');
+    const mainMenu = document.getElementById('menu');
+    const userInfoDiv = document.getElementById('userInfo');
+    const header = document.querySelector('.header');
+
+    if (!userInfoMenu || !userInfoDiv || !header) return;
+
+    if (mainMenu && mainMenu.style.display === 'block') {
+        mainMenu.style.display = 'none';
+    }
+
+    const isUserInfoMenuOpen = userInfoMenu.style.display === 'block';
+
+    if (isUserInfoMenuOpen) {
+        userInfoMenu.style.display = 'none';
+    } else {
+        const emailDisplay = document.getElementById('userInfoMenuEmail');
+        if (emailDisplay) {
+            if (userInfoGlobal && userInfoGlobal.email) {
+                emailDisplay.textContent = userInfoGlobal.email;
+            } else {
+                emailDisplay.textContent = userInfoGlobal ? 'Email not available' : 'User data not loaded';
+            }
+        }
+        
+        userInfoMenu.style.display = 'block';
+
+        const userInfoRect = userInfoDiv.getBoundingClientRect();
+        const headerRect = header.getBoundingClientRect();
+        const menuWidth = userInfoMenu.offsetWidth;
+
+        let leftPosition = (userInfoRect.right - headerRect.left) - menuWidth;
+        
+        if (leftPosition < 0) {
+            leftPosition = 0;
+        }
+        
+        userInfoMenu.style.left = `${leftPosition}px`;
+        userInfoMenu.style.top = `${userInfoRect.bottom - headerRect.top}px`;
+    }
 }
 
 function checkLoginStateOnLoad() {
@@ -644,7 +685,7 @@ function updateProgressBar(fillId, total, goal) {
     progressFill.style.width = `${Math.min(100, percentage)}%`;
     progressFill.textContent = `${total}${fillId === 'caloriesProgressFill' ? '' : 'g'} / ${goal}${fillId === 'caloriesProgressFill' ? '' : 'g'}`;
     if (percentage > 100) {
-        overfill.style.width = `${Math.min(100, percentage - 100)}%`; // Cap overfill display at 100% of bar width
+        overfill.style.width = `${Math.min(100, percentage - 100)}%`;
         overfill.style.display = 'block';
     } else {
         overfill.style.width = '0';
@@ -664,12 +705,12 @@ function initializeModal() {
             signupContent.style.display !== 'block' && signupContent.style.display !== 'flex') {
             showImageModal(img.src);
         }
-    }, true); // Use capture phase to catch clicks early
+    }, true);
 
     if (imageModal) {
         imageModal.addEventListener('click', function(event) {
-            if (event.target === imageModal) { // Click on overlay itself
-                closeModal(); // This will hide login/signup/image/settings
+            if (event.target === imageModal) {
+                closeModal();
             }
         });
     }
@@ -686,7 +727,7 @@ function showImageModal(src) {
     modalImg.style.display = 'block';
     loginContent.style.display = 'none';
     signupContent.style.display = 'none';
-    modal.style.display = 'flex'; // Use flex for centering image too
+    modal.style.display = 'flex';
 }
 
 function closeModal() {
@@ -704,9 +745,7 @@ function closeModal() {
 }
 
 function updateGoalsDisplay(calories, fat, carbs, protein) {
-    // This function might not be strictly necessary if updateProgressBars updates text directly
-    // For now, ensure progress bars are updated
-    updateDisplay(); // This will call updateProgressBars
+    updateDisplay();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -716,30 +755,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if(exerciseForm) exerciseForm.style.display = 'none';
     const settingsModal = document.getElementById('settingsModal');
     if(settingsModal) settingsModal.style.display = 'none';
-    const menu = document.getElementById('menu');
-    if(menu) menu.style.display = 'none';
+    
+    // Get menu elements consistently
+    const mainMenu = document.getElementById('menu'); // Main hamburger menu dropdown
+    const mainMenuButton = document.getElementById('menuButton'); // Main hamburger menu button
+    const userInfoMenu = document.getElementById('userInfoMenu'); // User profile icon dropdown
+    const userInfoIcon = document.getElementById('userInfo'); // User profile icon itself
+    const pageHeader = document.querySelector('.header'); // The main header element
+
+    if(mainMenu) mainMenu.style.display = 'none';
+    if(userInfoMenu) userInfoMenu.style.display = 'none';
 
 
     initializeGoogleSignIn();
     checkLoginStateOnLoad();
 
-    const logoutBtn = document.getElementById('logoutButton');
+    const logoutBtn = document.getElementById('logoutButton'); // Logout in main menu
     if (logoutBtn) logoutBtn.addEventListener('click', handleGoogleSignOut);
+
+    const userInfoMenuLogoutBtn = document.getElementById('userInfoMenuLogout'); // Logout in user info menu
+    if (userInfoMenuLogoutBtn) {
+        userInfoMenuLogoutBtn.addEventListener('click', () => {
+            handleGoogleSignOut();
+            if (userInfoMenu) {
+                userInfoMenu.style.display = 'none';
+            }
+        });
+    }
 
     initializeModal();
     if (typeof checkServerStatus === "function") checkServerStatus();
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
-        if (!button.dataset.originalText) { // Store original text for all save buttons
+        if (!button.dataset.originalText) {
             button.dataset.originalText = button.textContent;
         }
         button.addEventListener('click', (event) => {
             const form = event.target.closest('.meal-form');
             if (form) {
                 const mealType = form.id.replace('Form', '');
-                // If it was an edit, the specific onclick in editMeal would have handled it.
-                // This is for adding a new meal.
-                if (!button.dataset.editingId) { // Only call addMeal if not in edit mode (handled by editMeal's specific onclick)
+                if (!button.dataset.editingId) {
                     addMeal(mealType);
                 }
             }
@@ -751,7 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const form = event.target.closest('.meal-form');
             if(form) {
                 const mealType = form.id.replace('Form', '');
-                const dishNameInput = form.querySelector(`#${mealType}DishName`); // More specific selector
+                const dishNameInput = form.querySelector(`#${mealType}DishName`);
                 const saveButton = form.querySelector('.saveMealButton');
                 const editingId = saveButton ? saveButton.dataset.editingId : null;
 
@@ -762,73 +817,86 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const menuButton = document.getElementById('menuButton');
-
-    const header = document.querySelector('.header'); // The menu is positioned relative to this
-
-    if (menuButton && menu && header) {
-        menuButton.addEventListener('click', function (event) {
+    // Main Menu Button Logic
+    if (mainMenuButton && mainMenu && pageHeader) {
+        mainMenuButton.addEventListener('click', function (event) {
             event.stopPropagation();
 
-            const isMenuOpen = menu.style.display === 'block';
+            if (userInfoMenu && userInfoMenu.style.display === 'block') {
+                userInfoMenu.style.display = 'none'; // Close user info menu if open
+            }
 
-            if (isMenuOpen) {
-                menu.style.display = 'none';
+            const isMainMenuOpen = mainMenu.style.display === 'block';
+            if (isMainMenuOpen) {
+                mainMenu.style.display = 'none';
             } else {
-                menu.style.display = 'block';
-
-                const buttonRect = menuButton.getBoundingClientRect(); // Button's position relative to viewport
-                const headerRect = header.getBoundingClientRect();   // Header's position relative to viewport
-
-                // Calculate menu's left relative to the header, to align with button's left
-                menu.style.left = `${buttonRect.left - headerRect.left}px`;
-
-                // Calculate menu's top relative to the header, to align with button's bottom
-                menu.style.top = `${buttonRect.bottom - headerRect.top}px`;
+                mainMenu.style.display = 'block';
+                const buttonRect = mainMenuButton.getBoundingClientRect();
+                const headerRect = pageHeader.getBoundingClientRect();
+                mainMenu.style.left = `${buttonRect.left - headerRect.left}px`;
+                mainMenu.style.top = `${buttonRect.bottom - headerRect.top}px`;
             }
         });
-
-        // To make it dynamically update on screen resize:
-        window.addEventListener('resize', function() {
-            if (menu.style.display === 'block') { // Only reposition if the menu is open
-                const buttonRect = menuButton.getBoundingClientRect();
-                const headerRect = header.getBoundingClientRect();
-
-                menu.style.left = `${buttonRect.left - headerRect.left}px`;
-                menu.style.top = `${buttonRect.bottom - headerRect.top}px`;
-            }
-        });
-
-        // Click outside to close logic for the menu
-        document.addEventListener('click', function(event) {
-            if (menu.style.display === 'block' &&
-                !menu.contains(event.target) &&      // Click was not inside the menu
-                event.target !== menuButton &&       // Click was not on the menu button itself
-                !menuButton.contains(event.target)) { // Click was not on a child of menuButton
-                menu.style.display = 'none';
-            }
-        });
-
     } else {
-        if (!menuButton) console.error("Menu button (#menuButton) not found!");
-        if (!menu) console.error("Menu element (#menu) not found!"); // 'menu' is already defined and checked above
-        if (!header) console.error("Header element (.header) not found!");
+        if (!mainMenuButton) console.error("Menu button (#menuButton) not found!");
+        if (!mainMenu) console.error("Main menu element (#menu) not found!");
+        if (!pageHeader) console.error("Header element (.header) not found!");
     }
 
-    document.addEventListener('click', function (event) {
-        // This listener is primarily for modals now.
-        // Menu closing is handled by the more specific listener above.
+    // User Info Icon click is handled by updateUIAfterSignIn attaching toggleUserInfoMenu
+
+    // Click outside to close logic for ALL menus and modals
+    document.addEventListener('click', function(event) {
+        // Close main menu
+        if (mainMenu && mainMenu.style.display === 'block') {
+            if (!mainMenu.contains(event.target) && mainMenuButton && !mainMenuButton.contains(event.target)) {
+                mainMenu.style.display = 'none';
+            }
+        }
+
+        // Close user info menu
+        if (userInfoMenu && userInfoMenu.style.display === 'block') {
+            if (!userInfoMenu.contains(event.target) && userInfoIcon && !userInfoIcon.contains(event.target)) {
+                userInfoMenu.style.display = 'none';
+            }
+        }
         
-        // Modal closing by clicking overlay is handled by imageModal's own event listener.
-        // This listener can handle settings modal if it's not using imageModal as overlay.
+        // Settings Modal closing
         const activeSettingsModal = document.getElementById('settingsModal');
         if (activeSettingsModal && activeSettingsModal.style.display !== 'none') {
-            if (event.target === activeSettingsModal) { // Click on overlay for settings modal
+            if (event.target === activeSettingsModal) {
                  activeSettingsModal.style.display = 'none';
             }
         }
+        // imageModal overlay click is handled by its own listener in initializeModal()
     });
 
+    // Resize listener to handle both menus
+    window.addEventListener('resize', function() {
+        if (!pageHeader) return;
+        const headerRect = pageHeader.getBoundingClientRect();
+
+        // Reposition main menu if open
+        if (mainMenu && mainMenu.style.display === 'block' && mainMenuButton) {
+            const buttonRect = mainMenuButton.getBoundingClientRect();
+            mainMenu.style.left = `${buttonRect.left - headerRect.left}px`;
+            mainMenu.style.top = `${buttonRect.bottom - headerRect.top}px`;
+        }
+
+        // Reposition user info menu if open
+        if (userInfoMenu && userInfoMenu.style.display === 'block' && userInfoIcon) {
+            const userInfoRect = userInfoIcon.getBoundingClientRect();
+            const menuWidth = userInfoMenu.offsetWidth;
+            
+            let leftPosition = (userInfoRect.right - headerRect.left) - menuWidth;
+            if (leftPosition < 0) leftPosition = 0;
+
+            userInfoMenu.style.left = `${leftPosition}px`;
+            userInfoMenu.style.top = `${userInfoRect.bottom - headerRect.top}px`;
+        }
+    });
+
+    // Login Modal related event listeners
     const loginMenuItem = document.querySelector('.menu-item-login');
     if (loginMenuItem) {
         loginMenuItem.addEventListener('click', function () {
@@ -840,7 +908,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginModalContent) loginModalContent.style.display = 'block';
             if (signupModalContent) signupModalContent.style.display = 'none';
             if (imageModal) imageModal.style.display = 'flex';
-            if (menu) menu.style.display = 'none'; // Close menu when opening login
+            if (mainMenu) mainMenu.style.display = 'none'; // Close main menu
+            if (userInfoMenu) userInfoMenu.style.display = 'none'; // Close user info menu
         });
     }
     
@@ -879,17 +948,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveExerciseButton = document.getElementById('saveExerciseButton');
     if(saveExerciseButton) saveExerciseButton.addEventListener('click', addExercise);
 
+    // Settings Modal Logic
     const settingsMenuItem = document.querySelector('.menu-item-settings');
     const settingsForm = document.getElementById('settingsForm');
+    // settingsModal already defined at the top of DOMContentLoaded
 
     if(settingsMenuItem && settingsModal && settingsForm) {
         settingsMenuItem.addEventListener('click', () => {
+            if (mainMenu) mainMenu.style.display = 'none'; // Close main menu
+            if (userInfoMenu) userInfoMenu.style.display = 'none'; // Close user info menu
+            
             settingsModal.style.display = 'flex';
             document.getElementById('dailyCalories').value = goals.calories;
             document.getElementById('dailyFat').value = goals.fat;
             document.getElementById('dailyCarbs').value = goals.carbs;
             document.getElementById('dailyProtein').value = goals.protein;
-            if (menu) menu.style.display = 'none'; // Close menu when opening settings
         });
 
         settingsForm.addEventListener('submit', function (e) {

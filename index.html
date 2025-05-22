@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.2.14">
+    <link rel="stylesheet" href="css/styles.css?v0.2.15">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -17,15 +17,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
+        <div class="container">
         <div class="header">
             <div class="row">
                 <button id="menuButton" class="menu-button">☰</button>
                 <div class="title">Before You Eat</div>
-                <div id="userInfo" style="display: none; align-items: center;">
-                    <!-- User profile picture will go here -->
+                <div id="userInfo" style="align-items: center; cursor: pointer;">
+                    <!-- User profile picture will go here (JS adds img tag inside this div) -->
                 </div>
             </div>
+
             <div id="menu" class="menu" style="display: none;">
                 <div class="menu-item menu-item-login">
                     <i class="fas fa-sign-in-alt"></i> Login
@@ -38,20 +39,30 @@
                 </div>
             </div>
 
+            <div id="userInfoMenu" class="menu" style="display: none;">
+                <div id="userInfoMenuEmail" class="menu-item-email">
+                    <!-- User email will be populated here by JS -->
+                </div>
+                <div id="userInfoMenuLogout" class="menu-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </div>
+            </div>
+            
             <div class="date-navigation">
                 <button class="nav-button" onclick="changeDate(-1)">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <button class="date-button" onclick="goToToday()">
                     <i class="fas fa-calendar-alt"></i>
-                    <span id="currentDateDisplay">Date</span> <!-- JS will update this -->
+                    <span id="currentDateDisplay">Date</span>
                 </button>
                 <button class="nav-button" onclick="changeDate(1)">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
+
             <div class="row bottom">
-                <div class="version">v0.2.14</div>
+                <div class="version">v0.2.15</div>
                 <div id="server-status" class="server-status">
                     <span id="status-icon" class="status-icon yellow"></span>
                     <span id="status-text" class="status-text">Checking...</span>
@@ -267,6 +278,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.2.14"></script>
+    <script src="js/scripts.js?v0.2.15"></script>
 </body>
 </html>

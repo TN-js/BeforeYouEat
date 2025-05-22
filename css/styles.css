@@ -116,9 +116,9 @@ h3 {
     color: #4a5568;
     font-size: 24px;
     outline: none;
-    position: absolute; /* Added */
-    left: 0px; /* Added */
-    top: 10px; /* Added */
+    position: absolute;
+    left: 0px;
+    top: 10px;
 }
 
 .menu-button:hover {
@@ -143,9 +143,10 @@ h3 {
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin-top: 10px;
+    position: relative; /* Crucial for absolute positioning of children */
+    height: 60px; /* Explicit height for better vertical alignment control */
+    margin-top: 10px; /* Retain original margins or adjust as needed */
     margin-bottom: 10px;
-    position: relative; /* Added */
 }
 
 .header .row.bottom {
@@ -160,13 +161,15 @@ h3 {
     font-size: 36px;
     font-weight: bold;
     text-align: center;
-    width: calc(100% - 80px); /* Adjusted */
-    background: none;
+    /* MODIFIED: Occupy full width, use padding to avoid overlap with absolute icons */
+    width: 100%;
+    padding: 0 50px; /* Adjust padding if icons are wider or spacing changes */
+    box-sizing: border-box;
     color: #0c2512;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
     font-family: 'Pacifico', cursive;
-    /* padding-bottom: 10px; */
-    margin: 0 auto;
+    margin: 0; /* Remove margin: 0 auto as width is 100% */
+    line-height: 60px; /* Vertically center text within the 60px high row */
 }
 
 .header .version {
@@ -713,13 +716,16 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     background-color: #f1f1f1;
 }
 
+
 .menu-item i {
     margin-right: 10px;
     font-size: 20px;
     color: #4a5568;
     width: 25px;
-    display: flex;
-    text-align: center;
+    display: flex; /* if you want to center icon in its allocated space */
+    justify-content: center; /* if you want to center icon in its allocated space */
+    align-items: center; /* if you want to center icon in its allocated space */
+    /* text-align: center; is for text content, not directly for flex item alignment */
 }
 
 /* Additional styles for login modal links */
@@ -769,4 +775,33 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 
 .google-login-button svg {
     margin-right: 10px;
+}
+
+/* ADDED/MODIFIED: Styles for #userInfo */
+#userInfo {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none; /* Initially hidden; JS toggles to 'flex' */
+    align-items: center; /* This was in inline style, good to keep */
+    cursor: pointer; /* This was in inline style, good to keep */
+    /* Optional: define a fixed size if needed, e.g., height: 40px; */
+}
+
+/* ADDED: Style for the profile picture image itself */
+#userInfo img {
+    width: 35px; /* Matches JS style */
+    height: 35px; /* Matches JS style */
+    border-radius: 50%; /* Matches JS style */
+}
+
+/* ADDED: Styles for the email item in the user info dropdown */
+#userInfoMenu .menu-item-email {
+    padding: 10px;
+    color: #333;
+    font-size: 14px;
+    border-bottom: 1px solid #eee; /* Visually separates email from logout */
+    text-align: center;
+    word-break: break-all; /* Prevents long emails from breaking layout */
 }
