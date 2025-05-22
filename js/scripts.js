@@ -729,6 +729,37 @@ function updateUIAfterSignIn(userInfo) {
     document.getElementById('menu').style.display = ''; // Or manage as per existing menu logic
 }
 
+// This function will be called when the Google Platform Library is loaded
+function onGooglePlatformLoaded() {
+    console.log('Google Platform Library loaded, initializing Auth2...');
+    gapi.load('auth2', function() {
+        gapi.auth2.init({
+            client_id: GOOGLE_CLIENT_ID,
+        }).then(function(authInstance) {
+            console.log('Google Auth2 initialized');
+            googleAuth = authInstance;
+
+            const googleLoginButton = document.getElementById('googleLogin');
+            if (googleLoginButton) {
+                googleAuth.attachClickHandler(googleLoginButton, {},
+                    handleGoogleSignIn,
+                    function(error) {
+                        console.error('Google Sign-In error', JSON.stringify(error, undefined, 2));
+                        alert('Error signing in with Google: ' + JSON.stringify(error));
+                    }
+                );
+            } else {
+                console.error('googleLogin button not found during auth init');
+            }
+            
+            checkLoginStateOnLoad(); // Check login state once auth is ready
+
+        }).catch(function(error) {
+            console.error('Error initializing Google Auth2:', error);
+        });
+    });
+}
+
 function handleGoogleSignOut() {
     if (googleAuth) {
         googleAuth.signOut().then(() => {
@@ -861,47 +892,30 @@ function updateGoalsDisplay(calories, fat, carbs, protein) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFromLocalStorage();
+    loadFromLocalStorage(); // Existing function
+    // Other non-Google related initializations can remain here
+    // e.g., document.querySelectorAll('.saveMealButton').forEach(...) etc.
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     document.getElementById('exerciseForm').style.display = 'none';
 
-    // Initialize Google Auth
-    gapi.load('auth2', function() {
-        gapi.auth2.init({
-            client_id: GOOGLE_CLIENT_ID,
-            // scope: 'profile email' // default scopes, can be explicit
-        }).then(function(authInstance) {
-            console.log('Google Auth2 initialized');
-            googleAuth = authInstance; // Store the GoogleAuth object
+    // The Google Auth initialization is now triggered by onGooglePlatformLoaded
 
-            // Attach click handler for Google Sign-In button
-            // Check if the button exists before attaching
-            const googleLoginButton = document.getElementById('googleLogin');
-            if (googleLoginButton) {
-                googleAuth.attachClickHandler(googleLoginButton, {},
-                    handleGoogleSignIn,
-                    function(error) {
-                        console.error('Google Sign-In error', JSON.stringify(error, undefined, 2));
-                        alert('Error signing in with Google: ' + JSON.stringify(error));
-                    }
-                );
-            } else {
-                console.error('googleLogin button not found');
-            }
-            
-            // Initial check of login state
-            checkLoginStateOnLoad();
-
-        }).catch(function(error) {
-            console.error('Error initializing Google Auth2:', error);
-        });
-    });
-
-    // Attach sign out handler
+    // Attach sign out handler (can still be here or moved to onGooglePlatformLoaded if preferred,
+    // but it's safer to attach only after elements are certainly in DOM)
     const logoutBtn = document.getElementById('logoutButton');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleGoogleSignOut);
+    } else {
+        console.error('logoutButton not found in DOMContentLoaded');
     }
+    
+    // Ensure other initial setup calls are made
+    initializeModal(); // If this initializes parts of the login modal, ensure it's robust
+    checkServerStatus(); // Existing function call
+    
+    // Note: The original code for attaching Google Sign-In and calling checkLoginStateOnLoad
+    // has been moved to onGooglePlatformLoaded.
+    // The event listener for 'googleLogin' (the placeholder one) should already be removed.
 
     document.querySelectorAll('.saveMealButton').forEach(button => {
         button.addEventListener('click', (event) => {
