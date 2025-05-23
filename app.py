@@ -41,6 +41,7 @@ else: # Production (Render)
     CORS(app, resources={
         r"/analyze_image": {"origins": frontend_url},
         r"/estimate_macros": {"origins": frontend_url},
+        r"/edit_macros_with_command": {"origins": frontend_url},
         r"/health": {"origins": frontend_url},
         r"/api/*": {"origins": frontend_url}
     })

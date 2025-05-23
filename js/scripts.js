@@ -781,15 +781,40 @@ async function updateUIAfterSignIn(userInfo) {
     const userInfoMenuLogoutBtn = document.getElementById('userInfoMenuLogout');
     if (userInfoMenuLogoutBtn) userInfoMenuLogoutBtn.style.display = 'flex';
 
-    loadFromLocalStorage(); 
+    loadFromLocalStorage(); // Load local data first, always.
 
-    if (isServerOnline) {
-        await loadDataFromServer(formatLocalDateForStorage(currentDate)); 
-        await syncDataToServer(); 
+    // Attempt to connect to the server immediately after sign-in
+    if (googleIdToken && currentGoogleUserIdForStorage) {
+        console.log("Attempting initial server connection after sign-in...");
+        try {
+            // Try to fetch initial data. This also serves as a connectivity test.
+            const healthResponse = await fetch(`${BACKEND_URL}/health`, { method: 'GET', cache: 'no-store' });
+            if (healthResponse.ok) {
+                const healthData = await healthResponse.json();
+                if (healthData.status === 'live') {
+                    isServerOnline = true; // We successfully connected
+                    serverJustCameOnlineForPolling = true; // Hint for polling
+                    console.log("Server is live. Proceeding with initial data load and sync.");
+                    await loadDataFromServer(formatLocalDateForStorage(currentDate)); // Load fresh data
+                    await syncDataToServer(); // Sync any pending local changes
+                } else {
+                    isServerOnline = false;
+                    console.warn("Server reported not live during initial check after login. Relying on local data.");
+                }
+            } else {
+                isServerOnline = false;
+                console.warn("Could not reach server health endpoint during initial check after login. Status:", healthResponse.status, ". Relying on local data.");
+            }
+        } catch (error) {
+            isServerOnline = false;
+            console.error("Error during initial server connection attempt after login:", error, ". Relying on local data.");
+        }
     } else {
-        console.warn("Server offline, relying on local data after login.");
+        console.log("Not attempting server connection: No Google ID token or user ID.");
     }
-    startPollingForUpdates();
+
+    startPollingForUpdates(); // Start regular polling regardless of initial success
+    updateDisplay(); // Ensure UI reflects any data loaded
 }
 
 function handleGoogleSignOut() {
@@ -873,18 +898,36 @@ function initializeGoogleSignIn() {
 }
 
 // --- SERVER COMMUNICATION & SYNC ---
-async function loadDataFromServer(dateStr) { 
-    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline) {
+async function loadDataFromServer(dateStr) {
+    if (!googleIdToken || !currentGoogleUserIdForStorage) {
         updateDisplay(); return;
     }
+    // Optional: Add a check here if you want to prevent the fetch attempt
+    // if isServerOnline is known to be false from other checks.
+    // However, updateUIAfterSignIn now attempts to set it.
+    // And checkServerStatus should keep it updated.
+    // The fetch itself is the ultimate test.
+    // if (!isServerOnline) {
+    //     console.warn(`loadDataFromServer (${dateStr}): Server marked offline, not attempting fetch.`);
+    //     updateDisplay(); // Ensure UI reflects local data
+    //     return;
+    // }
+
     try {
+        console.log(`loadDataFromServer: Fetching data for ${dateStr} from ${BACKEND_URL}`); // Added log
         const response = await fetch(`${BACKEND_URL}/api/data?date=${dateStr}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${googleIdToken}`, 'Content-Type': 'application/json' }
         });
         if (!response.ok) {
-            if (response.status === 401) handleGoogleSignOut(); 
-            else console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);
+            // If we fail to load, it's good to reflect that the server might be an issue
+            // The main checkServerStatus will handle setting isServerOnline more globally
+            console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);
+            if (response.status === 401) {
+                console.warn("loadDataFromServer: Authorization error (401). Signing out.");
+                handleGoogleSignOut();
+            }
+            // Don't explicitly set isServerOnline = false here, let checkServerStatus manage it
             updateDisplay(); return;
         }
         const serverData = await response.json();
@@ -919,21 +962,30 @@ async function loadDataFromServer(dateStr) {
         else if (exercise[dateStr] === undefined) exercise[dateStr] = 0;
         localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
         localStorage.setItem(getLocalStorageKey('exercise'), JSON.stringify(exercise));
-    } catch (error) { console.error("Failed to load or merge data from server:", error); }
-    updateDisplay(); 
+
+    } catch (error) {
+        console.error("Failed to load or merge data from server:", error);
+        // Don't explicitly set isServerOnline = false here from a single failed load.
+        // Let checkServerStatus be the authority on overall server status.
+    }
+    updateDisplay();
 }
 
 async function syncDataToServer() {
-    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline) {
-        if(!isServerOnline) console.warn("Sync skipped: Server offline.");
+    if (!googleIdToken || !currentGoogleUserIdForStorage) {
         return;
     }
+    // if (!isServerOnline) { // Rely on fetch failure for this specific attempt
+    //     console.warn("Sync skipped: Server marked offline by checkServerStatus.");
+    //     return;
+    // }
+
     let pendingSyncData = { mealsToUpdate: [], mealsToDelete: [], exercisePerDate: {}, goals: null };
     let changesFound = false;
     for (const dateKey in meals) {
         const dayMeals = meals[dateKey];
         for (const mealType in dayMeals) {
-            (dayMeals[mealType] || []).forEach(meal => { 
+            (dayMeals[mealType] || []).forEach(meal => {
                 if (meal.needsSync) {
                     changesFound = true;
                     if (meal.deleted) pendingSyncData.mealsToDelete.push({ client_id: meal.id, date: dateKey, serverId: meal.serverId });
@@ -943,11 +995,25 @@ async function syncDataToServer() {
         }
     }
     const currentFormattedDate = formatLocalDateForStorage(currentDate);
-    if (changesFound) { // Only include exercise/goals if meals changed, or implement separate change tracking for them
-        if (exercise[currentFormattedDate] !== undefined) pendingSyncData.exercisePerDate[currentFormattedDate] = exercise[currentFormattedDate];
-        pendingSyncData.goals = goals;
+    // Smart sync: only include exercise/goals if there are meal changes OR if they themselves changed
+    // This part of your logic might need refinement if you want to sync goals/exercise independently
+    // of meal changes when they are modified locally.
+    // For now, assuming your existing logic for `changesFound` is what you intend.
+    if (changesFound) {
+        // Only include goals/exercise if meals are also changing, or make this check more granular
+        if (exercise[currentFormattedDate] !== undefined) { // Or some other flag to indicate exercise needs sync
+             pendingSyncData.exercisePerDate[currentFormattedDate] = exercise[currentFormattedDate];
+        }
+        // Similarly for goals, only send if they genuinely need syncing
+        pendingSyncData.goals = goals; // Or some other flag for goals.needsSync
     }
-    if (!changesFound && Object.keys(pendingSyncData.exercisePerDate).length === 0 && !pendingSyncData.goals) return;
+
+
+    if (!changesFound && Object.keys(pendingSyncData.exercisePerDate).length === 0 && !pendingSyncData.goals) {
+        // console.log("syncDataToServer: No changes to sync.");
+        return;
+    }
+    console.log("syncDataToServer: Attempting to sync data to", BACKEND_URL, pendingSyncData); // Added log
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/sync`, {
@@ -958,9 +1024,14 @@ async function syncDataToServer() {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({error: "Unknown sync error"}));
             console.error(`Sync failed! Status: ${response.status}`, errorData.error || response.statusText);
-            if (response.status === 401) handleGoogleSignOut();
+            if (response.status === 401) {
+                console.warn("syncDataToServer: Authorization error (401). Signing out.");
+                handleGoogleSignOut();
+            }
+            // Don't set isServerOnline = false here.
             return;
         }
+        // ... (rest of your existing successful sync handling) ...
         const syncResult = await response.json();
         console.log("Sync successful:", syncResult);
         (syncResult.syncedMealClientIds || []).forEach(syncedClientId => {
@@ -985,7 +1056,11 @@ async function syncDataToServer() {
         });
         localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
         updateDisplay();
-    } catch (error) { console.error("Error during syncDataToServer fetch:", error); }
+
+    } catch (error) {
+        console.error("Error during syncDataToServer fetch:", error);
+        // Don't set isServerOnline = false here.
+    }
 }
 
 // --- POLLING FUNCTIONS ---
@@ -1064,39 +1139,50 @@ async function checkServerStatus() {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
     if (!statusIcon || !statusText) return;
+
+    // Visual cue for checking
     if (!statusIcon.classList.contains('blink')) {
         statusIcon.classList.add('blink');
         statusIcon.addEventListener('animationend', () => statusIcon.classList.remove('blink'), { once: true });
     }
     statusIcon.classList.remove('green', 'red'); statusIcon.classList.add('yellow');
     statusText.textContent = 'Checking...';
+
+    let wasPreviouslyOnline = isServerOnline; // Keep track of previous state
+
     try {
         const response = await fetch(`${BACKEND_URL}/health`, { method: 'GET', cache: 'no-store' });
         const data = await response.json();
         if (response.ok && data.status === 'live') {
             statusIcon.classList.replace('yellow','green'); statusText.textContent = 'Live';
-            if (!isServerOnline) { 
-                isServerOnline = true; serverJustCameOnlineForPolling = true;
-                await syncDataToServer(); startPollingForUpdates();
-            } else { 
-                isServerOnline = true; 
-                if (!pollingIntervalId && googleIdToken && currentGoogleUserIdForStorage) startPollingForUpdates();
+            isServerOnline = true; // Authoritative "online" state
+            if (!wasPreviouslyOnline) { // Just came online
+                console.log("Server status: Came online.");
+                serverJustCameOnlineForPolling = true; // For polling logic
+                // Consider triggering a sync if it just came online and there might be pending data
+                if (googleIdToken && currentGoogleUserIdForStorage) {
+                    await syncDataToServer(); // Sync any pending local changes
+                    // Optionally, also reload current day's data if desired
+                    // await loadDataFromServer(formatLocalDateForStorage(currentDate));
+                }
+                startPollingForUpdates(); // Ensure polling is active
             }
-            if (statusCheckInterval) { clearInterval(statusCheckInterval); statusCheckInterval = null; }
-        } else { 
-            if (isServerOnline) console.warn("Server went offline or is sleeping.");
-            isServerOnline = false; serverJustCameOnlineForPolling = false;
+            // If it was already online, polling should be handling updates.
+            if (statusCheckInterval) { clearInterval(statusCheckInterval); statusCheckInterval = null; } // Stop rapid checks if successful
+        } else {
             statusIcon.classList.replace('yellow','red');
             statusText.textContent = response.ok ? 'Unknown' : 'Sleeping';
+            isServerOnline = false; // Authoritative "offline" state
+            if (wasPreviouslyOnline) console.warn("Server status: Went offline or is sleeping.");
             stopPollingForUpdates();
-            if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
+            if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000); // Resume rapid checks
         }
-    } catch (error) { 
-        if (isServerOnline) console.warn("Server connection lost.");
-        isServerOnline = false; serverJustCameOnlineForPolling = false;
+    } catch (error) {
         statusIcon.classList.replace('yellow','red'); statusText.textContent = 'Offline';
+        isServerOnline = false; // Authoritative "offline" state due to error
+        if (wasPreviouslyOnline) console.warn("Server status: Connection lost.");
         stopPollingForUpdates();
-        if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
+        if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000); // Resume rapid checks
     }
 }
 
