@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.3.2">
+    <link rel="stylesheet" href="css/styles.css?v0.3.3">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -17,13 +17,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-        <div class="container">
+    <div class="container">
         <div class="header">
             <div class="row">
                 <button id="menuButton" class="menu-button">☰</button>
                 <div class="title">Before You Eat</div>
                 <div id="userInfo" style="align-items: center; cursor: pointer;">
-                    <!-- User profile picture will go here (JS adds img tag inside this div) -->
+                    <!-- User profile picture will go here -->
                 </div>
             </div>
 
@@ -62,7 +62,7 @@
             </div>
 
             <div class="row bottom">
-                <div class="version">v0.3.2</div>
+                <div class="version">v0.3.3</div>
                 <div id="server-status" class="server-status">
                     <span id="status-icon" class="status-icon yellow"></span>
                     <span id="status-text" class="status-text">Checking...</span>
@@ -72,42 +72,51 @@
 
         <div class="summary">
             <h2>Daily Summary</h2>
+
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Cals</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="caloriesProgressFill">0 / 2000</div>
+                    <div class="progress-bar-fill" id="caloriesProgressFill"></div>
+                    <div class="progress-bar-text" id="caloriesProgressText">0 / 2000</div>
                 </div>
             </div>
+
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Fat</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="fatProgressFill">0g / 67g</div>
+                    <div class="progress-bar-fill" id="fatProgressFill"></div>
+                    <div class="progress-bar-text" id="fatProgressText">0g / 67g</div>
                 </div>
             </div>
+
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Carbs</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="carbsProgressFill">0g / 275g</div>
+                    <div class="progress-bar-fill" id="carbsProgressFill"></div>
+                    <div class="progress-bar-text" id="carbsProgressText">0g / 275g</div>
                 </div>
             </div>
+
             <div class="progress-bar-container">
                 <div class="progress-bar-label">Protein</div>
                 <div class="progress-bar">
-                    <div class="progress-bar-fill" id="proteinProgressFill">0g / 75g</div>
+                    <div class="progress-bar-fill" id="proteinProgressFill"></div>
+                    <div class="progress-bar-text" id="proteinProgressText">0g / 75g</div>
                 </div>
             </div>
+
             <p>Total Exercise: <span id="totalExercise">0</span> calories burned</p>
         </div>
 
         <div class="meals">
-            <!-- Breakfast -->
             <div id="breakfastSlot" class="meal-slot">
                 <h3>Breakfast</h3>
-                <button onclick="toggleMealForm('breakfast')">Add Breakfast</button>
+                <button class="defaultButton" onclick="toggleMealForm('breakfast')">Add Breakfast</button>
                 <div id="breakfastForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="breakfastDishName" placeholder="Meal Name">
                         <button class="generateMacrosButton">Generate Macros</button>
+                        <button class="aiEditMacrosButton" style="display: none;">AI Update</button>
                     </div>
                     <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
@@ -115,23 +124,24 @@
                     <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="breakfast">Save Breakfast</button>
                     <div class="image-upload-container">
-                        <label for="breakfastImageUpload">Upload Image</label>
+                        <label for="breakfastImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="breakfastImageUpload" accept="image/*" onchange="handleImageUpload(this, 'breakfast')">
-                        <label for="breakfastImageCapture">Capture Image</label>
+                        <label for="breakfastImageCapture" class="ai-enhanced-button">Capture Image</label>
                         <input type="file" id="breakfastImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'breakfast')">
                     </div>
                     <img id="uploadedImageBreakfast" class="meal-image" alt="Uploaded breakfast image" style="display: none;">
                 </div>
                 <div id="breakfastItems" class="meal-items"></div>
             </div>
-            <!-- Lunch -->
+
             <div id="lunchSlot" class="meal-slot">
                 <h3>Lunch</h3>
-                <button onclick="toggleMealForm('lunch')">Add Lunch</button>
+                <button class="defaultButton" onclick="toggleMealForm('lunch')">Add Lunch</button>
                 <div id="lunchForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="lunchDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton">Generate Macros</button>
+                        <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
+                        <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
                     <input type="number" id="lunchCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
@@ -139,23 +149,24 @@
                     <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="lunch">Save Lunch</button>
                     <div class="image-upload-container">
-                        <label for="lunchImageUpload">Upload Image</label>
+                        <label for="lunchImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="lunchImageUpload" accept="image/*" onchange="handleImageUpload(this, 'lunch')">
-                        <label for="lunchImageCapture">Capture Image</label>
+                        <label for="lunchImageCapture" class="ai-enhanced-button">Capture Image</label>
                         <input type="file" id="lunchImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'lunch')">
                     </div>
                     <img id="uploadedImageLunch" class="meal-image" alt="Uploaded lunch image" style="display: none;">
                 </div>
                 <div id="lunchItems" class="meal-items"></div>
             </div>
-            <!-- Dinner -->
+
             <div id="dinnerSlot" class="meal-slot">
                 <h3>Dinner</h3>
-                <button onclick="toggleMealForm('dinner')">Add Dinner</button>
+                <button class="defaultButton" onclick="toggleMealForm('dinner')">Add Dinner</button>
                 <div id="dinnerForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="dinnerDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton">Generate Macros</button>
+                        <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
+                        <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
                     <input type="number" id="dinnerCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
@@ -163,23 +174,24 @@
                     <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="dinner">Save Dinner</button>
                     <div class="image-upload-container">
-                        <label for="dinnerImageUpload">Upload Image</label>
+                        <label for="dinnerImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="dinnerImageUpload" accept="image/*" onchange="handleImageUpload(this, 'dinner')">
-                        <label for="dinnerImageCapture">Capture Image</label>
+                        <label for="dinnerImageCapture" class="ai-enhanced-button">Capture Image</label>
                         <input type="file" id="dinnerImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'dinner')">
                     </div>
                     <img id="uploadedImageDinner" class="meal-image" alt="Uploaded dinner image" style="display: none;">
                 </div>
                 <div id="dinnerItems" class="meal-items"></div>
             </div>
-            <!-- Snacks -->
+
             <div id="snacksSlot" class="meal-slot">
                 <h3>Snacks</h3>
-                <button onclick="toggleMealForm('snacks')">Add Snacks</button>
+                <button class="defaultButton" onclick="toggleMealForm('snacks')">Add Snacks</button>
                 <div id="snacksForm" class="meal-form" style="display: none;">
                     <div class="meal-name-group">
                         <input type="text" id="snacksDishName" placeholder="Meal Name">
-                        <button class="generateMacrosButton">Generate Macros</button>
+                        <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
+                        <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
                     <input type="number" id="snacksCalories" step="0.1" placeholder="Cals">
                     <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
@@ -187,9 +199,9 @@
                     <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
                     <button class="saveMealButton" data-meal-type="snacks">Save Snacks</button>
                     <div class="image-upload-container">
-                        <label for="snacksImageUpload">Upload Image</label>
+                        <label for="snacksImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="snacksImageUpload" accept="image/*" onchange="handleImageUpload(this, 'snacks')">
-                        <label for="snacksImageCapture">Capture Image</label>
+                        <label for="snacksImageCapture" class="ai-enhanced-button">Capture Image</label>
                         <input type="file" id="snacksImageCapture" accept="image/*" capture="environment" onchange="handleImageUpload(this, 'snacks')">
                     </div>
                     <img id="uploadedImageSnacks" class="meal-image" alt="Uploaded snacks image" style="display: none;">
@@ -200,10 +212,10 @@
 
         <div class="exercise">
             <h3>Exercise</h3>
-            <button onclick="toggleExerciseForm()">Add Exercise</button>
+            <button class="defaultButton" onclick="toggleExerciseForm()">Add Exercise</button>
             <div id="exerciseForm" style="display: none;">
                 <input type="number" id="exerciseCalories" step="0.1" placeholder="Calories burned">
-                <button id="saveExerciseButton">Save Exercise</button>
+                <button class="saveExerciseButton" id="saveExerciseButton">Save Exercise</button>
             </div>
             <div id="exerciseItems" class="exercise-items"></div>
         </div>
@@ -219,7 +231,7 @@
                 <input type="text" id="loginUsername" name="loginUsername" required>
                 <label for="loginPassword">Password</label>
                 <input type="password" id="loginPassword" name="loginPassword" required>
-                <button type="submit">Log in</button>
+                <button class="defaultButton" type="submit">Log in</button>
             </form>
             <h3>Or</h3>
             <div id="googleLoginButtonContainer"></div>
@@ -238,7 +250,7 @@
                 <input type="text" id="signUpUsername" name="signUpUsername" required>
                 <label for="signUpPassword">Password</label>
                 <input type="password" id="signUpPassword" name="signUpPassword" required>
-                <button type="submit">Sign Up</button>
+                <button class="defaultButton" type="submit">Sign Up</button>
             </form>
             <div class="login-links">
                 <div class="signup-link">
@@ -271,13 +283,13 @@
                         <label for="dailyProtein">Daily Protein (g)</label>
                         <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                    <button class="defaultButton" type="submit" class="btn btn-primary">Save Settings</button>
                 </form>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.3.2"></script>
+    <script src="js/scripts.js?v0.3.3"></script>
 </body>
 </html>

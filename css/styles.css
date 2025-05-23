@@ -25,23 +25,23 @@ h3 {
     margin: 0;
 }
 
-/* Server Status Indicator Styles */
 .server-status {
     display: flex;
     align-items: center;
-    background-color: white; /* Maintain a subtle background */
+    background-color: white;
     gap: 5px;
-    padding: 5px 10px;
-    border-radius: 10px;
+    /* padding: 5px 10px; */
+    padding: 3px 6px;
+    border-radius: 4px;
     margin-top: 24px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    position: relative; /* Ensure proper positioning for animations */
+    position: relative;
 }
 
 .status-icon {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background-color: #ffc107; /* Yellow for checking */
     transition: background-color 0.1s ease;
@@ -102,33 +102,10 @@ h3 {
     }
 }
 
-.menu-button {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    color: #4a5568;
-    font-size: 24px;
-    outline: none;
-    position: absolute;
-    left: 0px;
-    top: 10px;
-}
-
-.menu-button:hover {
-    background: none; /* Remove background on hover */
-}
-
 .header {
     background: linear-gradient(45deg, #d4f1d4, #d4f1f9, #e1d4f1, #d4f1d4, #d4f1f9, #e1d4f1);
     background-size: 300% 300%;
-    animation: gradientAnimation 10s linear infinite;
+    animation: gradientAnimation 30s linear infinite;
     color: white;
     text-align: center;
     position: relative;
@@ -145,7 +122,7 @@ h3 {
     width: 100%;
     position: relative; /* Crucial for absolute positioning of children */
     height: 60px; /* Explicit height for better vertical alignment control */
-    margin-top: 10px; /* Retain original margins or adjust as needed */
+    margin-top: 10px;
     margin-bottom: 10px;
 }
 
@@ -161,70 +138,90 @@ h3 {
     font-size: 36px;
     font-weight: bold;
     text-align: center;
-    /* MODIFIED: Occupy full width, use padding to avoid overlap with absolute icons */
+    /* Occupy full width, use padding to avoid overlap with absolute icons */
     width: 100%;
-    padding: 0 50px; /* Adjust padding if icons are wider or spacing changes */
+    padding: 0 50px;
     box-sizing: border-box;
     color: #0c2512;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
     font-family: 'Pacifico', cursive;
-    margin: 0; /* Remove margin: 0 auto as width is 100% */
+    margin: 0;
     line-height: 60px; /* Vertically center text within the 60px high row */
 }
 
-.header .version {
-    font-size: 12px;
+.version {
+    font-size: 14px;
+    font-weight: bold;
     color: rgba(255, 255, 255, 0.9);
     background-color: #0c2512;
     padding: 3px 6px;
     border-radius: 4px;
-    /* margin: 0 20px; */
     margin-top: 24px;
 }
 
-/* Minimal arrow buttons */
+.menu-button {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #4a5568;
+    font-size: 24px;
+    outline: none;
+    position: absolute;
+    left: 0px;
+    top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button:hover {
+    background: none;
+}
+
 .nav-button {
     width: 40px;
     height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
+    border-radius: 4px;
     cursor: pointer;
     background: none;
     border: none;
-    /* padding: 0; */
     margin: 0;
     color: #4a5568;
     font-size: 24px;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
-    /* border-radius: 10px; */
     transition: background-color 0.05s ease;
-    outline: none; /* Ensure no outline on focus */
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.nav-button:hover {
-    background: none; /* Remove background on hover */
-}
-
+.nav-button:hover,
 .nav-button:active {
-    background: none; /* Remove background on hover */
+    background: none;
 }
 
 .date-navigation {
     display: flex;
-    justify-content: center; /* Center the items */
-    align-items: center; /* Align items vertically */
+    justify-content: center;
+    align-items: center;
     width: 100%;
     gap: 20px;
+    font-size: 16px;
 }
 
-/* Add new styles for the unified date/today button */
+/* Styles for the unified date/today button */
 .date-button {
     display: flex;
     align-items: center;
-    /* padding: 10px 20px; */
     border: none;
-    /* border-radius: 10px; */
+    border-radius: 4px;
     background-color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     cursor: pointer;
@@ -232,7 +229,6 @@ h3 {
     font-size: 16px;
     color: #4a5568;
     margin: 0;
-    /* width: 75%; */
     height: 40px;
 }
 
@@ -261,30 +257,71 @@ h3 {
     transform: translateX(-50%); /* Center the date */
 }
 
-.banner-image {
-    width: 100%;
-    height: auto;
-}
-
 .meal-name-group {
     display: flex;
     align-items: center;
+    justify-content: center;
     margin-bottom: 10px;
 }
 
 .meal-name-group input[type="text"] {
     flex: 3;
     margin-right: 10px;
+    margin-bottom: 0;
+}
+
+.aiEditMacrosButton {
+    flex: 1;
+    padding: 11px 0;
+    background: linear-gradient(45deg, #bdd9ee, #cfc5e9);
+    border: none;
+    border-radius: 4px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.aiEditMacrosButton:hover {
+    background: linear-gradient(45deg, #accde1, #bfb0d8);
+}
+
+.ai-enhanced-button {
+    background: linear-gradient(45deg, #bdd9ee, #cfc5e9);
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    outline: none;
+    text-align: center;
+    display: inline-block;
+    margin: 0;
+}
+
+.ai-enhanced-button:hover {
+    background: linear-gradient(45deg, #accde1, #bfb0d8);
 }
 
 .generateMacrosButton {
     flex: 1;
-    padding: 5px 10px;  /* Adjust padding if needed */
-    /* font-size: 14px; */
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
+    padding: 2px 0;
+    /* background: linear-gradient(45deg, #b7d9c5, #a8cbb7); */
+    /* background: linear-gradient(45deg, #c9e3f5, #dcd3f7); */
+    background: linear-gradient(45deg, #bdd9ee, #cfc5e9);
+    /* background: linear-gradient(45deg, #c3e7e0, #dce3f0); */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
     color: white;
-    border-radius: 5px;
+    font-weight: bold;
     cursor: pointer;
     transition: background-color 0.05s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -292,12 +329,7 @@ h3 {
 }
 
 .generateMacrosButton:hover {
-    background-color: rgba(12, 37, 18, 0.9);
-}
-
-.generateMacrosButton:active {
-    background-color: rgba(12, 37, 18, 1);
-    transform: translateY(1px);
+    background: linear-gradient(45deg, #accde1, #bfb0d8);
 }
 
 .meals, .exercise, .summary {
@@ -321,12 +353,74 @@ input[type="text"], input[type="number"] {
     font-size: 16px;
 }
 
-button, .image-upload-container label, .modal-content button {
-    background-color: rgba(12, 37, 18, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.9);
+.defaultButton {
+    background-color: #576353;
+    /* border: 2px solid rgba(255, 255, 255, 0.9); */
+    border: none;
     color: white;
     padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+button {
+    padding: 10px 15px;
+    cursor: pointer;
+    outline: none;
+}
+
+.saveMealButton, .saveExerciseButton {
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    border-radius: 4px;
+    background-color: #576353;
+    border: none;
+}
+
+.saveMealButton:hover {
+    background-color: #3a4637;
+}
+
+.date-button {
+    width: 100%;
+}
+
+.duplicate-button, .edit-button, .remove-button {
+    color: white;
+}
+
+.image-upload-container {
+    padding: 0;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.image-upload-container label{
+    padding: 0;
+    width: 100%;
+    margin: 0;
+    transition: all 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.modal-content button {
+    background-color: #576353;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     width: 100%;
@@ -337,12 +431,12 @@ button, .image-upload-container label, .modal-content button {
 }
 
 button:hover, .image-upload-container label:hover, .modal-content button:hover {
-    background-color: rgba(12, 37, 18, 0.9);
+    background-color: #3a4637;
     border-color: white;
 }
 
 button:active, .image-upload-container label:active, .modal-content button:active {
-    background-color: rgba(12, 37, 18, 1);
+    background-color: #3a4637;
     transform: translateY(1px);
 }
 
@@ -469,23 +563,21 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 }
 
 .meal-item .button-area .edit-button {
-    background-color: #007bff; /* Blue color */
+    background-color: #007bff;
 }
 
 .meal-item .button-area .remove-button, .exercise-item .button-area .remove-button {
-    background-color: #dc3545; /* Red color */
+    background-color: #dc3545;
 }
 
-/* Styles for the duplicate button */
 .meal-item .button-area .duplicate-button {
-    background-color: #28a745; /* Darker green color */
-    /* border: 2px solid rgba(255, 255, 255, 0.9); */
+    background-color: #28a745;
     color: white;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    width: 40px; /* Same size as other buttons */
+    width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
@@ -517,45 +609,63 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .progress-bar {
     width: 100%;
     border-radius: 5px;
-    overflow: hidden;
+    overflow: hidden; /* Important for rounded corners of children */
     height: 20px;
-    display: flex;
-    align-items: center;
-    position: relative;
-    background-color: #e0f2e9;
-    z-index: 1;
+    display: flex; /* Can be kept or removed if all children are absolute */
+    align-items: center; /* Can be kept or removed */
+    position: relative; /* Crucial for absolute positioning of children and z-index stacking context */
+    background-color: #ebf3e9; /* Base color of the track */
+    z-index: 1; /* Establishes a stacking context */
 }
 .progress-bar-fill {
     height: 100%;
-    text-align: right;
-    padding-right: 5px;
-    color: #0c2512;
-    line-height: 20px;
-    background: linear-gradient(45deg, #b8e6b8, #b8e6f2, #d1b8e6, #b8e6b8, #b8e6f2, #d1b8e6);
-    background-size: 300% 300%;
-    animation: gradientAnimation 10s linear infinite;
-    transition: width 0.5s ease-in-out;
-    z-index: 2;
+    /* text-align: right;      -- REMOVE these text-related styles -- */
+    /* padding-right: 5px;     -- REMOVE -- */
+    /* color: #0c2512;         -- REMOVE -- */
+    /* line-height: 20px;      -- REMOVE -- */
+    background: linear-gradient(45deg, #cfead1, #d7eaf4, #e3d7ef);
+    transition: width 0.1s ease-in-out;
+    
+    position: absolute; /* Make it an absolute layer */
+    top: 0;
+    left: 0;
+    z-index: 1; /* Base fill layer, behind overfill and text */
 }
 .progress-bar-overfill {
     height: 100%;
-    position: absolute;
+    position: absolute; /* Already absolute */
     top: 0;
     left: 0;
     background-image: repeating-linear-gradient(
         45deg,
         rgba(255, 255, 255, 0.4),
         rgba(255, 255, 255, 0.4) 10px,
-        rgba(255, 255, 255, 1) 10px,
-        rgba(255, 255, 255, 1) 20px
+        rgba(255, 255, 255, 0.9) 10px,
+        rgba(255, 255, 255, 0.9) 20px
     );
-    transition: width 0.5s ease-in-out;
-    z-index: 5;
+    transition: width 0.1s ease-in-out;
+    z-index: 2; /* Above .progress-bar-fill, below .progress-bar-text */
+                 /* Was 5, original .progress-bar-fill was 2 */
 }
 .progress-bar-text {
-    z-index: 10;
-}
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* width: is now set by JavaScript */
+    height: 100%;
 
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Default: Text will be aligned to the right of ITS OWN container width */
+
+    padding-right: 5px;
+    color: #0c2512;
+
+    z-index: 3;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+}
 .image-upload-container {
     margin-top: 10px;
     display: flex;
@@ -576,22 +686,15 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     margin-right: 5px;
 }
 
-#uploadedImage {
-    max-width: 100%;
-    margin-top: 10px;
-    display: none;
-}
-
 #uploadedImageBreakfast,
 #uploadedImageLunch,
 #uploadedImageDinner,
 #uploadedImageSnacks {
-    display: none;
+    display: none; /* JS will set to 'block' when image is present */
     max-width: 100%;
     margin-top: 10px;
     margin-left: auto;
     margin-right: auto;
-    display: block;
 }
 
 /* Modal container */
@@ -610,7 +713,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     padding-top: 10vh; /* Add padding to move the content up slightly */
 }
 
-/* Modal content for login */
+/* Modal content for login/settings */
 .modal-content {
     background-color: white;
     margin: auto;
@@ -625,7 +728,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     align-items: center;
 }
 
-/* Ensure consistent styles for all input fields */
+/* Ensure consistent styles for all input fields in modals */
 .modal-content input[type="text"],
 .modal-content input[type="password"] {
     width: 100%;
@@ -650,26 +753,36 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    background-color: rgba(12, 37, 18, 0.7); /* Match theme color */
+    /* background-color: rgba(12, 37, 18, 0.7); */
+    background-color: #576353;
     border: none;
     color: white;
     transition: background-color 0.05s ease;
 }
 
 .modal-content button:hover, .google-login-button:hover {
-    background-color: rgba(12, 37, 18, 0.9); /* Slightly lighter shade */
+    background-color: #3a4637;
 }
 
 .modal-content button:active, .google-login-button:active {
-    background-color: rgba(12, 37, 18, 1); /* Slightly darker shade */
+    background-color: #3a4637;
 }
 
 /* Adjust form titles to match the overall theme */
 .modal-content h2, .modal-content h3 {
     text-align: center;
+    margin-top: 10px;
     margin-bottom: 20px;
     font-size: 24px;
-    color: #4a5568; /* Match your theme color */
+    /* color: #4a5568; */
+    color: #333;
+}
+
+.modal-title {
+    font-size: 24px;
+    color: #333;
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
 
 /* Modal content for images */
@@ -716,15 +829,14 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     background-color: #f1f1f1;
 }
 
-
 .menu-item i {
     margin-right: 10px;
     font-size: 20px;
     color: #4a5568;
     width: 25px;
-    display: flex; /* if you want to center icon in its allocated space */
-    justify-content: center; /* if you want to center icon in its allocated space */
-    align-items: center; /* if you want to center icon in its allocated space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     /* text-align: center; is for text content, not directly for flex item alignment */
 }
 
@@ -777,18 +889,18 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     margin-right: 10px;
 }
 
-/* ADDED/MODIFIED: Styles for #userInfo */
+/* Styles for #userInfo */
 #userInfo {
     position: absolute;
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
     display: none; /* Initially hidden; JS toggles to 'flex' */
-    align-items: center; /* This was in inline style, good to keep */
-    cursor: pointer; /* This was in inline style, good to keep */
+    align-items: center; /* This was in inline style */
+    cursor: pointer; /* This was in inline style */
 }
 
-/* ADDED: Style for the profile picture image itself */
+/* Style for the profile picture image itself */
 #userInfo img {
     width: 35px; /* Matches JS style */
     height: 35px; /* Matches JS style */

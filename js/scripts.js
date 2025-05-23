@@ -1,26 +1,34 @@
-// --- START OF scripts.js WITH POLLING INTEGRATED ---
-// const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
-const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
+// --- START OF scripts.js ---
+const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
+// const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
 const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
 
-let statusCheckInterval = null;
-let isServerOnline = false;
-let userInfoGlobal = null;
-let googleIdToken = null;
-let currentGoogleUserIdForStorage = null;
-
+// --- Global State Variables ---
 let meals = {};
 let exercise = {};
 let goals = { calories: 2000, fat: 67, carbs: 275, protein: 75 };
 let currentDate = new Date();
 
+let userInfoGlobal = null;
+let googleIdToken = null;
+let currentGoogleUserIdForStorage = null;
+
+let isServerOnline = false;
+let statusCheckInterval = null;
 let serverSyncTimeout = null;
 const SYNC_DEBOUNCE_TIME = 3000;
 
-// --- POLLING ---
 let pollingIntervalId = null;
-const POLLING_INTERVAL = 15000; // Poll every 15 seconds (adjust as needed)
-let serverJustCameOnlineForPolling = false; // To trigger initial poll after server is back
+const POLLING_INTERVAL = 15000;
+let serverJustCameOnlineForPolling = false;
+
+// State for meal form interaction
+const mealFormEditState = { // True if editing an existing meal
+    breakfast: false, lunch: false, dinner: false, snacks: false
+};
+const mealFormAddState = { // True if form is open for adding a new meal
+    breakfast: false, lunch: false, dinner: false, snacks: false
+};
 
 // --- UTILITY FUNCTIONS ---
 function getLocalDateParts(date) {
@@ -81,9 +89,7 @@ async function changeDate(delta) {
 
     if (googleIdToken && currentGoogleUserIdForStorage) {
         await loadDataFromServer(formatLocalDateForStorage(currentDate));
-        // Polling will continue for the new date if already active
-        // Or if not, pollForUpdates can be called to fetch immediately for the new date
-        if (pollingIntervalId) pollForUpdates(); // Poll immediately for new date
+        if (pollingIntervalId) pollForUpdates();
     } else {
         loadFromLocalStorage();
     }
@@ -99,14 +105,13 @@ async function goToToday() {
 
     if (googleIdToken && currentGoogleUserIdForStorage) {
         await loadDataFromServer(formatLocalDateForStorage(currentDate));
-        if (pollingIntervalId) pollForUpdates(); // Poll immediately for new date
+        if (pollingIntervalId) pollForUpdates();
     } else {
         loadFromLocalStorage();
     }
 }
 
 function updateDateDisplay() {
-    // ... (same as your version)
     const displayElement = document.getElementById('currentDateDisplay');
     if (displayElement) {
         if (currentDate instanceof Date && !isNaN(currentDate)) {
@@ -120,39 +125,102 @@ function updateDateDisplay() {
     }
 }
 
-// --- MEAL AND EXERCISE FORM TOGGLING ---
-// ... (same as your version) ...
+// --- MEAL FORM UI MANAGEMENT ---
+
+// Helper function to update the main "Add/Cancel" button text for a meal slot
+function updateAddMealButtonText(mealType, isEditing, isAdding) {
+    const addMealButton = document.querySelector(`#${mealType}Slot > button:first-of-type`);
+    if (addMealButton) {
+        const mealTypeName = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+        if (isEditing) {
+            addMealButton.textContent = `Cancel Editing ${mealTypeName}`;
+        } else if (isAdding) {
+            addMealButton.textContent = `Cancel Adding ${mealTypeName}`;
+        } else {
+            addMealButton.textContent = `Add ${mealTypeName}`;
+        }
+    }
+}
+
+// Main function to toggle meal forms open/closed and manage states
 function toggleMealForm(mealType) {
     const form = document.getElementById(`${mealType}Form`);
     if (!form) return;
+
     const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
     const dishNameInput = document.getElementById(`${mealType}DishName`);
     const calorieInput = document.getElementById(`${mealType}Calories`);
     const fatInput = document.getElementById(`${mealType}Fat`);
     const carbsInput = document.getElementById(`${mealType}Carbs`);
     const proteinInput = document.getElementById(`${mealType}Protein`);
+    
+    const saveButton = form.querySelector('.saveMealButton');
+    const generateButton = form.querySelector('.generateMacrosButton');
+    const aiEditButton = form.querySelector('.aiEditMacrosButton');
 
-    if (form.style.display === 'none' || form.style.display === '') {
+    const isFormCurrentlyOpen = form.style.display === 'block';
+    const isEditingExistingMealItem = !!saveButton.dataset.editingId; // True if "Save Edit" is active (an item is being edited)
+
+    if (!isFormCurrentlyOpen) { // ---- ACTION: OPENING THE FORM ----
+        // If another form is open (either for add or edit), close it first
+        for (const type of ['breakfast', 'lunch', 'dinner', 'snacks']) {
+            if (type !== mealType) {
+                const otherForm = document.getElementById(`${type}Form`);
+                if (otherForm && otherForm.style.display === 'block') {
+                    toggleMealForm(type); // Close other open forms
+                }
+            }
+        }
+        
         form.style.display = 'block';
-        if(uploadedImage) {
-            uploadedImage.style.display = 'none';
-            uploadedImage.src = '';
+
+        if (isEditingExistingMealItem) { 
+            // This specific state (opening form FOR an item edit) is mostly set by editMeal().
+            // editMeal() itself calls form.style.display = 'block' if needed,
+            // then sets its specific button states.
+            // So, this branch in toggleMealForm confirms the main button text.
+            mealFormEditState[mealType] = true;
+            mealFormAddState[mealType] = false;
+            updateAddMealButtonText(mealType, true, false); // "Cancel Editing..."
+        } else { // Opening for a NEW meal (not an existing item edit)
+            if(dishNameInput) dishNameInput.value = '';
+            if(calorieInput) calorieInput.value = '';
+            if(fatInput) fatInput.value = '';
+            if(carbsInput) carbsInput.value = '';
+            if(proteinInput) proteinInput.value = '';
+            if(uploadedImage) { uploadedImage.style.display = 'none'; uploadedImage.src = ''; }
+            
+            if (saveButton.dataset.originalText) saveButton.textContent = saveButton.dataset.originalText;
+            if (saveButton.dataset.editingId) delete saveButton.dataset.editingId;
+            if (form.dataset.originalMealName) delete form.dataset.originalMealName;
+
+            if (generateButton) { generateButton.style.display = 'block'; generateButton.textContent = 'Generate Macros'; }
+            if (aiEditButton) aiEditButton.style.display = 'none';
+            
+            mealFormEditState[mealType] = false; 
+            mealFormAddState[mealType] = true; 
+            updateAddMealButtonText(mealType, false, true); // "Cancel Adding..."
         }
-        const saveButton = form.querySelector('.saveMealButton');
-        if (saveButton && saveButton.dataset.originalText) {
-            saveButton.textContent = saveButton.dataset.originalText;
-        }
-    } else {
+    } else { // ---- ACTION: HIDING THE FORM ----
         form.style.display = 'none';
+        
         if(dishNameInput) dishNameInput.value = '';
         if(calorieInput) calorieInput.value = '';
-        if(proteinInput) proteinInput.value = '';
-        if(carbsInput) carbsInput.value = '';
         if(fatInput) fatInput.value = '';
-        if(uploadedImage) {
-            uploadedImage.style.display = 'none';
-            uploadedImage.src = '';
-        }
+        if(carbsInput) carbsInput.value = '';
+        if(proteinInput) proteinInput.value = '';
+        if(uploadedImage) { uploadedImage.style.display = 'none'; uploadedImage.src = ''; }
+
+        if (saveButton.dataset.editingId) delete saveButton.dataset.editingId;
+        if (form.dataset.originalMealName) delete form.dataset.originalMealName;
+        if (saveButton.dataset.originalText) saveButton.textContent = saveButton.dataset.originalText;
+
+        if (generateButton) { generateButton.style.display = 'block'; generateButton.textContent = 'Generate Macros'; }
+        if (aiEditButton) { aiEditButton.style.display = 'none'; aiEditButton.textContent = 'AI Update'; }
+        
+        mealFormEditState[mealType] = false; 
+        mealFormAddState[mealType] = false;  
+        updateAddMealButtonText(mealType, false, false); // Main button back to "Add [MealType]"
     }
 }
 
@@ -160,8 +228,8 @@ function toggleExerciseForm() {
     const form = document.getElementById('exerciseForm');
     if(form) form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
 }
+
 // --- DATA MANIPULATION (LOCAL STATE) ---
-// ... (same as your version, functions like addMeal, editMeal, etc.) ...
 function addMeal(mealType, existingImage = null) {
     const dishNameInput = document.getElementById(`${mealType}DishName`);
     const caloriesInput = document.getElementById(`${mealType}Calories`);
@@ -182,6 +250,7 @@ function addMeal(mealType, existingImage = null) {
     }
 
     if (!dishName && calories === 0 && fat === 0 && carbs === 0 && protein === 0 && !image) {
+        toggleMealForm(mealType); // Just close the form, toggleMealForm handles resets.
         return;
     }
 
@@ -199,8 +268,8 @@ function addMeal(mealType, existingImage = null) {
     meals[mealDate][mealType].push(meal);
     updateDisplay();
     saveToLocalStorageAndQueueSync();
-    clearInputs(mealType);
-    toggleMealForm(mealType);
+    
+    toggleMealForm(mealType); // Close and reset form states.
 }
 
 function addExercise() {
@@ -252,6 +321,7 @@ function removeExercise() {
     }
 }
 
+// Called when an existing meal's "edit" (pencil) button is clicked
 function editMeal(mealType, id) {
     const mealDate = formatLocalDateForStorage(currentDate);
     id = parseInt(id);
@@ -262,6 +332,17 @@ function editMeal(mealType, id) {
     const form = document.getElementById(`${mealType}Form`);
     if (!form) return;
 
+    // If another meal form is open, close it first
+    for (const type of ['breakfast', 'lunch', 'dinner', 'snacks']) {
+        if (type !== mealType) {
+            const otherForm = document.getElementById(`${type}Form`);
+            if (otherForm && otherForm.style.display === 'block') {
+                toggleMealForm(type); 
+            }
+        }
+    }
+
+    form.dataset.originalMealName = mealToEdit.dishName || '';
     document.getElementById(`${mealType}DishName`).value = mealToEdit.dishName || '';
     document.getElementById(`${mealType}Calories`).value = mealToEdit.calories || '';
     document.getElementById(`${mealType}Fat`).value = mealToEdit.fat || '';
@@ -271,57 +352,86 @@ function editMeal(mealType, id) {
     const uploadedImageDisplay = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
     if (uploadedImageDisplay) {
         if (mealToEdit.image) {
-            uploadedImageDisplay.src = mealToEdit.image;
-            uploadedImageDisplay.style.display = 'block';
+            uploadedImageDisplay.src = mealToEdit.image; uploadedImageDisplay.style.display = 'block';
         } else {
-            uploadedImageDisplay.style.display = 'none';
-            uploadedImageDisplay.src = '';
+            uploadedImageDisplay.style.display = 'none'; uploadedImageDisplay.src = '';
         }
     }
     
-    if (form.style.display === 'none' || form.style.display === '') {
+    // Ensure form is visible (toggleMealForm will handle state if it was already open for add)
+    if (form.style.display === 'none' || mealFormAddState[mealType]) { // Open if closed OR if open for add
+        if (mealFormAddState[mealType]) { // If switching from add to edit for same mealtype
+             toggleMealForm(mealType); // Close "add" state first
+        }
         form.style.display = 'block';
     }
 
     const saveButton = form.querySelector(`.saveMealButton`);
-    if (!saveButton) return;
-
     if (!saveButton.dataset.originalText) saveButton.dataset.originalText = saveButton.textContent;
     saveButton.textContent = 'Save Edit';
     saveButton.dataset.editingId = id.toString();
 
-    saveButton.onclick = function() {
-        const currentEditingId = parseInt(saveButton.dataset.editingId);
-        if (isNaN(currentEditingId)) return;
+    const generateButton = form.querySelector('.generateMacrosButton');
+    const aiEditButton = form.querySelector(`.aiEditMacrosButton`);
 
-        const mealIndex = meals[mealDate][mealType].findIndex(m => m.id === currentEditingId);
-        if (mealIndex === -1 || meals[mealDate][mealType][mealIndex].deleted) return;
-
-        const editedMeal = meals[mealDate][mealType][mealIndex];
-        editedMeal.dishName = document.getElementById(`${mealType}DishName`).value.trim();
-        editedMeal.calories = parseFloat(document.getElementById(`${mealType}Calories`).value) || 0;
-        editedMeal.fat = parseFloat(document.getElementById(`${mealType}Fat`).value) || 0;
-        editedMeal.carbs = parseFloat(document.getElementById(`${mealType}Carbs`).value) || 0;
-        editedMeal.protein = parseFloat(document.getElementById(`${mealType}Protein`).value) || 0;
-        
-        const currentImageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-        if (currentImageElement && currentImageElement.style.display !== 'none' && currentImageElement.src && currentImageElement.src !== editedMeal.image) {
-            editedMeal.image = currentImageElement.src;
-        } else if ((!currentImageElement || currentImageElement.style.display === 'none' || !currentImageElement.src) && editedMeal.image) {
-            editedMeal.image = null; 
-        }
-
-        editedMeal.needsSync = true;
-        editedMeal.lastModified = new Date().toISOString();
-
-        updateDisplay();
-        saveToLocalStorageAndQueueSync();
-        
-        toggleMealForm(mealType);
-        saveButton.textContent = saveButton.dataset.originalText;
-        delete saveButton.dataset.editingId;
-    };
+    if (generateButton) generateButton.style.display = 'none';
+    if (aiEditButton) {
+        aiEditButton.style.display = 'block';
+        aiEditButton.textContent = 'AI Update'; 
+        aiEditButton.onclick = () => { 
+            const originalMealNameFromForm = form.dataset.originalMealName || document.getElementById(`${mealType}DishName`).value;
+            const currentMealNameInField = document.getElementById(`${mealType}DishName`).value;
+            const currentCaloriesInField = parseFloat(document.getElementById(`${mealType}Calories`).value) || 0;
+            const currentFatInField = parseFloat(document.getElementById(`${mealType}Fat`).value) || 0;
+            const currentCarbsInField = parseFloat(document.getElementById(`${mealType}Carbs`).value) || 0;
+            const currentProteinInField = parseFloat(document.getElementById(`${mealType}Protein`).value) || 0;
+            
+            handleAiEditMacros(mealType, originalMealNameFromForm, currentMealNameInField, currentCaloriesInField, currentFatInField, currentCarbsInField, currentProteinInField);
+        };
+    }
+    mealFormEditState[mealType] = true; 
+    mealFormAddState[mealType] = false; 
+    updateAddMealButtonText(mealType, true, false);
 }
+
+// Called when "Save Edit" is clicked from the form
+function completeEditMeal(mealType, editingId) {
+    const mealDate = formatLocalDateForStorage(currentDate);
+    if (!meals[mealDate] || !meals[mealDate][mealType]) {
+        console.error(`Meals data structure not initialized for ${mealDate} and ${mealType}`);
+        toggleMealForm(mealType); 
+        return;
+    }
+    const mealIndex = meals[mealDate][mealType].findIndex(m => m.id === editingId);
+    if (mealIndex === -1 || (meals[mealDate][mealType][mealIndex] && meals[mealDate][mealType][mealIndex].deleted)) {
+        console.error("Meal to edit not found or already deleted during completeEditMeal.");
+        toggleMealForm(mealType); 
+        return;
+    }
+
+    const editedMeal = meals[mealDate][mealType][mealIndex];
+    editedMeal.dishName = document.getElementById(`${mealType}DishName`).value.trim();
+    editedMeal.calories = parseFloat(document.getElementById(`${mealType}Calories`).value) || 0;
+    editedMeal.fat = parseFloat(document.getElementById(`${mealType}Fat`).value) || 0;
+    editedMeal.carbs = parseFloat(document.getElementById(`${mealType}Carbs`).value) || 0;
+    editedMeal.protein = parseFloat(document.getElementById(`${mealType}Protein`).value) || 0;
+    
+    const currentImageElement = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    if (currentImageElement && currentImageElement.style.display !== 'none' && currentImageElement.src && currentImageElement.src !== editedMeal.image) {
+        editedMeal.image = currentImageElement.src;
+    } else if ((!currentImageElement || currentImageElement.style.display === 'none' || !currentImageElement.src) && editedMeal.image) {
+        editedMeal.image = null; 
+    }
+
+    editedMeal.needsSync = true;
+    editedMeal.lastModified = new Date().toISOString();
+
+    updateDisplay();
+    saveToLocalStorageAndQueueSync();
+    
+    toggleMealForm(mealType); // Close and reset form states.
+}
+
 
 function duplicateMeal(mealType, id) {
     const mealDate = formatLocalDateForStorage(currentDate);
@@ -343,21 +453,10 @@ function duplicateMeal(mealType, id) {
     }
 }
 
-function clearInputs(mealType) {
-    if (mealType) {
-        const form = document.getElementById(`${mealType}Form`);
-        if (form) {
-            form.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => input.value = '');
-            const img = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
-            if (img) {
-                img.src = '';
-                img.style.display = 'none';
-            }
-        }
-    }
-}
+// clearInputs is likely not needed if toggleMealForm handles clearing on close.
+// function clearInputs(mealType) { ... } 
+
 // --- UI UPDATES ---
-// ... (same as your version) ...
 function updateDisplay() {
     let totals = { calories: 0, fat: 0, carbs: 0, protein: 0 };
     const mealDate = formatLocalDateForStorage(currentDate);
@@ -443,8 +542,12 @@ function updateProgressBars(totals, exerciseCalories) {
 function updateProgressBar(fillId, total, goal) {
     const progressFill = document.getElementById(fillId);
     if (!progressFill) return;
-    const progressBar = progressFill.closest('.progress-bar');
-    if (!progressBar) return;
+
+    const progressBar = progressFill.parentElement;
+    if (!progressBar || !progressBar.classList.contains('progress-bar')) {
+        console.error("Could not find .progress-bar for", fillId);
+        return;
+    }
 
     let overfill = progressBar.querySelector('.progress-bar-overfill');
     if (!overfill) {
@@ -452,14 +555,46 @@ function updateProgressBar(fillId, total, goal) {
         overfill.className = 'progress-bar-overfill';
         progressBar.appendChild(overfill);
     }
+
     const percentage = goal > 0 ? (total / goal) * 100 : (total > 0 ? 101 : 0);
-    
+
     const displayTotal = Number(total).toFixed(fillId === 'caloriesProgressFill' ? 0 : 1);
     const displayGoal = Number(goal).toFixed(fillId === 'caloriesProgressFill' ? 0 : 1);
 
     progressFill.style.width = `${Math.min(100, percentage)}%`;
-    progressFill.textContent = `${displayTotal}${fillId === 'caloriesProgressFill' ? '' : 'g'} / ${displayGoal}${fillId === 'caloriesProgressFill' ? '' : 'g'}`;
-    
+
+    const textElementId = fillId.replace('Fill', 'Text');
+    const textElement = document.getElementById(textElementId);
+
+    if (textElement) {
+        textElement.textContent = `${displayTotal}${fillId === 'caloriesProgressFill' ? '' : 'g'} / ${displayGoal}${fillId === 'caloriesProgressFill' ? '' : 'g'}`;
+
+        // --- DYNAMIC TEXT POSITIONING LOGIC ---
+        const textContainerWidthPercentage = Math.min(100, percentage);
+        textElement.style.width = `${textContainerWidthPercentage}%`;
+
+        // Threshold for switching text alignment (e.g., if text roughly needs 20% of bar width)
+        // This value might need tweaking based on your font size and typical text length.
+        const MIN_PERCENTAGE_FOR_RIGHT_ALIGN = 15; // Adjust as needed
+
+        if (textContainerWidthPercentage < MIN_PERCENTAGE_FOR_RIGHT_ALIGN) {
+            // When the fill (and thus text container) is very narrow,
+            // align text to the left of the *entire progress bar*
+            // and make the text container wide enough to show the text.
+            textElement.style.justifyContent = 'flex-start';
+            textElement.style.paddingLeft = '5px'; // Add some left padding
+            textElement.style.paddingRight = '0';  // Remove right padding if any
+            textElement.style.width = '100%'; // Make text container full width to show text at left
+        } else {
+            // Otherwise, align text to the right of its (potentially partial) width
+            textElement.style.justifyContent = 'flex-end';
+            textElement.style.paddingLeft = '0';   // Remove left padding
+            textElement.style.paddingRight = '5px'; // Restore right padding
+            // textElement.style.width is already set above to textContainerWidthPercentage
+        }
+        // --- END DYNAMIC TEXT POSITIONING LOGIC ---
+    }
+
     if (percentage > 100) {
         overfill.style.width = `${Math.min(100, percentage - 100)}%`;
         overfill.style.display = 'block';
@@ -468,20 +603,20 @@ function updateProgressBar(fillId, total, goal) {
         overfill.style.display = 'none';
     }
 }
+
 // --- LOCAL STORAGE MANAGEMENT ---
-// ... (same as your version) ...
 function saveToLocalStorageAndQueueSync() {
-    const MAX_STORAGE = 5 * 1024 * 1024;
-    const BUFFER_PERCENTAGE = 0.1;
+    const MAX_STORAGE = 5 * 1024 * 1024; // 5MB
+    const BUFFER_PERCENTAGE = 0.1; // 10% buffer
     const TARGET_STORAGE = MAX_STORAGE * (1 - BUFFER_PERCENTAGE);
 
     function getCurrentUserDataSize() {
         let total = 0;
         const keysToSum = ['meals', 'exercise', 'goals', 'currentDate', 'hasLoggedInBefore'];
         keysToSum.forEach(baseKey => {
-            const userKey = getLocalStorageKey(baseKey); // Uses currentGoogleUserIdForStorage
+            const userKey = getLocalStorageKey(baseKey);
             if (localStorage.getItem(userKey)) {
-                total += (localStorage.getItem(userKey).length + userKey.length) * 2;
+                total += (localStorage.getItem(userKey).length + userKey.length) * 2; // Approx bytes
             }
         });
         return total;
@@ -490,18 +625,18 @@ function saveToLocalStorageAndQueueSync() {
     function removeOldestUserMealEntry() {
         const userMealsKey = getLocalStorageKey('meals');
         let userMealsData = JSON.parse(localStorage.getItem(userMealsKey) || '{}');
-        const dates = Object.keys(userMealsData).sort(); // Sorts YYYY-MM-DD strings
+        const dates = Object.keys(userMealsData).sort(); 
         for (const date of dates) {
             for (const mealType in userMealsData[date]) {
                 if (userMealsData[date][mealType] && userMealsData[date][mealType].length > 0) {
                     const removedMeal = userMealsData[date][mealType].shift();
-                    console.log("LocalStorage: Removed oldest meal for space:", removedMeal ? removedMeal.dishName : 'Unknown meal', "on", date);
+                    console.warn("LocalStorage: Removed oldest meal for space:", removedMeal ? removedMeal.dishName : 'Unknown meal', "on", date);
                     if (userMealsData[date][mealType].length === 0) delete userMealsData[date][mealType];
                     if (Object.keys(userMealsData[date]).length === 0) delete userMealsData[date];
                     localStorage.setItem(userMealsKey, JSON.stringify(userMealsData));
                     
                     meals = userMealsData; 
-                    if (date === formatLocalDateForStorage(currentDate)) { // Check if current view affected
+                    if (date === formatLocalDateForStorage(currentDate)) {
                         updateDisplay(); 
                     }
                     return true;
@@ -559,7 +694,7 @@ function loadFromLocalStorage() {
             currentDate = parseStoredDateToLocalDate(storedDateStr);
         } else {
              const today = new Date(); const p = getLocalDateParts(today);
-             currentDate = new Date(p.year, p.month, p.day); // Default to midnight local today
+             currentDate = new Date(p.year, p.month, p.day);
         }
         localStorage.setItem(currentDateKey, formatLocalDateForStorage(currentDate));
 
@@ -584,7 +719,6 @@ function loadFromLocalStorage() {
 
 // --- GOOGLE AUTHENTICATION & USER STATE ---
 function handleGoogleCredentialResponse(response) {
-    // ... (same as your version) ...
     if (response.credential) {
         const idTokenPayload = decodeJwtResponse(response.credential);
         if (idTokenPayload) {
@@ -608,7 +742,6 @@ function handleGoogleCredentialResponse(response) {
 }
 
 async function updateUIAfterSignIn(userInfo) {
-    // ... (same as your version, ensure startPollingForUpdates is called at the end) ...
     if (!userInfo && localStorage.getItem('googleUser')) {
         try {
             userInfo = JSON.parse(localStorage.getItem('googleUser'));
@@ -654,14 +787,13 @@ async function updateUIAfterSignIn(userInfo) {
         await loadDataFromServer(formatLocalDateForStorage(currentDate)); 
         await syncDataToServer(); 
     } else {
-        console.log("Server offline, relying on local data after login.");
+        console.warn("Server offline, relying on local data after login.");
     }
-    startPollingForUpdates(); // --- POLLING --- Start polling after login and initial sync/load attempt
+    startPollingForUpdates();
 }
 
 function handleGoogleSignOut() {
-    stopPollingForUpdates(); // --- POLLING --- Stop polling on sign out
-    // ... (rest of your version) ...
+    stopPollingForUpdates();
     const prevUserId = currentGoogleUserIdForStorage;
 
     localStorage.removeItem('googleUser');
@@ -681,10 +813,8 @@ function handleGoogleSignOut() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
     }
-    console.log("User signed out.");
 }
 
-// ... (updateUIAfterSignOut, checkLoginStateOnLoad, initializeGoogleSignIn - same as your version) ...
 function updateUIAfterSignOut() {
     const userInfoDiv = document.getElementById('userInfo');
     if (userInfoDiv) {
@@ -735,7 +865,7 @@ function initializeGoogleSignIn() {
             const googleButtonContainer = document.getElementById('googleLoginButtonContainer');
             if (googleButtonContainer) {
                 google.accounts.id.renderButton(googleButtonContainer,
-                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left" /*, width: "100%" REMOVED for GSI warning */}
+                    { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left" }
                 );
             } else console.error('Google login button container not found.');
         } catch (error) { console.error("Error initializing Google Sign In:", error); }
@@ -743,44 +873,32 @@ function initializeGoogleSignIn() {
 }
 
 // --- SERVER COMMUNICATION & SYNC ---
-// ... (loadDataFromServer, syncDataToServer - same as your version) ...
 async function loadDataFromServer(dateStr) { 
-    if (!googleIdToken || !currentGoogleUserIdForStorage) {
+    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline) {
         updateDisplay(); return;
     }
-    if (!isServerOnline) {
-        updateDisplay(); return;
-    }
-
-    console.log(`Loading data for ${dateStr} from server for user ${currentGoogleUserIdForStorage}...`);
     try {
         const response = await fetch(`${BACKEND_URL}/api/data?date=${dateStr}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${googleIdToken}`, 'Content-Type': 'application/json' }
         });
-
         if (!response.ok) {
-            if (response.status === 401) { handleGoogleSignOut(); } 
-            else { console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);}
-            updateDisplay(); 
-            return;
+            if (response.status === 401) handleGoogleSignOut(); 
+            else console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);
+            updateDisplay(); return;
         }
         const serverData = await response.json();
-        
         if (serverData.goals) {
             goals = serverData.goals;
             localStorage.setItem(getLocalStorageKey('goals'), JSON.stringify(goals));
         }
-
         const localMealsForDate = meals[dateStr] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
         const serverMealsForDate = serverData.meals || { breakfast: [], lunch: [], dinner: [], snacks: [] };
         const mergedMealsForDate = { breakfast: [], lunch: [], dinner: [], snacks: [] };
-
         ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(mealType => {
             const localItems = localMealsForDate[mealType] || [];
             const serverItems = serverMealsForDate[mealType] || [];
             let combinedItems = [];
-
             serverItems.forEach(sItem => {
                 const localMatch = localItems.find(lItem => lItem.id === sItem.id && !lItem.deleted);
                 if (localMatch && localMatch.needsSync && new Date(localMatch.lastModified) > new Date(sItem.lastModified || 0)) {
@@ -789,84 +907,47 @@ async function loadDataFromServer(dateStr) {
                     combinedItems.push({ ...sItem, needsSync: false, serverId: sItem.serverId || sItem.id });
                 }
             });
-
             localItems.forEach(lItem => {
                 if (lItem.deleted) return;
                 const serverMatch = combinedItems.find(cItem => cItem.id === lItem.id);
-                if (!serverMatch) {
-                    combinedItems.push({ ...lItem, needsSync: true });
-                }
+                if (!serverMatch) combinedItems.push({ ...lItem, needsSync: true });
             });
             mergedMealsForDate[mealType] = combinedItems.sort((a,b) => a.id - b.id);
         });
         meals[dateStr] = mergedMealsForDate;
-
-        if (serverData.exercise !== undefined) {
-            exercise[dateStr] = serverData.exercise;
-        } else if (exercise[dateStr] === undefined) {
-            exercise[dateStr] = 0;
-        }
-
-        console.log("Data merged from server for", dateStr);
+        if (serverData.exercise !== undefined) exercise[dateStr] = serverData.exercise;
+        else if (exercise[dateStr] === undefined) exercise[dateStr] = 0;
         localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
         localStorage.setItem(getLocalStorageKey('exercise'), JSON.stringify(exercise));
-        
-    } catch (error) {
-        console.error("Failed to load or merge data from server:", error);
-    }
+    } catch (error) { console.error("Failed to load or merge data from server:", error); }
     updateDisplay(); 
 }
 
 async function syncDataToServer() {
     if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline) {
-        if(!isServerOnline) console.log("Sync skipped: Server offline.");
-        else console.log("Sync conditions not met (not logged in or no user ID).");
+        if(!isServerOnline) console.warn("Sync skipped: Server offline.");
         return;
     }
-
-    console.log("Attempting to sync local changes for user:", currentGoogleUserIdForStorage);
-    let pendingSyncData = {
-        mealsToUpdate: [], mealsToDelete: [],
-        exercisePerDate: {}, goals: null
-    };
+    let pendingSyncData = { mealsToUpdate: [], mealsToDelete: [], exercisePerDate: {}, goals: null };
     let changesFound = false;
-
     for (const dateKey in meals) {
         const dayMeals = meals[dateKey];
         for (const mealType in dayMeals) {
             (dayMeals[mealType] || []).forEach(meal => { 
                 if (meal.needsSync) {
                     changesFound = true;
-                    if (meal.deleted) {
-                        pendingSyncData.mealsToDelete.push({ 
-                            client_id: meal.id, date: dateKey, serverId: meal.serverId
-                        });
-                    } else {
-                        pendingSyncData.mealsToUpdate.push({ ...meal, date: dateKey, mealType: mealType });
-                    }
+                    if (meal.deleted) pendingSyncData.mealsToDelete.push({ client_id: meal.id, date: dateKey, serverId: meal.serverId });
+                    else pendingSyncData.mealsToUpdate.push({ ...meal, date: dateKey, mealType: mealType });
                 }
             });
         }
     }
-    
     const currentFormattedDate = formatLocalDateForStorage(currentDate);
-    if (changesFound) { // Only include exercise/goals if meals are changing
-        if (exercise[currentFormattedDate] !== undefined) {
-            pendingSyncData.exercisePerDate[currentFormattedDate] = exercise[currentFormattedDate];
-        }
+    if (changesFound) { // Only include exercise/goals if meals changed, or implement separate change tracking for them
+        if (exercise[currentFormattedDate] !== undefined) pendingSyncData.exercisePerDate[currentFormattedDate] = exercise[currentFormattedDate];
         pendingSyncData.goals = goals;
     }
-
-    // More precise check if any data is actually pending
-    if (pendingSyncData.mealsToUpdate.length === 0 && 
-        pendingSyncData.mealsToDelete.length === 0 &&
-        Object.keys(pendingSyncData.exercisePerDate).length === 0 &&
-        !pendingSyncData.goals // Check if goals was actually populated
-    ) {
-       console.log("No local changes truly pending sync after detailed check.");
-       return;
-    }
-
+    if (!changesFound && Object.keys(pendingSyncData.exercisePerDate).length === 0 && !pendingSyncData.goals) return;
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/sync`, {
@@ -874,17 +955,14 @@ async function syncDataToServer() {
             headers: { 'Authorization': `Bearer ${googleIdToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(pendingSyncData)
         });
-
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({error: "Unknown sync error"}));
             console.error(`Sync failed! Status: ${response.status}`, errorData.error || response.statusText);
             if (response.status === 401) handleGoogleSignOut();
             return;
         }
-
         const syncResult = await response.json();
         console.log("Sync successful:", syncResult);
-
         (syncResult.syncedMealClientIds || []).forEach(syncedClientId => {
             for (const dateKey in meals) {
                 for (const mealType in meals[dateKey]) {
@@ -892,9 +970,7 @@ async function syncDataToServer() {
                     const meal = meals[dateKey][mealType].find(m => m.id === syncedClientId);
                     if (meal) {
                         meal.needsSync = false; delete meal.deleted;
-                        if (syncResult.mealServerIds && syncResult.mealServerIds[syncedClientId]) {
-                            meal.serverId = syncResult.mealServerIds[syncedClientId];
-                        }
+                        if (syncResult.mealServerIds && syncResult.mealServerIds[syncedClientId]) meal.serverId = syncResult.mealServerIds[syncedClientId];
                     }
                 }
             }
@@ -907,167 +983,87 @@ async function syncDataToServer() {
                 }
             }
         });
-
         localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
         updateDisplay();
-        console.log("Local data updated after successful sync.");
-
-    } catch (error) {
-        console.error("Error during syncDataToServer fetch:", error);
-    }
+    } catch (error) { console.error("Error during syncDataToServer fetch:", error); }
 }
 
 // --- POLLING FUNCTIONS ---
 async function pollForUpdates() {
-    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline || document.hidden) {
-        return;
-    }
-
+    if (!googleIdToken || !currentGoogleUserIdForStorage || !isServerOnline || document.hidden) return;
     const dateStrToPoll = formatLocalDateForStorage(currentDate);
-    // console.log(`Polling for updates for date: ${dateStrToPoll}`);
-
     try {
         const response = await fetch(`${BACKEND_URL}/api/data?date=${dateStrToPoll}`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${googleIdToken}` }
+            method: 'GET', headers: { 'Authorization': `Bearer ${googleIdToken}` }
         });
-
         if (!response.ok) {
-            if (response.status === 401) {
-                console.error("Polling: Auth error (401). Stopping polling and signing out.");
-                handleGoogleSignOut(); 
-            } else {
-                console.error(`Polling: HTTP error! status: ${response.status} for date ${dateStrToPoll}`);
-            }
+            if (response.status === 401) { console.error("Polling: Auth error (401). Stopping polling and signing out."); handleGoogleSignOut(); } 
+            else console.error(`Polling: HTTP error! status: ${response.status} for date ${dateStrToPoll}`);
             return;
         }
-
         const serverDataForDate = await response.json();
         let localDataWasChangedByPolling = false;
-
         if (serverDataForDate.goals && JSON.stringify(goals) !== JSON.stringify(serverDataForDate.goals)) {
-            console.log("Polling: Goals updated from server.");
             goals = serverDataForDate.goals;
             localStorage.setItem(getLocalStorageKey('goals'), JSON.stringify(goals));
             localDataWasChangedByPolling = true;
         }
-
         const serverExercise = serverDataForDate.exercise !== undefined ? serverDataForDate.exercise : 0;
         const localExercise = exercise[dateStrToPoll] !== undefined ? exercise[dateStrToPoll] : 0;
-        
-        // Only update from poll if server has different data AND local data is not currently marked for sync
-        // This is a simple check; ideally, exercise would also have a lastModified/needsSync status
-        let exerciseNeedsUpdateFromPoll = false;
         if (localExercise !== serverExercise) {
-            // Check if there's a PENDING sync for exercise that might be more up-to-date
-            // This is hard without more granular dirty tracking for exercise.
-            // For now, if different, assume server is more current unless a sync is actively queued.
-            // This is a weak point in simple polling.
-            exercise[dateStrToPoll] = serverExercise;
-            exerciseNeedsUpdateFromPoll = true; // Mark that it *might* have changed due to poll
+            exercise[dateStrToPoll] = serverExercise; localDataWasChangedByPolling = true;
         }
-        if (exerciseNeedsUpdateFromPoll) {
-            console.log(`Polling: Exercise for ${dateStrToPoll} potentially updated from server: ${serverExercise} (was ${localExercise})`);
-            localDataWasChangedByPolling = true;
-        }
-
-
         const serverMeals = serverDataForDate.meals || { breakfast: [], lunch: [], dinner: [], snacks: [] };
-        if (!meals[dateStrToPoll]) {
-            meals[dateStrToPoll] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
-        }
-
+        if (!meals[dateStrToPoll]) meals[dateStrToPoll] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
         let mealsChangedDirectlyByPoll = false;
         for (const mealType of ['breakfast', 'lunch', 'dinner', 'snacks']) {
             const serverItems = serverMeals[mealType] || [];
-            const localItemsOriginal = JSON.parse(JSON.stringify(meals[dateStrToPoll][mealType] || [])); // Deep copy for comparison
+            const localItemsOriginal = JSON.parse(JSON.stringify(meals[dateStrToPoll][mealType] || []));
             let currentLocalItemsForType = meals[dateStrToPoll][mealType] || [];
             const newMergedItemsForType = [];
-
             const serverItemsMap = new Map(serverItems.map(item => [item.id, item]));
-
-            // Iterate through local items first to handle updates and deletions
             for (const lItem of currentLocalItemsForType) {
                 const sItemMatch = serverItemsMap.get(lItem.id);
-                if (sItemMatch) { // Item exists on server
-                    // If local item is dirty (needsSync) and newer, keep local.
-                    // Otherwise, take server version.
-                    if (lItem.needsSync && new Date(lItem.lastModified) > new Date(sItemMatch.lastModified || 0)) {
-                        newMergedItemsForType.push({ ...lItem });
-                    } else {
-                        newMergedItemsForType.push({ ...sItemMatch, needsSync: false });
-                    }
-                    serverItemsMap.delete(lItem.id); // Remove from map as it's been processed
+                if (sItemMatch) { 
+                    if (lItem.needsSync && new Date(lItem.lastModified) > new Date(sItemMatch.lastModified || 0)) newMergedItemsForType.push({ ...lItem });
+                    else newMergedItemsForType.push({ ...sItemMatch, needsSync: false });
+                    serverItemsMap.delete(lItem.id);
                 } else if (!lItem.deleted) { 
-                    // Local item not on server, and not marked for deletion: keep it (it's new or was deleted on server by another client)
-                    // If it needsSync, it will be sent. If not, it means server deleted it.
-                    // This logic might need to be smarter about server deletions.
-                    // For now, if it's not `needsSync:false` it means server deleted it, or it's a new local item.
-                    if (lItem.needsSync) { // New local item or locally modified after server deletion.
-                        newMergedItemsForType.push({ ...lItem });
-                    } else {
-                        // This meal was synced, but server doesn't have it anymore -> deleted on server
-                        console.log(`Polling: Meal ${lItem.dishName} (id: ${lItem.id}) deleted on server, removing locally.`);
-                        // mealsChangedDirectlyByPoll will be true due to removal below
-                    }
+                    if (lItem.needsSync) newMergedItemsForType.push({ ...lItem });
+                    else console.warn(`Polling: Meal ${lItem.dishName} (id: ${lItem.id}) deleted on server, removing locally.`);
                 }
-                // If lItem.deleted and needsSync, it will be handled by syncDataToServer
             }
-
-            // Add any remaining server items (new on server)
-            serverItemsMap.forEach(sItem => {
-                newMergedItemsForType.push({ ...sItem, needsSync: false });
-            });
-            
+            serverItemsMap.forEach(sItem => newMergedItemsForType.push({ ...sItem, needsSync: false }));
             newMergedItemsForType.sort((a,b) => a.id - b.id);
-            if (JSON.stringify(localItemsOriginal) !== JSON.stringify(newMergedItemsForType)) {
-                mealsChangedDirectlyByPoll = true;
-            }
+            if (JSON.stringify(localItemsOriginal) !== JSON.stringify(newMergedItemsForType)) mealsChangedDirectlyByPoll = true;
             meals[dateStrToPoll][mealType] = newMergedItemsForType;
         }
-
-        if (mealsChangedDirectlyByPoll) {
-            localDataWasChangedByPolling = true;
-        }
-        
+        if (mealsChangedDirectlyByPoll) localDataWasChangedByPolling = true;
         if (localDataWasChangedByPolling) {
             console.log(`Polling: Data for ${dateStrToPoll} was updated by server poll.`);
             localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
             localStorage.setItem(getLocalStorageKey('exercise'), JSON.stringify(exercise));
             updateDisplay();
         }
-
-    } catch (error) {
-        console.error("Polling fetch/processing error:", error);
-    }
+    } catch (error) { console.error("Polling fetch/processing error:", error); }
 }
 
 function startPollingForUpdates() {
     stopPollingForUpdates(); 
     if (googleIdToken && currentGoogleUserIdForStorage) {
-        console.log("Starting polling for updates every", POLLING_INTERVAL / 1000, "seconds.");
         pollingIntervalId = setInterval(pollForUpdates, POLLING_INTERVAL);
-        if (isServerOnline || serverJustCameOnlineForPolling) { // Poll immediately if server is already online or just came online
-            pollForUpdates();
-            serverJustCameOnlineForPolling = false; // Reset flag
-        }
+        if (isServerOnline || serverJustCameOnlineForPolling) { pollForUpdates(); serverJustCameOnlineForPolling = false; }
     }
 }
 
 function stopPollingForUpdates() {
-    if (pollingIntervalId) {
-        console.log("Stopping polling for updates.");
-        clearInterval(pollingIntervalId);
-        pollingIntervalId = null;
-    }
+    if (pollingIntervalId) { clearInterval(pollingIntervalId); pollingIntervalId = null; }
 }
 
 async function checkServerStatus() {
-    // ... (same as your version, but use serverJustCameOnlineForPolling flag)
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
     if (!statusIcon || !statusText) return;
-
     if (!statusIcon.classList.contains('blink')) {
         statusIcon.classList.add('blink');
         statusIcon.addEventListener('animationend', () => statusIcon.classList.remove('blink'), { once: true });
@@ -1079,55 +1075,59 @@ async function checkServerStatus() {
         const data = await response.json();
         if (response.ok && data.status === 'live') {
             statusIcon.classList.replace('yellow','green'); statusText.textContent = 'Live';
-            if (!isServerOnline) { // Was offline, now online
-                isServerOnline = true; 
-                serverJustCameOnlineForPolling = true; // Set flag for polling
-                console.log("Server came online. Sync and polling will be attempted.");
-                await syncDataToServer(); // Attempt immediate sync
-                startPollingForUpdates(); // Restart polling which will poll immediately too
+            if (!isServerOnline) { 
+                isServerOnline = true; serverJustCameOnlineForPolling = true;
+                await syncDataToServer(); startPollingForUpdates();
             } else { 
                 isServerOnline = true; 
-                if (!pollingIntervalId && googleIdToken && currentGoogleUserIdForStorage) { // If polling was stopped for some reason but should be active
-                    startPollingForUpdates();
-                }
+                if (!pollingIntervalId && googleIdToken && currentGoogleUserIdForStorage) startPollingForUpdates();
             }
             if (statusCheckInterval) { clearInterval(statusCheckInterval); statusCheckInterval = null; }
-        } else { // Server not live (sleeping or unknown)
-            if (isServerOnline) console.log("Server went offline or is sleeping.");
-            isServerOnline = false; 
-            serverJustCameOnlineForPolling = false;
+        } else { 
+            if (isServerOnline) console.warn("Server went offline or is sleeping.");
+            isServerOnline = false; serverJustCameOnlineForPolling = false;
             statusIcon.classList.replace('yellow','red');
             statusText.textContent = response.ok ? 'Unknown' : 'Sleeping';
-            stopPollingForUpdates(); // Stop polling if server is not live
+            stopPollingForUpdates();
             if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
         }
-    } catch (error) { // Network error, server likely offline
-        if (isServerOnline) console.log("Server connection lost.");
-        isServerOnline = false; 
-        serverJustCameOnlineForPolling = false;
-        statusIcon.classList.replace('yellow','red');
-        statusText.textContent = 'Offline';
-        stopPollingForUpdates(); // Stop polling if server is offline
+    } catch (error) { 
+        if (isServerOnline) console.warn("Server connection lost.");
+        isServerOnline = false; serverJustCameOnlineForPolling = false;
+        statusIcon.classList.replace('yellow','red'); statusText.textContent = 'Offline';
+        stopPollingForUpdates();
         if (!statusCheckInterval) statusCheckInterval = setInterval(checkServerStatus, 10000);
     }
 }
 
 // --- IMAGE HANDLING & OPENAI ---
-async function handleMealNameInput(mealName, mealType, editingId = null) { // Keep editingId if you might support AI for edits
+async function handleMealNameInput(mealName, mealType, editingId = null) {
     if (!mealName) {
         alert('Please enter a meal name.');
         return;
     }
+    const formElement = document.getElementById(`${mealType}Form`);
+    const generateButtonElement = formElement ? formElement.querySelector('.generateMacrosButton') : null;
+    const originalButtonText = "Generate Macros"; 
+    if (generateButtonElement) generateButtonElement.textContent = 'Generating...';
+    let saveInitiated = false; 
     try {
         const response = await fetch(`${BACKEND_URL}/estimate_macros`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ meal_name: mealName })
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
+        if (!response.ok) {
+            let errorText = `HTTP error! status: ${response.status}`;
+            try {
+                const errorJson = await response.json();
+                if (errorJson && errorJson.error) { errorText = errorJson.error; }
+                else { errorText += ` - ${await response.text()}`; }
+            } catch (e) { /* Stick to original errorText */ }
+            throw new Error(errorText);
+        }
         const data = await response.json();
         const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
-        
         const formPrefix = mealType;
         let populatedSuccessfully = false;
         if (matches) {
@@ -1141,60 +1141,68 @@ async function handleMealNameInput(mealName, mealType, editingId = null) { // Ke
             const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
             if (nameMatchOnly && nameMatchOnly[1]) {
                 document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
-                // Note: only name is populated here, calories etc., might be 0 or previous values
-                // You might decide not to auto-save if only the name is populated and macros are missing.
-                // For now, we'll proceed if name is there.
                 populatedSuccessfully = true; 
             }
             console.warn(`Could not parse full macros from AI text response: ${data}`);
-            // alert(`Could not fully parse macros. Please check. AI said: ${data.substring(0,150)}...`); // Maybe too intrusive
         }
-
-        // --- AUTOMATICALLY SAVE IF POPULATED ---
         if (populatedSuccessfully) {
             const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
-            if (saveButton && saveButton.dataset.editingId) {
-                // If in edit mode, click the "Save Edit" button programmatically
-                // This will trigger its specific onclick handler that updates the existing meal.
-                console.log(`AI populated fields for editing meal ${mealType}. Triggering save edit.`);
-                saveButton.click(); 
-                // The edit handler should already call toggleMealForm.
-            } else if (saveButton) {
-                // If in add mode (no editingId), call addMeal directly
-                console.log(`AI populated fields for new meal ${mealType}. Triggering add meal.`);
+            if (saveButton && saveButton.dataset.editingId) { 
+                saveInitiated = true;
+                completeEditMeal(mealType, parseInt(saveButton.dataset.editingId)); 
+            } else if (saveButton) { 
+                saveInitiated = true;
                 addMeal(mealType); 
-                // addMeal already calls toggleMealForm to close and clear.
             }
+        } else {
+            alert("AI could not fully populate the meal details from the name. Please review.");
         }
-        // --- END OF AUTOMATIC SAVE ---
-
     } catch (error) {
         alert(`Error estimating macros: ${error.message}`);
         console.error("Error in handleMealNameInput:", error);
+    } finally {
+        if (!saveInitiated && generateButtonElement) {
+            generateButtonElement.textContent = originalButtonText;
+        }
+        else if (generateButtonElement && generateButtonElement.textContent === 'Generating...') {
+             generateButtonElement.textContent = originalButtonText;
+        }
     }
 }
 
 async function handleImageUpload(input, mealType) {
     const file = input.files[0];
     if (file) {
+        const formElement = document.getElementById(`${mealType}Form`);
+        const uploadLabels = formElement ? Array.from(formElement.querySelectorAll('.image-upload-container label')) : [];
+        const originalLabelTexts = [];
+        uploadLabels.forEach(label => {
+            originalLabelTexts.push(label.textContent);
+            label.textContent = 'Processing...';
+        });
+        let saveInitiated = false;
         const reader = new FileReader();
         reader.onload = async function (e) {
             try {
                 const compressedImage = await compressImage(e.target.result, 500, 500);
                 const uploadedImageDisplay = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                 if (uploadedImageDisplay) {
-                    uploadedImageDisplay.src = compressedImage;
-                    uploadedImageDisplay.style.display = 'block';
+                    uploadedImageDisplay.src = compressedImage; uploadedImageDisplay.style.display = 'block';
                 }
-
                 const blob = dataURLToBlob(compressedImage);
                 const formData = new FormData(); formData.append('image', blob, 'compressed.jpg');
-
                 const response = await fetch(`${BACKEND_URL}/analyze_image`, { method: 'POST', body: formData });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
+                if (!response.ok) {
+                    let errorText = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorJson = await response.json();
+                        if (errorJson && errorJson.error) { errorText = errorJson.error; }
+                        else { errorText += ` - ${await response.text()}`; }
+                    } catch (parseErr) { /* Stick to original errorText */ }
+                    throw new Error(errorText);
+                }
                 const data = await response.json();
                 const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
-                
                 const formPrefix = mealType;
                 let populatedSuccessfully = false;
                 if (matches) {
@@ -1208,34 +1216,106 @@ async function handleImageUpload(input, mealType) {
                     const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
                     if (nameMatchOnly && nameMatchOnly[1]) {
                         document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
-                        populatedSuccessfully = true; // As above, consider if this is enough to auto-save
+                        populatedSuccessfully = true;
                     }
                     console.warn(`Could not parse full macros from AI image analysis: ${data}`);
-                    // alert(`Could not fully parse macros from image. Please check. AI said: ${data.substring(0,150)}...`);
                 }
-
-                // --- AUTOMATICALLY SAVE IF POPULATED ---
                 if (populatedSuccessfully) {
                     const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
                     if (saveButton && saveButton.dataset.editingId) {
-                        // If in edit mode
-                        console.log(`AI (image) populated fields for editing meal ${mealType}. Triggering save edit.`);
-                        saveButton.click();
+                        saveInitiated = true; completeEditMeal(mealType, parseInt(saveButton.dataset.editingId));
                     } else if (saveButton) {
-                        // If in add mode
-                        console.log(`AI (image) populated fields for new meal ${mealType}. Triggering add meal.`);
-                        addMeal(mealType);
+                        saveInitiated = true; addMeal(mealType);
                     }
+                } else {
+                    alert("AI could not fully populate meal details from the image. Please review.");
                 }
-                // --- END OF AUTOMATIC SAVE ---
-
             } catch (error) {
                 alert(`Error processing image: ${error.message}`);
-                console.error("Error in handleImageUpload:", error);
+                console.error("Error in handleImageUpload (reader.onload):", error);
+            } finally {
+                uploadLabels.forEach((label, index) => {
+                    if (originalLabelTexts[index]) label.textContent = originalLabelTexts[index];
+                });
+                if (input) input.value = null; 
             }
         };
+        reader.onerror = function (error) {
+            console.error("FileReader error:", error); alert("Error reading the image file.");
+            uploadLabels.forEach((label, index) => {
+                if (originalLabelTexts[index]) label.textContent = originalLabelTexts[index];
+            });
+            if (input) input.value = null;
+        };
         reader.readAsDataURL(file);
-        input.value = null; // Reset file input to allow uploading the same image again if needed
+    } else {
+        if (input) input.value = null;
+    }
+}
+
+async function handleAiEditMacros(mealType, originalMealName, newMealName, calories, fat, carbs, protein) {
+    if (!newMealName) {
+        alert('Please ensure the meal name is entered (you can include your command there).');
+        return;
+    }
+    const form = document.getElementById(`${mealType}Form`);
+    const buttonElement = form ? form.querySelector('.aiEditMacrosButton') : null;
+    const saveButton = form ? form.querySelector('.saveMealButton') : null; 
+    const originalAiButtonText = "AI Update";
+    if(buttonElement) buttonElement.textContent = 'AI Updating...';
+    let saveInitiated = false;
+    try {
+        const response = await fetch(`${BACKEND_URL}/edit_macros_with_command`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                original_meal_name: originalMealName, new_meal_name: newMealName,
+                current_calories: calories, current_fat: fat, current_carbs: carbs, current_protein: protein
+            })
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({error: "Unknown error from server"}));
+            console.error(`AI Edit HTTP error: ${response.status}`, errorData);
+            alert(`Error updating macros with AI: ${errorData.error || response.statusText}`);
+            if(buttonElement) buttonElement.textContent = originalAiButtonText;
+            return;
+        }
+        const data = await response.json();
+        const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+        const formPrefix = mealType;
+        let populatedSuccessfully = false;
+        if (matches) {
+            document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
+            document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
+            document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
+            document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
+            document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+            populatedSuccessfully = true;
+        } else {
+            const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
+            if (nameMatchOnly && nameMatchOnly[1]) {
+                document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
+                populatedSuccessfully = true; 
+            }
+            console.warn(`Could not parse full macros from AI command edit response: ${data}`);
+        }
+        if (populatedSuccessfully) {
+            if (saveButton && saveButton.dataset.editingId) {
+                saveInitiated = true;
+                completeEditMeal(mealType, parseInt(saveButton.dataset.editingId));
+            } else { // AI Edit should ideally only be available in edit mode.
+                if(buttonElement) buttonElement.textContent = originalAiButtonText;
+            }
+        } else {
+            alert("AI could not fully update the meal. Please review the fields.");
+            if(buttonElement) buttonElement.textContent = originalAiButtonText;
+        }
+    } catch (error) {
+        if(!saveInitiated && buttonElement) { 
+            buttonElement.textContent = originalAiButtonText;
+        }
+        alert(`Error during AI macro update: ${error.message}`);
+        console.error("Error in handleAiEditMacros:", error);
     }
 }
 
@@ -1265,13 +1345,12 @@ function dataURLToBlob(dataurl) {
     while (n--) u8arr[n] = bstr.charCodeAt(n);
     return new Blob([u8arr], { type: mime });
 }
+
 // --- MODALS & MENUS ---
-// ... (same as your version, initializeModal, showImageModal, closeModal, toggleUserInfoMenu, initDragAndDrop) ...
 function initializeModal() { 
     const imageModal = document.getElementById('imageModal');
     const loginContent = document.getElementById('loginModalContent');
     const signupContent = document.getElementById('signupModalContent');
-
     document.body.addEventListener('click', (event) => {
         const img = event.target.closest('.meal-image');
         if (imageModal && loginContent && signupContent && img && img.src &&
@@ -1280,31 +1359,26 @@ function initializeModal() {
             showImageModal(img.src);
         }
     }, true);
-
-    if (imageModal) {
-        imageModal.addEventListener('click', function(event) {
-            if (event.target === imageModal ) closeModal();
-        });
-    }
+    if (imageModal) imageModal.addEventListener('click', (event) => { if (event.target === imageModal ) closeModal(); });
 }
+
 function showImageModal(src) { 
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const loginContent = document.getElementById('loginModalContent');
     const signupContent = document.getElementById('signupModalContent');
     if (!modal || !modalImg || !loginContent || !signupContent) return;
-
     modalImg.src = src; modalImg.style.display = 'block';
     loginContent.style.display = 'none'; signupContent.style.display = 'none';
     modal.style.display = 'flex'; document.body.style.overflow = 'hidden';
 }
+
 function closeModal() { 
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
     const loginContent = document.getElementById('loginModalContent');
     const signupContent = document.getElementById('signupModalContent');
     const settingsModal = document.getElementById('settingsModal');
-
     if (modal && modal.style.display !== 'none') modal.style.display = 'none';
     if (modalImg && modalImg.style.display !== 'none') { modalImg.src = ''; modalImg.style.display = 'none'; }
     if (loginContent && loginContent.style.display !== 'none') loginContent.style.display = 'none';
@@ -1320,15 +1394,12 @@ function toggleUserInfoMenu(event) {
     const userInfoDiv = document.getElementById('userInfo');
     const header = document.querySelector('.header');
     if (!userInfoMenu || !userInfoDiv || !header) return;
-
     if (mainMenu && mainMenu.style.display === 'block') mainMenu.style.display = 'none';
     const isUserInfoMenuOpen = userInfoMenu.style.display === 'block';
     userInfoMenu.style.display = isUserInfoMenuOpen ? 'none' : 'block';
-
     if (!isUserInfoMenuOpen) {
         const emailDisplay = document.getElementById('userInfoMenuEmail');
         if (emailDisplay) emailDisplay.textContent = (userInfoGlobal && userInfoGlobal.email) ? userInfoGlobal.email : 'Email not available';
-        
         const userInfoRect = userInfoDiv.getBoundingClientRect();
         const headerRect = header.getBoundingClientRect();
         const menuWidth = userInfoMenu.offsetWidth;
@@ -1351,11 +1422,9 @@ function initDragAndDrop() {
                     const mealTypeFrom = evt.from.id.replace('Items', '');
                     const mealTypeTo = evt.to.id.replace('Items', '');
                     const mealDate = formatLocalDateForStorage(currentDate);
-                    
                     if (meals[mealDate] && meals[mealDate][mealTypeFrom] && meals[mealDate][mealTypeTo]) {
                         if (!Array.isArray(meals[mealDate][mealTypeFrom])) meals[mealDate][mealTypeFrom] = [];
                         if (!Array.isArray(meals[mealDate][mealTypeTo])) meals[mealDate][mealTypeTo] = [];
-
                         const movedMealArray = meals[mealDate][mealTypeFrom].splice(evt.oldIndex, 1);
                         if (movedMealArray && movedMealArray.length > 0) {
                             const movedMeal = movedMealArray[0];
@@ -1369,9 +1438,9 @@ function initDragAndDrop() {
         }
     });
 }
+
 // --- DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', () => {
-    // ... (same as your version, but add visibilitychange listener) ...
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     const exerciseForm = document.getElementById('exerciseForm');
     if(exerciseForm) exerciseForm.style.display = 'none';
@@ -1384,29 +1453,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeGoogleSignIn();
     checkLoginStateOnLoad(); 
-    checkServerStatus(); // Initial check
-    setInterval(checkServerStatus, 30000); // Periodic check
+    checkServerStatus(); 
+    setInterval(checkServerStatus, 30000); // Check server status periodically
 
     initializeModal();
     initDragAndDrop();
 
-    // --- POLLING --- Add visibility listener
     window.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopPollingForUpdates();
-        } else {
-            if (googleIdToken && currentGoogleUserIdForStorage && isServerOnline) { // Only start if relevant conditions met
-                startPollingForUpdates();
-            }
-        }
+        if (document.hidden) stopPollingForUpdates();
+        else if (googleIdToken && currentGoogleUserIdForStorage && isServerOnline) startPollingForUpdates();
     });
-    // ... (rest of your DOMContentLoaded event listeners - unchanged) ...
+    
     document.querySelectorAll('.saveMealButton').forEach(button => {
         if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
+        const mealType = button.dataset.mealType; 
+        if (!mealType) { console.error("Save button is missing data-meal-type attribute:", button); return; }
         button.addEventListener('click', (event) => {
-            if (button.dataset.editingId) return; 
-            const form = event.target.closest('.meal-form');
-            if (form) addMeal(form.id.replace('Form', ''));
+            if (button.dataset.editingId) completeEditMeal(mealType, parseInt(button.dataset.editingId));
+            else addMeal(mealType);
         });
     });
     
@@ -1425,7 +1489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(saveExerciseButton) saveExerciseButton.addEventListener('click', addExercise);
 
     const mainMenuButton = document.getElementById('menuButton');
-    const pageHeader = document.querySelector('.header');
+    const pageHeader = document.querySelector('.header'); // Define pageHeader here
     if (mainMenuButton && mainMenu && pageHeader) {
         mainMenuButton.addEventListener('click', function (event) {
             event.stopPropagation();
@@ -1494,7 +1558,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginFormElement) {
         loginFormElement.addEventListener('submit', e => { e.preventDefault(); alert('Standard login not implemented. Please use Google Sign-In.'); });
     }
-
     const forgotPassword = document.getElementById('forgotPassword');
     if (forgotPassword) {
         forgotPassword.addEventListener('click', e => { e.preventDefault(); alert('Forgot password not implemented.'); });
@@ -1506,7 +1569,6 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsMenuItem.addEventListener('click', () => {
             if (mainMenu) mainMenu.style.display = 'none';
             if (userInfoMenu) userInfoMenu.style.display = 'none';
-            
             settingsModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             document.getElementById('dailyCalories').value = goals.calories;
@@ -1514,19 +1576,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('dailyCarbs').value = goals.carbs;
             document.getElementById('dailyProtein').value = goals.protein;
         });
-
         settingsForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const oldGoals = {...goals};
             goals.calories = parseInt(document.getElementById('dailyCalories').value) || goals.calories;
             goals.fat = parseInt(document.getElementById('dailyFat').value) || goals.fat;
             goals.carbs = parseInt(document.getElementById('dailyCarbs').value) || goals.carbs;
             goals.protein = parseInt(document.getElementById('dailyProtein').value) || goals.protein;
-            
-            if (JSON.stringify(oldGoals) !== JSON.stringify(goals)) {
-                console.log("Goals changed, will be synced.");
-            }
-            
             saveToLocalStorageAndQueueSync();
             settingsModal.style.display = 'none';
             document.body.style.overflow = '';
@@ -1537,22 +1592,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function(event) {
         const isClickInsideMainMenu = mainMenuButton && mainMenuButton.contains(event.target) || mainMenu && mainMenu.contains(event.target);
         const isClickInsideUserInfoMenu = document.getElementById('userInfo') && document.getElementById('userInfo').contains(event.target) || userInfoMenu && userInfoMenu.contains(event.target);
-        
-        if (mainMenu && mainMenu.style.display === 'block' && !isClickInsideMainMenu) {
-            mainMenu.style.display = 'none';
-        }
-        if (userInfoMenu && userInfoMenu.style.display === 'block' && !isClickInsideUserInfoMenu) {
-            userInfoMenu.style.display = 'none';
-        }
-        
+        if (mainMenu && mainMenu.style.display === 'block' && !isClickInsideMainMenu) mainMenu.style.display = 'none';
+        if (userInfoMenu && userInfoMenu.style.display === 'block' && !isClickInsideUserInfoMenu) userInfoMenu.style.display = 'none';
         const activeSettingsModal = document.getElementById('settingsModal');
-        if (activeSettingsModal && activeSettingsModal.style.display === 'flex' && event.target === activeSettingsModal) {
-            closeModal();
-        }
+        if (activeSettingsModal && activeSettingsModal.style.display === 'flex' && event.target === activeSettingsModal) closeModal();
     });
 
     window.addEventListener('resize', function() {
-        if (!pageHeader) return;
+        if (!pageHeader) return; // pageHeader defined in DOMContentLoaded
         const headerRect = pageHeader.getBoundingClientRect();
         if (mainMenu && mainMenu.style.display === 'block' && mainMenuButton) {
             const buttonRect = mainMenuButton.getBoundingClientRect();
