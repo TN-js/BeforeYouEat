@@ -902,73 +902,97 @@ async function loadDataFromServer(dateStr) {
     if (!googleIdToken || !currentGoogleUserIdForStorage) {
         updateDisplay(); return;
     }
-    // Optional: Add a check here if you want to prevent the fetch attempt
-    // if isServerOnline is known to be false from other checks.
-    // However, updateUIAfterSignIn now attempts to set it.
-    // And checkServerStatus should keep it updated.
-    // The fetch itself is the ultimate test.
-    // if (!isServerOnline) {
-    //     console.warn(`loadDataFromServer (${dateStr}): Server marked offline, not attempting fetch.`);
-    //     updateDisplay(); // Ensure UI reflects local data
-    //     return;
-    // }
 
     try {
-        console.log(`loadDataFromServer: Fetching data for ${dateStr} from ${BACKEND_URL}`); // Added log
+        console.log(`loadDataFromServer: Fetching data for ${dateStr} from ${BACKEND_URL}`);
         const response = await fetch(`${BACKEND_URL}/api/data?date=${dateStr}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${googleIdToken}`, 'Content-Type': 'application/json' }
         });
         if (!response.ok) {
-            // If we fail to load, it's good to reflect that the server might be an issue
-            // The main checkServerStatus will handle setting isServerOnline more globally
             console.error(`HTTP error! status: ${response.status} loading data for ${dateStr}`);
             if (response.status === 401) {
                 console.warn("loadDataFromServer: Authorization error (401). Signing out.");
                 handleGoogleSignOut();
             }
-            // Don't explicitly set isServerOnline = false here, let checkServerStatus manage it
             updateDisplay(); return;
         }
         const serverData = await response.json();
+
         if (serverData.goals) {
             goals = serverData.goals;
             localStorage.setItem(getLocalStorageKey('goals'), JSON.stringify(goals));
         }
-        const localMealsForDate = meals[dateStr] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
+
+        // Use a deep copy of local meals for this date to avoid direct mutation issues during merge
+        // or be very careful if not deep-cloning. For simplicity and safety, let's conceptualize it as operating on copies.
+        const localMealsForDateBeforeMerge = meals[dateStr] ? JSON.parse(JSON.stringify(meals[dateStr])) : { breakfast: [], lunch: [], dinner: [], snacks: [] };
         const serverMealsForDate = serverData.meals || { breakfast: [], lunch: [], dinner: [], snacks: [] };
-        const mergedMealsForDate = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+        const mergedMealsForDateOutput = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+
         ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(mealType => {
-            const localItems = localMealsForDate[mealType] || [];
+            const localItems = localMealsForDateBeforeMerge[mealType] ? [...localMealsForDateBeforeMerge[mealType]] : []; // Operable copy
             const serverItems = serverMealsForDate[mealType] || [];
-            let combinedItems = [];
+            const resultItemsForType = [];
+
+            // 1. Process items from the server
             serverItems.forEach(sItem => {
-                const localMatch = localItems.find(lItem => lItem.id === sItem.id && !lItem.deleted);
-                if (localMatch && localMatch.needsSync && new Date(localMatch.lastModified) > new Date(sItem.lastModified || 0)) {
-                    combinedItems.push({...localMatch });
+                const localMatchIndex = localItems.findIndex(lItem => lItem.id === sItem.id && !lItem.deleted); // Find non-deleted local match
+
+                if (localMatchIndex > -1) {
+                    const localMatch = localItems[localMatchIndex];
+                    const serverTimestamp = new Date(sItem.lastModified || 0).getTime();
+                    const localTimestamp = new Date(localMatch.lastModified || 0).getTime();
+
+                    if (localMatch.needsSync && localTimestamp > serverTimestamp) {
+                        // Local item is newer and pending sync, prioritize local
+                        resultItemsForType.push({ ...localMatch });
+                    } else {
+                        // Server item is newer, or local is synced/older. Take server version.
+                        resultItemsForType.push({ ...sItem, needsSync: false, serverId: sItem.serverId || sItem.id });
+                    }
+                    localItems.splice(localMatchIndex, 1); // Remove processed item from local list
                 } else {
-                    combinedItems.push({ ...sItem, needsSync: false, serverId: sItem.serverId || sItem.id });
+                    // Item is on server but not locally (or local was deleted and server item is newer/authoritative)
+                    resultItemsForType.push({ ...sItem, needsSync: false, serverId: sItem.serverId || sItem.id });
                 }
             });
+
+            // 2. Process remaining local items (those not matched with server items)
             localItems.forEach(lItem => {
-                if (lItem.deleted) return;
-                const serverMatch = combinedItems.find(cItem => cItem.id === lItem.id);
-                if (!serverMatch) combinedItems.push({ ...lItem, needsSync: true });
+                if (lItem.deleted && lItem.needsSync) {
+                    // Local item is marked for deletion and needs sync. Keep it for sync.
+                    resultItemsForType.push({ ...lItem });
+                } else if (!lItem.deleted && lItem.serverId) {
+                    // Local item is NOT marked for deletion, HAS a serverId, but was NOT in server's response.
+                    // This means it was deleted on the server/another client. So, DON'T add it to result.
+                    console.log(`Merge: Local item "${lItem.dishName}" (Client ID: ${lItem.id}, ServerID: ${lItem.serverId}) not found on server for date ${dateStr}. Removing from local view.`);
+                } else if (!lItem.deleted && !lItem.serverId) {
+                    // Local item is NOT marked for deletion, does NOT have a serverId.
+                    // This is a new local item that hasn't been synced yet. Add it for sync.
+                    resultItemsForType.push({ ...lItem, needsSync: true });
+                }
+                // If lItem.deleted is true but needsSync is false, it means deletion was synced. We can ignore it.
+                // If lItem.deleted is false, lItem.serverId exists, and it *was* matched with a server item, it's already handled.
             });
-            mergedMealsForDate[mealType] = combinedItems.sort((a,b) => a.id - b.id);
+
+            mergedMealsForDateOutput[mealType] = resultItemsForType.sort((a, b) => (a.id || 0) - (b.id || 0));
         });
-        meals[dateStr] = mergedMealsForDate;
-        if (serverData.exercise !== undefined) exercise[dateStr] = serverData.exercise;
-        else if (exercise[dateStr] === undefined) exercise[dateStr] = 0;
+
+        meals[dateStr] = mergedMealsForDateOutput;
+
+        if (serverData.exercise !== undefined) {
+            exercise[dateStr] = serverData.exercise;
+        } else if (exercise[dateStr] === undefined) {
+            exercise[dateStr] = 0;
+        }
         localStorage.setItem(getLocalStorageKey('meals'), JSON.stringify(meals));
         localStorage.setItem(getLocalStorageKey('exercise'), JSON.stringify(exercise));
 
     } catch (error) {
         console.error("Failed to load or merge data from server:", error);
-        // Don't explicitly set isServerOnline = false here from a single failed load.
-        // Let checkServerStatus be the authority on overall server status.
     }
-    updateDisplay();
+    updateDisplay(); // Update UI after merge
 }
 
 async function syncDataToServer() {
@@ -1159,11 +1183,12 @@ async function checkServerStatus() {
             if (!wasPreviouslyOnline) { // Just came online
                 console.log("Server status: Came online.");
                 serverJustCameOnlineForPolling = true; // For polling logic
-                // Consider triggering a sync if it just came online and there might be pending data
                 if (googleIdToken && currentGoogleUserIdForStorage) {
-                    await syncDataToServer(); // Sync any pending local changes
-                    // Optionally, also reload current day's data if desired
-                    // await loadDataFromServer(formatLocalDateForStorage(currentDate));
+                    console.log("Server just came online, loading fresh data for current date and then syncing.");
+                    // Load data for the current date first to get the latest from server
+                    await loadDataFromServer(formatLocalDateForStorage(currentDate));
+                    // Then sync any local changes that might have occurred or were pending
+                    await syncDataToServer(); 
                 }
                 startPollingForUpdates(); // Ensure polling is active
             }
