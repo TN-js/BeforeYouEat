@@ -297,8 +297,10 @@ def sync_data(current_user):
 
 @app.route('/estimate_macros', methods=['POST'])
 def estimate_macros():
-    if 'meal_name' not in request.json: return jsonify({'error': 'No meal name provided'}), 400
-    meal_name = request.json['meal_name']
+    data = request.get_json(silent=True)
+    if not data or 'meal_name' not in data:
+        return jsonify({'error': 'No meal name provided'}), 400
+    meal_name = data['meal_name']
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {openai_api_key}"}
     payload = { "model": "gpt-4.1-mini-2025-04-14", "messages": [{"role": "user", "content": f"Please estimate the macros for the meal named '{meal_name}'. Try to estimate the name of the dish that was inputted (if you suspect it was misspelled or shortened), calories, fat, carbs, and protein in grams based on common recipes and serving sizes. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information (if a meal name input includes the mass, then keep that in your output name though, it could be useful.), just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Fat: b g, Carbs: c g, Protein: d g'."}], "max_tokens": 150 }
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
@@ -319,7 +321,10 @@ def analyze_image():
 
 @app.route('/edit_macros_with_command', methods=['POST'])
 def edit_macros_with_command():
-    data = request.json
+    data = request.get_json(silent=True)
+    if not data:
+        app.logger.error("edit_macros_with_command: No JSON payload received")
+        return jsonify({'error': 'No JSON payload provided'}), 400
     # Add 'original_meal_name' to required fields
     required_fields = ['original_meal_name', 'new_meal_name', 'current_calories', 'current_fat', 'current_carbs', 'current_protein']
     if not all(field in data for field in required_fields):
