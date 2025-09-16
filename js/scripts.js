@@ -1295,7 +1295,7 @@ async function handleImageUpload(input, mealType) {
         const reader = new FileReader();
         reader.onload = async function (e) {
             try {
-                const compressedImage = await compressImage(e.target.result, 500, 500);
+                const compressedImage = await compressImage(e.target.result, 1000, 1000);
                 const uploadedImageDisplay = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
                 if (uploadedImageDisplay) {
                     uploadedImageDisplay.src = compressedImage; uploadedImageDisplay.style.display = 'block';
