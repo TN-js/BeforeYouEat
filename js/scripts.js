@@ -1,6 +1,6 @@
 // --- START OF scripts.js ---
-// const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
-const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
+const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
+// const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
 const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
 
 // --- Global State Variables ---
@@ -1238,7 +1238,7 @@ async function handleMealNameInput(mealName, mealType, editingId = null) {
             throw new Error(errorText);
         }
         const data = await response.json();
-        const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+        const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
         const formPrefix = mealType;
         let populatedSuccessfully = false;
         if (matches) {
@@ -1249,7 +1249,7 @@ async function handleMealNameInput(mealName, mealType, editingId = null) {
             document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
             populatedSuccessfully = true;
         } else {
-            const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
+            const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
             if (nameMatchOnly && nameMatchOnly[1]) {
                 document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
                 populatedSuccessfully = true; 
@@ -1313,7 +1313,7 @@ async function handleImageUpload(input, mealType) {
                     throw new Error(errorText);
                 }
                 const data = await response.json();
-                const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+                const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
                 const formPrefix = mealType;
                 let populatedSuccessfully = false;
                 if (matches) {
@@ -1324,7 +1324,7 @@ async function handleImageUpload(input, mealType) {
                     document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
                     populatedSuccessfully = true;
                 } else {
-                    const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
+                    const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
                     if (nameMatchOnly && nameMatchOnly[1]) {
                         document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
                         populatedSuccessfully = true;
@@ -1392,7 +1392,7 @@ async function handleAiEditMacros(mealType, originalMealName, newMealName, calor
             return;
         }
         const data = await response.json();
-        const matches = data.match(/Name:\s*([^,]+?),\s*Cals:\s*(\d+(?:\.\d+)?),\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
+        const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
         const formPrefix = mealType;
         let populatedSuccessfully = false;
         if (matches) {
@@ -1403,7 +1403,7 @@ async function handleAiEditMacros(mealType, originalMealName, newMealName, calor
             document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
             populatedSuccessfully = true;
         } else {
-            const nameMatchOnly = data.match(/Name:\s*([^,]+)/i);
+            const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
             if (nameMatchOnly && nameMatchOnly[1]) {
                 document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
                 populatedSuccessfully = true; 
