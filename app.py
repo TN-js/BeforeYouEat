@@ -5,8 +5,8 @@ import os
 from base64 import b64encode
 from flask_cors import CORS
 from dotenv import load_dotenv
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError # Keep for potential implicit use by SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
+# from sqlalchemy.exc import IntegrityError # Keep for potential implicit use by SQLAlchemy
 from functools import wraps
 from datetime import datetime
 
@@ -46,6 +46,7 @@ else: # Production (Render)
         r"/api/*": {"origins": frontend_url}
     })
 
+"""
 # --- Database Configuration ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__)) # Dir where app.py is
 
@@ -69,6 +70,8 @@ if not app.config.get('SQLALCHEMY_DATABASE_URI'):
 app.logger.info(f"Final SQLALCHEMY_DATABASE_URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+"""
+
 
 # Debug Mode
 app.debug = os.getenv('FLASK_DEBUG') == '1' if IS_LOCAL_TESTING else False
@@ -80,6 +83,7 @@ if not openai_api_key: raise ValueError("OPENAI_API_KEY not found.")
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 if not GOOGLE_CLIENT_ID: raise ValueError("GOOGLE_CLIENT_ID not found.")
 
+"""
 # FLAG FOR ONE-TIME DB INITIALIZATION (per worker)
 db_initialized_for_worker = False
 
@@ -294,6 +298,8 @@ def sync_data(current_user):
     try: db.session.commit()
     except Exception as e_c: db.session.rollback(); app.logger.error(f"Sync: Commit error: {e_c}", exc_info=True); return jsonify({'error': 'Commit error during sync'}), 500
     return jsonify({'message':'Sync processed.','syncedMealClientIds':s_ids,'deletedMealClientIds':d_ids,'mealServerIds':m_s_ids}),200
+"""
+
 
 @app.route('/estimate_macros', methods=['POST'])
 def estimate_macros():
@@ -419,7 +425,7 @@ def edit_macros_with_command():
 
     prompt_content = f"""The user is editing a meal entry.
 The original meal name was: '{original_meal_name}'.
-The new meal name, which might include a command for you to process or indicate a change in the nature of the dish, is: '{new_meal_name}'.
+The new meal name, which might include a command/message/question for you for you to process (usually the last sentence of the edit) or indicate a change in the nature of the dish, is: '{new_meal_name}'.
 The current macros for this meal (based on the '{original_meal_name}' before applying any command from the new meal name) are:
 Calories: {current_calories} kcal
 Fat: {current_fat} g
@@ -428,39 +434,18 @@ Protein: {current_protein} g
 
 Your task is to:
 1. Compare the 'original meal name' with the 'new meal name' (if relevant, if it's wholly different you can probably just ignore the old name).
-2. Analyze the 'new meal name' for any commands (e.g., "x2", "double it", "half portion", "add 10g protein", "remove 5g fat", "set to 200g total weight", "plus one egg") OR for changes in the fundamental nature of the dish (e.g., "cheeseburger" to "cheeseburger (plant-based)").
+2. Analyze the 'new meal name' for any commands or questions (e.g., "x2", "double it", "half portion", "add 10g protein", "remove 5g fat", "set to 200g total weight", "plus one egg", "It's a sandwich, why did you put ceasar salad??") OR for changes in the fundamental nature of the dish (e.g., "cheeseburger" to "cheeseburger (plant-based)").
 3. If a command or a significant change in dish nature is found, update the provided 'current macros' accordingly.
    - For scaling commands (e.g., "x2", "200g" if original implied 100g), scale all macros proportionally based on the 'current macros'.
    - For additive/subtractive commands ("add 10g protein", "remove 5g fat"), adjust only the relevant macros.
    - For changes in dish nature (like switching to a plant-based version), estimate new macros based on typical values for that dish version, leveraging the provided macros as a starting reference.
-4. Provide the updated meal name and macros in the format:
+4. Provide the updated meal name and macros (always write these with numbers, not words like "seventy eight") in the format (and remove the issued command if there was one.):
    'Name: [Dish Name], Cals: a, Fat: b g, Carbs: c g, Protein: d g'.
 5. If no change is necessary, return the provided macros but still use the formatting above.
 
-Examples:
-Example 1 (Scaling command):
-original_meal_name: "My Oatmeal"
-new_meal_name: "My Oatmeal x2"
-current_macros for "My Oatmeal": Cals: 300, Fat: 10g, Carbs: 45g, Protein: 12g
-Output: 'Name: My Oatmeal, Cals: 600, Fat: 20g, Carbs: 90g, Protein: 24g'
+Always do what you think is best for the current input though, don't rely on these guidelines too much.
 
-Example 2 (Additive command):
-original_meal_name: "Chicken Salad"
-new_meal_name: "Chicken Salad plus 10g protein"
-current_macros for "Chicken Salad": Cals: 400, Fat: 20g, Carbs: 30g, Protein: 25g
-Output: 'Name: Chicken Salad plus 10g protein, Cals: 400, Fat: 20g, Carbs: 30g, Protein: 35g'
-
-Example 3 (Dish Nature Change):
-original_meal_name: "Cheeseburger"
-new_meal_name: "Cheeseburger (plant-based)"
-current_macros for "Cheeseburger": Cals: 350, Fat: 18g, Carbs: 30g, Protein: 20g
-Output: 'Name: Cheeseburger (plant-based), Cals: 300, Fat: 12g, Carbs: 35g, Protein: 15g' (Illustrative - AI would estimate based on typical plant-based burger macros, possibly different from original beef burger macros)
-
-Example 4 (No significant change):
-original_meal_name: "My Salad"
-new_meal_name: "My Delicious Salad"
-current_macros for "My Salad": Cals: 250, Fat: 10g, Carbs: 15g, Protein: 20g
-Output: 'Name: My Delicious Salad, Cals: 250, Fat: 10g, Carbs: 15g, Protein: 20g'
+NOTE: If something looks like a command to you in the meal name; prioritize that above all else. And always make the new meal name look clean and finished, we're looking for short, clean, and concise names for meals, only keep a parentheses if necessary.
 """
 
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {openai_api_key}"}
@@ -514,6 +499,7 @@ def health_check(): return jsonify({'status': 'live'}), 200
 
 # --- Main Execution & DB Setup (for LOCAL TESTING ONLY) ---
 if __name__ == '__main__':
+    """
     if IS_LOCAL_TESTING:
         # Ensure the instance folder exists for local SQLite.
         db_uri_config = app.config.get('SQLALCHEMY_DATABASE_URI')
@@ -546,6 +532,8 @@ if __name__ == '__main__':
                 app.logger.error(f"Local: ERROR creating tables in __main__: {e}", exc_info=True)
                 exit(1) # Critical if local DB can't be set up
 
+
+    """
     if IS_LOCAL_TESTING:
         app.logger.info(f"Starting Flask development server on host 0.0.0.0, port 5000. Debug: {app.debug}")
         app.run(host='0.0.0.0', port=5000)

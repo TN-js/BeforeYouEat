@@ -20,6 +20,12 @@ const SYNC_DEBOUNCE_TIME = 3000;
 
 let pollingIntervalId = null;
 const POLLING_INTERVAL = 15000;
+const COPIED_MEAL_STORAGE_KEY = 'beforeYouEatCopiedMeal';
+let copiedMealData = null;
+let toastHideTimeoutId = null;
+const actionHistory = [];
+const MAX_HISTORY = 60;
+
 let serverJustCameOnlineForPolling = false;
 
 // State for meal form interaction
@@ -75,6 +81,314 @@ function decodeJwtResponse(token) {
         const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
         return JSON.parse(jsonPayload);
     } catch (e) { console.error("Error decoding JWT", e); return null; }
+}
+
+const MACRO_FIELDS = ['Calories', 'Fat', 'Carbs', 'Protein'];
+
+function getMacroSliderForInput(inputId) {
+    return document.querySelector(`.macro-adjust-slider[data-target-input='${inputId}']`);
+}
+
+function updateMacroSliderLabel(slider, percent) {
+    if (!slider) return;
+    const labelId = slider.dataset.labelId;
+    if (!labelId) return;
+    const labelEl = document.getElementById(labelId);
+    if (!labelEl) return;
+    const pct = Math.round(percent);
+    const prefix = pct > 0 ? '+' : '';
+    labelEl.textContent = `${prefix}${pct}%`;
+}
+
+function resetMacroSliderForInput(inputOrId) {
+    const inputEl = typeof inputOrId === 'string' ? document.getElementById(inputOrId) : inputOrId;
+    if (!inputEl) return;
+    const slider = getMacroSliderForInput(inputEl.id);
+    if (!slider) return;
+    const value = parseFloat(inputEl.value);
+    slider.dataset.baseValue = isNaN(value) ? '' : value;
+    slider.value = '0';
+    updateMacroSliderLabel(slider, 0);
+    updateSliderBackgroundVisual(slider);
+}
+
+function resetMacroSlidersForMealType(mealType) {
+    MACRO_FIELDS.forEach(field => resetMacroSliderForInput(`${mealType}${field}`));
+}
+
+const SLIDER_MIN = -20;
+const SLIDER_MAX = 20;
+
+function updateSliderBackgroundVisual(slider) {
+    if (!slider) return;
+    const value = parseFloat(slider.value) || 0;
+    const min = SLIDER_MIN;
+    const max = SLIDER_MAX;
+    const midPercent = ((0 - min) / (max - min)) * 100;
+    const currentPercent = ((value - min) / (max - min)) * 100;
+    let start = Math.min(midPercent, currentPercent);
+    let end = Math.max(midPercent, currentPercent);
+    start = Math.max(0, Math.min(100, start));
+    end = Math.max(0, Math.min(100, end));
+    const base = '#dfe9da';
+    const fill = '#93a38b';
+    if (Math.abs(value) < 0.1) {
+        slider.style.background = `linear-gradient(to right, ${base} 0%, ${base} 100%)`;
+        return;
+    }
+    slider.style.background = `linear-gradient(to right, ${base} 0%, ${base} ${start}%, ${fill} ${start}%, ${fill} ${end}%, ${base} ${end}%, ${base} 100%)`;
+}
+
+function scrollFormIntoView(mealType) {
+    if (!mealType) return;
+    const form = document.getElementById(`${mealType}Form`);
+    if (!form) return;
+    requestAnimationFrame(() => {
+        const rect = form.getBoundingClientRect();
+        const offset = 110;
+        const target = rect.top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+    });
+}
+
+function initializeMacroSliders() {
+    document.querySelectorAll('.macro-adjust-slider').forEach(slider => {
+        const inputId = slider.dataset.targetInput;
+        if (!inputId) return;
+        const inputEl = document.getElementById(inputId);
+        if (!inputEl) return;
+
+        resetMacroSliderForInput(inputEl);
+        updateSliderBackgroundVisual(slider);
+
+        slider.addEventListener('input', () => {
+            const baseValue = parseFloat(slider.dataset.baseValue);
+            const percent = parseFloat(slider.value) || 0;
+            updateMacroSliderLabel(slider, percent);
+            if (isNaN(baseValue)) return;
+            const newValue = +(baseValue * (1 + percent / 100)).toFixed(1);
+            inputEl.value = newValue;
+            updateSliderBackgroundVisual(slider);
+        });
+
+        slider.addEventListener('change', () => {
+            const currentValue = parseFloat(inputEl.value);
+            slider.dataset.baseValue = isNaN(currentValue) ? '' : currentValue;
+            slider.value = '0';
+            updateMacroSliderLabel(slider, 0);
+            updateSliderBackgroundVisual(slider);
+        });
+
+        inputEl.addEventListener('input', () => {
+            const value = parseFloat(inputEl.value);
+            slider.dataset.baseValue = isNaN(value) ? '' : value;
+            slider.value = '0';
+            updateMacroSliderLabel(slider, 0);
+            updateSliderBackgroundVisual(slider);
+        });
+
+        inputEl.addEventListener('change', () => {
+            const value = parseFloat(inputEl.value);
+            slider.dataset.baseValue = isNaN(value) ? '' : value;
+            slider.value = '0';
+            updateMacroSliderLabel(slider, 0);
+        });
+    });
+}
+
+function sanitizeCopiedMeal(rawData) {
+    if (!rawData || typeof rawData !== 'object') return null;
+    return {
+        dishName: rawData.dishName || '',
+        calories: Number(rawData.calories) || 0,
+        fat: Number(rawData.fat) || 0,
+        carbs: Number(rawData.carbs) || 0,
+        protein: Number(rawData.protein) || 0,
+        image: rawData.image || null,
+        mealType: rawData.mealType || null,
+        copiedAt: rawData.copiedAt || new Date().toISOString()
+    };
+}
+
+function persistCopiedMealData() {
+    if (!copiedMealData) {
+        try {
+            localStorage.removeItem(COPIED_MEAL_STORAGE_KEY);
+        } catch (err) {
+            console.warn('Could not clear copied meal from storage', err);
+        }
+        return;
+    }
+    try {
+        localStorage.setItem(COPIED_MEAL_STORAGE_KEY, JSON.stringify(copiedMealData));
+    } catch (err) {
+        console.warn('Could not persist copied meal', err);
+    }
+}
+
+function loadCopiedMealFromStorage() {
+    try {
+        const stored = localStorage.getItem(COPIED_MEAL_STORAGE_KEY);
+        if (stored) {
+            const parsed = sanitizeCopiedMeal(JSON.parse(stored));
+            copiedMealData = parsed;
+        }
+    } catch (err) {
+        console.warn('Could not load copied meal', err);
+        copiedMealData = null;
+    }
+}
+
+function hideToast() {
+    const toast = document.getElementById('copyToast');
+    if (!toast) return;
+    toast.classList.remove('visible');
+    toast.style.pointerEvents = 'none';
+    if (toastHideTimeoutId) {
+        clearTimeout(toastHideTimeoutId);
+        toastHideTimeoutId = null;
+    }
+}
+
+function showToast({ message = '', duration = 2600, actionLabel = null, actionHandler = null } = {}) {
+    hideToast();
+    const toast = document.getElementById('copyToast');
+    if (!toast) return;
+    toast.innerHTML = '';
+
+    if (actionLabel && typeof actionHandler === 'function') {
+        const actionButton = document.createElement('button');
+        actionButton.className = 'toast-action-button';
+        actionButton.type = 'button';
+        actionButton.textContent = actionLabel;
+        actionButton.addEventListener('click', () => {
+            hideToast();
+            actionHandler();
+        });
+        toast.appendChild(actionButton);
+        toast.style.pointerEvents = 'auto';
+    } else {
+        toast.style.pointerEvents = 'none';
+    }
+
+    const messageSpan = document.createElement('span');
+    messageSpan.className = 'toast-message';
+    messageSpan.textContent = message;
+    toast.appendChild(messageSpan);
+
+    toast.classList.add('visible');
+    if (duration !== null) {
+        toastHideTimeoutId = setTimeout(() => hideToast(), duration);
+    }
+}
+
+function cloneMealForHistory(meal) {
+    return JSON.parse(JSON.stringify(meal));
+}
+
+function recordAction(entry) {
+    actionHistory.push({ ...entry, recordedAt: new Date().toISOString() });
+    if (actionHistory.length > MAX_HISTORY) actionHistory.shift();
+    updateUndoControls();
+}
+
+function updateUndoControls() {
+    const undoButton = document.getElementById('undoFromSettings');
+    const hasHistory = actionHistory.length > 0;
+    if (undoButton) {
+        undoButton.disabled = !hasHistory;
+        undoButton.setAttribute('aria-disabled', String(!hasHistory));
+    }
+}
+
+function undoLastAction() {
+    if (!actionHistory.length) {
+        showToast({ message: 'Nothing to undo' });
+        return;
+    }
+    const entry = actionHistory.pop();
+    const { action, mealType, mealDate } = entry;
+    if (!meals[mealDate]) {
+        meals[mealDate] = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+    }
+    const mealList = meals[mealDate][mealType] || (meals[mealDate][mealType] = []);
+    let message = 'Change undone';
+
+    if (action === 'add') {
+        const idx = mealList.findIndex(m => m.id === entry.mealSnapshot.id);
+        if (idx !== -1) mealList.splice(idx, 1);
+        message = 'Meal addition undone';
+    } else if (action === 'delete') {
+        const snapshot = entry.mealSnapshot;
+        if (entry.wasSoftDelete) {
+            const existing = mealList.find(m => m.id === snapshot.id);
+            if (existing) {
+                Object.assign(existing, snapshot);
+                existing.deleted = false;
+                existing.needsSync = snapshot.needsSync;
+            } else {
+                mealList.splice(entry.originalIndex ?? mealList.length, 0, snapshot);
+            }
+        } else {
+            mealList.splice(Math.min(entry.originalIndex ?? mealList.length, mealList.length), 0, snapshot);
+        }
+        message = 'Meal restored';
+    }
+
+    updateDisplay();
+    saveToLocalStorageAndQueueSync();
+    updateUndoControls();
+    showToast({ message });
+}
+
+function setCopiedMealData(rawData, options = {}) {
+    const { silent = false } = options;
+    const sanitized = sanitizeCopiedMeal(rawData);
+    if (!sanitized) return;
+    copiedMealData = sanitized;
+    persistCopiedMealData();
+    updatePasteButtonsState();
+    if (!silent) showToast({ message: 'Meal copied' });
+}
+
+function updatePasteButtonsState() {
+    const hasData = !!copiedMealData;
+    document.querySelectorAll('.pasteMealButton').forEach(button => {
+        button.disabled = !hasData;
+        button.setAttribute('aria-disabled', String(!hasData));
+    });
+}
+
+function pasteMealIntoForm(mealType) {
+    if (!copiedMealData) {
+        showToast({ message: 'Copy a meal first' });
+        return;
+    }
+    const data = copiedMealData;
+    const dishNameInput = document.getElementById(`${mealType}DishName`);
+    if (dishNameInput) dishNameInput.value = data.dishName || '';
+    const caloriesInput = document.getElementById(`${mealType}Calories`);
+    if (caloriesInput) caloriesInput.value = data.calories || 0;
+    const fatInput = document.getElementById(`${mealType}Fat`);
+    if (fatInput) fatInput.value = data.fat || 0;
+    const carbsInput = document.getElementById(`${mealType}Carbs`);
+    if (carbsInput) carbsInput.value = data.carbs || 0;
+    const proteinInput = document.getElementById(`${mealType}Protein`);
+    if (proteinInput) proteinInput.value = data.protein || 0;
+
+    const uploadedImage = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+    if (uploadedImage) {
+        if (data.image) {
+            uploadedImage.src = data.image;
+            uploadedImage.style.display = 'block';
+        } else {
+            uploadedImage.src = '';
+            uploadedImage.style.display = 'none';
+        }
+    }
+
+    resetMacroSlidersForMealType(mealType);
+    showToast({ message: 'Meal pasted' });
 }
 
 // --- DATE NAVIGATION ---
@@ -173,6 +487,7 @@ function toggleMealForm(mealType) {
         }
         
         form.style.display = 'block';
+        scrollFormIntoView(mealType);
 
         if (isEditingExistingMealItem) { 
             // This specific state (opening form FOR an item edit) is mostly set by editMeal().
@@ -197,6 +512,8 @@ function toggleMealForm(mealType) {
             if (generateButton) { generateButton.style.display = 'block'; generateButton.textContent = 'Generate Macros'; }
             if (aiEditButton) aiEditButton.style.display = 'none';
             
+            resetMacroSlidersForMealType(mealType);
+
             mealFormEditState[mealType] = false; 
             mealFormAddState[mealType] = true; 
             updateAddMealButtonText(mealType, false, true); // "Cancel Adding..."
@@ -210,6 +527,8 @@ function toggleMealForm(mealType) {
         if(carbsInput) carbsInput.value = '';
         if(proteinInput) proteinInput.value = '';
         if(uploadedImage) { uploadedImage.style.display = 'none'; uploadedImage.src = ''; }
+
+        resetMacroSlidersForMealType(mealType);
 
         if (saveButton.dataset.editingId) delete saveButton.dataset.editingId;
         if (form.dataset.originalMealName) delete form.dataset.originalMealName;
@@ -266,6 +585,7 @@ function addMeal(mealType, existingImage = null) {
     if (!Array.isArray(meals[mealDate][mealType])) meals[mealDate][mealType] = [];
     
     meals[mealDate][mealType].push(meal);
+    recordAction({ action: 'add', mealType, mealDate, mealSnapshot: cloneMealForHistory(meal) });
     updateDisplay();
     saveToLocalStorageAndQueueSync();
     
@@ -290,22 +610,28 @@ function addExercise() {
 
 function removeMeal(mealType, id) {
     const mealDate = formatLocalDateForStorage(currentDate);
-    id = parseInt(id);
-    if (meals[mealDate] && meals[mealDate][mealType]) {
-        const mealIndex = meals[mealDate][mealType].findIndex(meal => meal.id === id);
-        if (mealIndex > -1) {
-            const mealToRemove = meals[mealDate][mealType][mealIndex];
-            if (mealToRemove.needsSync === false && mealToRemove.serverId) { 
-                mealToRemove.deleted = true;
-                mealToRemove.needsSync = true; 
-                mealToRemove.lastModified = new Date().toISOString();
-            } else { 
-                meals[mealDate][mealType].splice(mealIndex, 1);
-            }
-        }
+    id = parseInt(id, 10);
+    if (!meals[mealDate] || !meals[mealDate][mealType]) return;
+    const mealIndex = meals[mealDate][mealType].findIndex(meal => meal.id === id);
+    if (mealIndex === -1) return;
+    const mealToRemove = meals[mealDate][mealType][mealIndex];
+    if (!mealToRemove) return;
+
+    const mealSnapshot = cloneMealForHistory(mealToRemove);
+    const wasSoftDelete = mealToRemove.needsSync === false && !!mealToRemove.serverId;
+
+    if (wasSoftDelete) { 
+        mealToRemove.deleted = true;
+        mealToRemove.needsSync = true; 
+        mealToRemove.lastModified = new Date().toISOString();
+    } else { 
+        meals[mealDate][mealType].splice(mealIndex, 1);
     }
+
+    recordAction({ action: 'delete', mealType, mealDate, mealSnapshot, originalIndex: mealIndex, wasSoftDelete });
     updateDisplay();
     saveToLocalStorageAndQueueSync();
+    showToast({ message: 'Meal deleted', actionLabel: 'Undo', actionHandler: undoLastAction, duration: 4000 });
 }
 
 function removeExercise() {
@@ -349,6 +675,8 @@ function editMeal(mealType, id) {
     document.getElementById(`${mealType}Carbs`).value = mealToEdit.carbs || '';
     document.getElementById(`${mealType}Protein`).value = mealToEdit.protein || '';
 
+    resetMacroSlidersForMealType(mealType);
+
     const uploadedImageDisplay = document.getElementById(`uploadedImage${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
     if (uploadedImageDisplay) {
         if (mealToEdit.image) {
@@ -364,6 +692,7 @@ function editMeal(mealType, id) {
              toggleMealForm(mealType); // Close "add" state first
         }
         form.style.display = 'block';
+        scrollFormIntoView(mealType);
     }
 
     const saveButton = form.querySelector(`.saveMealButton`);
@@ -433,24 +762,25 @@ function completeEditMeal(mealType, editingId) {
 }
 
 
-function duplicateMeal(mealType, id) {
+function copyMeal(mealType, id) {
     const mealDate = formatLocalDateForStorage(currentDate);
-    id = parseInt(id);
+    id = parseInt(id, 10);
     if (!meals[mealDate] || !meals[mealDate][mealType]) return;
-    const mealToDuplicate = meals[mealDate][mealType].find(meal => meal.id === id);
-    if (mealToDuplicate && !mealToDuplicate.deleted) {
-        const newMeal = { 
-            ...mealToDuplicate, 
-            id: Date.now(),
-            needsSync: true,
-            deleted: false,
-            lastModified: new Date().toISOString()
-        }; 
-        delete newMeal.serverId;
-        meals[mealDate][mealType].push(newMeal);
-        updateDisplay();
-        saveToLocalStorageAndQueueSync();
-    }
+    const mealToCopy = meals[mealDate][mealType].find(meal => meal.id === id);
+    if (!mealToCopy || mealToCopy.deleted) return;
+
+    const payload = {
+        dishName: mealToCopy.dishName || '',
+        calories: Number(mealToCopy.calories) || 0,
+        fat: Number(mealToCopy.fat) || 0,
+        carbs: Number(mealToCopy.carbs) || 0,
+        protein: Number(mealToCopy.protein) || 0,
+        image: mealToCopy.image || null,
+        mealType,
+        copiedAt: new Date().toISOString()
+    };
+
+    setCopiedMealData(payload);
 }
 
 // clearInputs is likely not needed if toggleMealForm handles clearing on close.
@@ -479,7 +809,7 @@ function updateDisplay() {
                 totals.protein += meal.protein || 0;
                 const mealItem = document.createElement('div');
                 mealItem.className = 'meal-item';
-                if (meal.needsSync) mealItem.style.outline = "2px dashed orange";
+                // if (meal.needsSync) mealItem.style.outline = "2px dashed orange";
                 
                 mealItem.innerHTML = `
                     <div class="drag-area"><div class="dot-matrix"></div></div>
@@ -489,9 +819,9 @@ function updateDisplay() {
                         <p>Cals: ${meal.calories || 0} | Fat: ${meal.fat || 0}g | Carbs: ${meal.carbs || 0}g | Protein: ${meal.protein || 0}g</p>
                     </div>
                     <div class="button-area">
-                        <button class="duplicate-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-copy"></i></button>
-                        <button class="edit-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-pencil"></i></button>
-                        <button class="remove-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-trash"></i></button>
+                        <button class="duplicate-button icon-button" aria-label="Copy meal" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-copy"></i><span class="icon-button-label">Copy</span></button>
+                        <button class="edit-button icon-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-pencil"></i><span class="icon-button-label">Edit</span></button>
+                        <button class="remove-button icon-button" data-meal-type="${mealType}" data-id="${meal.id}"><i class="fa-solid fa-trash"></i><span class="icon-button-label">Delete</span></button>
                     </div>`;
                 mealItemsContainer.appendChild(mealItem);
             });
@@ -506,7 +836,7 @@ function updateDisplay() {
             exerciseItem.className = 'exercise-item';
             exerciseItem.innerHTML = `
                 <div class="exercise-info"><p>Calories burned: ${currentExercise}</p></div>
-                <div class="button-area"><button class="remove-button remove-exercise-button"><i class="fa-solid fa-trash"></i></button></div>`;
+                <div class="button-area"><button class="remove-button remove-exercise-button icon-button" aria-label="Delete exercise"><i class="fa-solid fa-trash"></i><span class="icon-button-label">Delete</span></button></div>`;
             exerciseItemsContainer.appendChild(exerciseItem);
         }
     }
@@ -527,7 +857,7 @@ function updateDisplay() {
         button.onclick = () => editMeal(button.dataset.mealType, button.dataset.id);
     });
     document.querySelectorAll('.duplicate-button').forEach(button => {
-        button.onclick = () => duplicateMeal(button.dataset.mealType, button.dataset.id);
+        button.onclick = () => copyMeal(button.dataset.mealType, button.dataset.id);
     });
 }
 
@@ -1247,6 +1577,7 @@ async function handleMealNameInput(mealName, mealType, editingId = null) {
             document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
             document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
             document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+            resetMacroSlidersForMealType(formPrefix);
             populatedSuccessfully = true;
         } else {
             const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
@@ -1322,6 +1653,7 @@ async function handleImageUpload(input, mealType) {
                     document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
                     document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
                     document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+                    resetMacroSlidersForMealType(formPrefix);
                     populatedSuccessfully = true;
                 } else {
                     const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
@@ -1401,6 +1733,7 @@ async function handleAiEditMacros(mealType, originalMealName, newMealName, calor
             document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
             document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
             document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
+            resetMacroSlidersForMealType(formPrefix);
             populatedSuccessfully = true;
         } else {
             const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
@@ -1552,6 +1885,17 @@ function initDragAndDrop() {
 
 // --- DOMContentLoaded ---
 document.addEventListener('DOMContentLoaded', () => {
+    initializeMacroSliders();
+    loadCopiedMealFromStorage();
+    updatePasteButtonsState();
+    updateUndoControls();
+    document.querySelectorAll('.pasteMealButton').forEach(button => {
+        button.addEventListener('click', () => pasteMealIntoForm(button.dataset.mealType));
+    });
+    const undoSettingsButton = document.getElementById('undoFromSettings');
+    if (undoSettingsButton) {
+        undoSettingsButton.addEventListener('click', () => undoLastAction());
+    }
     document.querySelectorAll('.meal-form').forEach(form => form.style.display = 'none');
     const exerciseForm = document.getElementById('exerciseForm');
     if(exerciseForm) exerciseForm.style.display = 'none';

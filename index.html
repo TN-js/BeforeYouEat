@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <title>Before You Eat</title>
-    <link rel="stylesheet" href="css/styles.css?v0.3.5">
+    <link rel="stylesheet" href="css/styles.css?v0.3.6">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -62,13 +62,15 @@
             </div>
 
             <div class="row bottom">
-                <div class="version">v0.3.5</div>
+                <div class="version">v0.3.6</div>
                 <div id="server-status" class="server-status">
                     <span id="status-icon" class="status-icon yellow"></span>
                     <span id="status-text" class="status-text">Checking...</span>
                 </div>
             </div>
         </div>
+
+        <div id="copyToast" class="copy-toast" role="status" aria-live="polite"></div>
 
         <div class="summary">
             <h2>Daily Summary</h2>
@@ -118,11 +120,38 @@
                         <button class="generateMacrosButton">Generate Macros</button>
                         <button class="aiEditMacrosButton" style="display: none;">AI Update</button>
                     </div>
-                    <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
-                    <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
-                    <input type="number" id="breakfastCarbs" step="0.1" placeholder="Carbs (g)">
-                    <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
-                    <button class="saveMealButton" data-meal-type="breakfast">Save Breakfast</button>
+                    <div class="macro-input-row">
+                        <input type="number" id="breakfastCalories" step="0.1" placeholder="Cals">
+                        <div class="macro-slider">
+                            <input type="range" id="breakfastCaloriesSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="breakfastCalories" data-label-id="breakfastCaloriesSliderLabel">
+                            <div class="macro-slider-label" id="breakfastCaloriesSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="breakfastFat" step="0.1" placeholder="Fat (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="breakfastFatSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="breakfastFat" data-label-id="breakfastFatSliderLabel">
+                            <div class="macro-slider-label" id="breakfastFatSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="breakfastCarbs" step="0.1" placeholder="Carbs (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="breakfastCarbsSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="breakfastCarbs" data-label-id="breakfastCarbsSliderLabel">
+                            <div class="macro-slider-label" id="breakfastCarbsSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="breakfastProtein" step="0.1" placeholder="Protein (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="breakfastProteinSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="breakfastProtein" data-label-id="breakfastProteinSliderLabel">
+                            <div class="macro-slider-label" id="breakfastProteinSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="meal-form-actions">
+                        <button class="copy-action-button pasteMealButton icon-button" type="button" disabled data-meal-type="breakfast" aria-label="Paste copied meal"><i class="fa-solid fa-paste"></i><span class="icon-button-label">Paste</span></button>
+                        <button class="saveMealButton" data-meal-type="breakfast">Save Breakfast</button>
+                    </div>
                     <div class="image-upload-container">
                         <label for="breakfastImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="breakfastImageUpload" accept="image/*" onchange="handleImageUpload(this, 'breakfast')">
@@ -143,11 +172,38 @@
                         <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
                         <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
-                    <input type="number" id="lunchCalories" step="0.1" placeholder="Cals">
-                    <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
-                    <input type="number" id="lunchCarbs" step="0.1" placeholder="Carbs (g)">
-                    <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
-                    <button class="saveMealButton" data-meal-type="lunch">Save Lunch</button>
+                    <div class="macro-input-row">
+                        <input type="number" id="lunchCalories" step="0.1" placeholder="Cals">
+                        <div class="macro-slider">
+                            <input type="range" id="lunchCaloriesSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="lunchCalories" data-label-id="lunchCaloriesSliderLabel">
+                            <div class="macro-slider-label" id="lunchCaloriesSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="lunchFat" step="0.1" placeholder="Fat (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="lunchFatSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="lunchFat" data-label-id="lunchFatSliderLabel">
+                            <div class="macro-slider-label" id="lunchFatSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="lunchCarbs" step="0.1" placeholder="Carbs (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="lunchCarbsSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="lunchCarbs" data-label-id="lunchCarbsSliderLabel">
+                            <div class="macro-slider-label" id="lunchCarbsSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="lunchProtein" step="0.1" placeholder="Protein (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="lunchProteinSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="lunchProtein" data-label-id="lunchProteinSliderLabel">
+                            <div class="macro-slider-label" id="lunchProteinSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="meal-form-actions">
+                        <button class="copy-action-button pasteMealButton icon-button" type="button" disabled data-meal-type="lunch" aria-label="Paste copied meal"><i class="fa-solid fa-paste"></i><span class="icon-button-label">Paste</span></button>
+                        <button class="saveMealButton" data-meal-type="lunch">Save Lunch</button>
+                    </div>
                     <div class="image-upload-container">
                         <label for="lunchImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="lunchImageUpload" accept="image/*" onchange="handleImageUpload(this, 'lunch')">
@@ -168,11 +224,38 @@
                         <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
                         <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
-                    <input type="number" id="dinnerCalories" step="0.1" placeholder="Cals">
-                    <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
-                    <input type="number" id="dinnerCarbs" step="0.1" placeholder="Carbs (g)">
-                    <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
-                    <button class="saveMealButton" data-meal-type="dinner">Save Dinner</button>
+                    <div class="macro-input-row">
+                        <input type="number" id="dinnerCalories" step="0.1" placeholder="Cals">
+                        <div class="macro-slider">
+                            <input type="range" id="dinnerCaloriesSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="dinnerCalories" data-label-id="dinnerCaloriesSliderLabel">
+                            <div class="macro-slider-label" id="dinnerCaloriesSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="dinnerFat" step="0.1" placeholder="Fat (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="dinnerFatSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="dinnerFat" data-label-id="dinnerFatSliderLabel">
+                            <div class="macro-slider-label" id="dinnerFatSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="dinnerCarbs" step="0.1" placeholder="Carbs (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="dinnerCarbsSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="dinnerCarbs" data-label-id="dinnerCarbsSliderLabel">
+                            <div class="macro-slider-label" id="dinnerCarbsSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="dinnerProtein" step="0.1" placeholder="Protein (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="dinnerProteinSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="dinnerProtein" data-label-id="dinnerProteinSliderLabel">
+                            <div class="macro-slider-label" id="dinnerProteinSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="meal-form-actions">
+                        <button class="copy-action-button pasteMealButton icon-button" type="button" disabled data-meal-type="dinner" aria-label="Paste copied meal"><i class="fa-solid fa-paste"></i><span class="icon-button-label">Paste</span></button>
+                        <button class="saveMealButton" data-meal-type="dinner">Save Dinner</button>
+                    </div>
                     <div class="image-upload-container">
                         <label for="dinnerImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="dinnerImageUpload" accept="image/*" onchange="handleImageUpload(this, 'dinner')">
@@ -193,11 +276,38 @@
                         <button class="generateMacrosButton ai-enhanced-button">Generate Macros</button>
                         <button class="aiEditMacrosButton ai-enhanced-button" style="display: none;">AI Update</button>
                     </div>
-                    <input type="number" id="snacksCalories" step="0.1" placeholder="Cals">
-                    <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
-                    <input type="number" id="snacksCarbs" step="0.1" placeholder="Carbs (g)">
-                    <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
-                    <button class="saveMealButton" data-meal-type="snacks">Save Snacks</button>
+                    <div class="macro-input-row">
+                        <input type="number" id="snacksCalories" step="0.1" placeholder="Cals">
+                        <div class="macro-slider">
+                            <input type="range" id="snacksCaloriesSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="snacksCalories" data-label-id="snacksCaloriesSliderLabel">
+                            <div class="macro-slider-label" id="snacksCaloriesSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="snacksFat" step="0.1" placeholder="Fat (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="snacksFatSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="snacksFat" data-label-id="snacksFatSliderLabel">
+                            <div class="macro-slider-label" id="snacksFatSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="snacksCarbs" step="0.1" placeholder="Carbs (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="snacksCarbsSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="snacksCarbs" data-label-id="snacksCarbsSliderLabel">
+                            <div class="macro-slider-label" id="snacksCarbsSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="macro-input-row">
+                        <input type="number" id="snacksProtein" step="0.1" placeholder="Protein (g)">
+                        <div class="macro-slider">
+                            <input type="range" id="snacksProteinSlider" class="macro-adjust-slider" min="-20" max="20" value="0" step="1" data-target-input="snacksProtein" data-label-id="snacksProteinSliderLabel">
+                            <div class="macro-slider-label" id="snacksProteinSliderLabel">0%</div>
+                        </div>
+                    </div>
+                    <div class="meal-form-actions">
+                        <button class="copy-action-button pasteMealButton icon-button" type="button" disabled data-meal-type="snacks" aria-label="Paste copied meal"><i class="fa-solid fa-paste"></i><span class="icon-button-label">Paste</span></button>
+                        <button class="saveMealButton" data-meal-type="snacks">Save Snacks</button>
+                    </div>
                     <div class="image-upload-container">
                         <label for="snacksImageUpload" class="ai-enhanced-button">Upload Image</label>
                         <input type="file" id="snacksImageUpload" accept="image/*" onchange="handleImageUpload(this, 'snacks')">
@@ -283,13 +393,14 @@
                         <label for="dailyProtein">Daily Protein (g)</label>
                         <input type="number" class="form-control" id="dailyProtein" name="dailyProtein" required>
                     </div>
-                    <button class="defaultButton" type="submit" class="btn btn-primary">Save Settings</button>
+                    <button class="defaultButton" type="submit">Save Settings</button>
                 </form>
+                <button type="button" id="undoFromSettings" class="defaultButton secondary" disabled style="margin-top: 10px;">Undo Last Change</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <script src="js/scripts.js?v0.3.5"></script>
+    <script src="js/scripts.js?v0.3.6"></script>
 </body>
 </html>

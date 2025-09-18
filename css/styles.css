@@ -250,7 +250,7 @@ h3 {
     font-weight: bold;
     color: #0c2512;
     padding: 5px;
-    border-radius: 5px;
+    border-radius: 4px;
     margin: 0; /* Reset margins */
     position: absolute; /* Position the date absolutely */
     left: 50%; /* Move the date to the center */
@@ -349,7 +349,7 @@ input[type="text"], input[type="number"] {
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 4px;
     font-size: 16px;
 }
 
@@ -368,6 +368,14 @@ input[type="text"], input[type="number"] {
     transition: all 0.05s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     outline: none;
+}
+
+.defaultButton.secondary {
+    background-color: #6f7c6b;
+}
+
+.defaultButton.secondary:hover {
+    background-color: #515d4f;
 }
 
 button {
@@ -491,7 +499,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .meal-slot {
     background-color: #ebf3e9;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 4px;
     margin-bottom: 10px;
 }
 
@@ -511,13 +519,13 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     padding: 10px;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 .meal-item .meal-image {
     max-width: 60px;
     max-height: 60px;
-    border-radius: 5px;
+    border-radius: 4px;
     margin: 0 10px;
 }
 
@@ -550,13 +558,13 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 }
 
 .meal-item .button-area button, .exercise-item .button-area button {
-    width: 40px; /* Adjust button width */
-    height: 40px; /* Adjust button height */
-    padding: 0;
-    font-size: 20px; /* Increase font size */
-    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 4px 2px;
+    font-size: 14px;
+    border-radius: 4px;
     border: none;
-    margin: 0; /* Remove margin */
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -564,21 +572,20 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 
 .meal-item .button-area .edit-button {
     background-color: #007bff;
+    color: #ffffff;
 }
 
 .meal-item .button-area .remove-button, .exercise-item .button-area .remove-button {
     background-color: #dc3545;
+    color: #ffffff;
 }
 
 .meal-item .button-area .duplicate-button {
     background-color: #28a745;
     color: white;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 6px 4px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -608,7 +615,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 }
 .progress-bar {
     width: 100%;
-    border-radius: 5px;
+    border-radius: 4px;
     overflow: hidden; /* Important for rounded corners of children */
     height: 20px;
     display: flex; /* Can be kept or removed if all children are absolute */
@@ -680,7 +687,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .image-upload-container label {
     color: white;
     padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     display: inline-block;
     margin-right: 5px;
@@ -735,7 +742,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 4px;
     box-sizing: border-box; /* Include padding and border in element's total width and height */
     font-size: 16px;
 }
@@ -750,7 +757,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .modal-content button, .google-login-button {
     width: 100%;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     /* background-color: rgba(12, 37, 18, 0.7); */
@@ -821,7 +828,7 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     cursor: pointer;
     font-size: 16px;
     color: #4a5568;
-    border-radius: 5px;
+    border-radius: 4px;
     transition: background-color 0.05s;
 }
 
@@ -914,4 +921,259 @@ button:active, .image-upload-container label:active, .modal-content button:activ
     border-bottom: 1px solid #eee; /* Visually separates email from logout */
     text-align: center;
     word-break: break-all; /* Prevents long emails from breaking layout */
+}
+.macro-slider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    width: 100%;
+}
+
+.macro-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 0 14px;
+}
+
+.macro-input-row input[type="number"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.macro-input-row .macro-slider {
+    flex: 2;
+    min-width: 0;
+}
+
+.macro-slider input[type="range"] {
+    flex: 1;
+    height: 40px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #dfe9da 0%, #dfe9da 100%);
+    cursor: pointer;
+}
+
+.macro-slider input[type="range"]:focus {
+    outline: none;
+}
+
+.macro-slider input[type="range"]::-webkit-slider-runnable-track {
+    height: 16px;
+    background: #dfe9da;
+    border: 1px solid #b6c2b2;
+    border-radius: 4px;
+}
+
+.macro-slider input[type="range"]::-moz-range-track {
+    height: 16px;
+    background: #dfe9da;
+    border: 1px solid #b6c2b2;
+    border-radius: 4px;
+}
+
+.macro-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #576353;
+    border: none;
+    border-radius: 4px;
+    margin-top: -3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s ease;
+}
+
+.macro-slider input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: #576353;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s ease;
+}
+
+.macro-slider input[type="range"]::-moz-range-progress {
+    background: #c8d6c4;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.macro-slider input[type="range"]::-ms-track {
+    height: 16px;
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+
+.macro-slider input[type="range"]::-ms-fill-lower {
+    background: #c8d6c4;
+    border: 1px solid #b6c2b2;
+    border-radius: 4px;
+}
+
+.macro-slider input[type="range"]::-ms-fill-upper {
+    background: #dfe9da;
+    border: 1px solid #b6c2b2;
+    border-radius: 4px;
+}
+
+.macro-slider input[type="range"]:active::-webkit-slider-thumb {
+    background: #3a4637;
+}
+
+.macro-slider input[type="range"]:active::-moz-range-thumb {
+    background: #3a4637;
+}
+
+.macro-slider-label {
+    min-width: 3rem;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #576353;
+    font-weight: 600;
+    flex: 0 0 auto;
+}
+
+.meal-form-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin: 12px 0;
+}
+
+.meal-form-actions .saveMealButton {
+    flex: 1;
+    width: auto;
+}
+
+.copy-action-button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px;
+    background-color: #576353;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 4px 2px;
+    line-height: 0;
+}
+
+.copy-action-button:hover:not(:disabled), .copy-action-button:focus-visible:not(:disabled) {
+    background-color: #3a4637;
+}
+
+.copy-action-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.copy-action-button i {
+    font-size: 18px;
+}
+
+.icon-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 14 px;
+    height: 14 px;
+}
+
+.icon-button i {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.icon-button-label {
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.copy-toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    width: min(80%, 520px);
+    background: rgba(87, 99, 83, 0.88);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+    z-index: 2000;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+    text-align: center;
+}
+
+.defaultButton {
+    background-color: rgb(87, 99, 83);
+    /* border: 2px solid rgba(255, 255, 255, 0.9); */
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.05s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.copy-toast.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.toast-message {
+    flex: 1;
+}
+
+.toast-action-button {
+    pointer-events: auto;
+    border: none;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.toast-action-button:hover, .toast-action-button:focus-visible {
+    background-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.toast-action-button:active {
+    transform: translateY(0);
 }
