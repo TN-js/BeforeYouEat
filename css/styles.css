@@ -347,7 +347,6 @@ label {
 input[type="text"], input[type="number"] {
     width: calc(100% - 22px);
     padding: 10px;
-    margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
@@ -925,7 +924,6 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 .macro-slider {
     display: flex;
     align-items: center;
-    gap: 10px;
     margin: 0;
     width: 100%;
 }
@@ -1031,9 +1029,9 @@ button:active, .image-upload-container label:active, .modal-content button:activ
 }
 
 .macro-slider-label {
-    min-width: 3rem;
+    min-width: 36px;
     text-align: right;
-    font-size: 0.9rem;
+    font-size: 14px;
     color: #576353;
     font-weight: 600;
     flex: 0 0 auto;
