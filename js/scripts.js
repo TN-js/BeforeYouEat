@@ -1542,6 +1542,27 @@ async function checkServerStatus() {
 }
 
 // --- IMAGE HANDLING & OPENAI ---
+function populateMacroFieldsFromResponse(data, mealType, sourceLabel) {
+    const hasStructuredMacros = data &&
+        typeof data === 'object' &&
+        !Array.isArray(data) &&
+        typeof data.dishName === 'string' &&
+        ['calories', 'fat', 'carbs', 'protein'].every(key => Number.isFinite(Number(data[key])));
+
+    if (!hasStructuredMacros) {
+        console.warn(`Could not parse full macros from AI ${sourceLabel} response:`, data);
+        return false;
+    }
+
+    document.getElementById(`${mealType}DishName`).value = data.dishName.trim();
+    document.getElementById(`${mealType}Calories`).value = Number(data.calories).toFixed(0);
+    document.getElementById(`${mealType}Fat`).value = Number(data.fat).toFixed(1);
+    document.getElementById(`${mealType}Carbs`).value = Number(data.carbs).toFixed(1);
+    document.getElementById(`${mealType}Protein`).value = Number(data.protein).toFixed(1);
+    resetMacroSlidersForMealType(mealType);
+    return true;
+}
+
 async function handleMealNameInput(mealName, mealType, editingId = null) {
     if (!mealName) {
         alert('Please enter a meal name.');
@@ -1568,25 +1589,7 @@ async function handleMealNameInput(mealName, mealType, editingId = null) {
             throw new Error(errorText);
         }
         const data = await response.json();
-        const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
-        const formPrefix = mealType;
-        let populatedSuccessfully = false;
-        if (matches) {
-            document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
-            document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
-            document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
-            document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
-            document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
-            resetMacroSlidersForMealType(formPrefix);
-            populatedSuccessfully = true;
-        } else {
-            const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
-            if (nameMatchOnly && nameMatchOnly[1]) {
-                document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
-                populatedSuccessfully = true; 
-            }
-            console.warn(`Could not parse full macros from AI text response: ${data}`);
-        }
+        const populatedSuccessfully = populateMacroFieldsFromResponse(data, mealType, 'text');
         if (populatedSuccessfully) {
             const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
             if (saveButton && saveButton.dataset.editingId) { 
@@ -1644,25 +1647,7 @@ async function handleImageUpload(input, mealType) {
                     throw new Error(errorText);
                 }
                 const data = await response.json();
-                const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
-                const formPrefix = mealType;
-                let populatedSuccessfully = false;
-                if (matches) {
-                    document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
-                    document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
-                    document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
-                    document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
-                    document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
-                    resetMacroSlidersForMealType(formPrefix);
-                    populatedSuccessfully = true;
-                } else {
-                    const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
-                    if (nameMatchOnly && nameMatchOnly[1]) {
-                        document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
-                        populatedSuccessfully = true;
-                    }
-                    console.warn(`Could not parse full macros from AI image analysis: ${data}`);
-                }
+                const populatedSuccessfully = populateMacroFieldsFromResponse(data, mealType, 'image analysis');
                 if (populatedSuccessfully) {
                     const saveButton = document.querySelector(`#${mealType}Form .saveMealButton`);
                     if (saveButton && saveButton.dataset.editingId) {
@@ -1724,25 +1709,7 @@ async function handleAiEditMacros(mealType, originalMealName, newMealName, calor
             return;
         }
         const data = await response.json();
-        const matches = data.match(/Name:\s*(.+?)\s*,\s*Cals:\s*(\d+(?:\.\d+)?)(?:\s*(?:kcal|cal|kcals|calories))?\s*,\s*Fat:\s*(\d+(?:\.\d+)?)\s*g,\s*Carbs:\s*(\d+(?:\.\d+)?)\s*g,\s*Protein:\s*(\d+(?:\.\d+)?)\s*g/i);
-        const formPrefix = mealType;
-        let populatedSuccessfully = false;
-        if (matches) {
-            document.getElementById(`${formPrefix}DishName`).value = matches[1].trim();
-            document.getElementById(`${formPrefix}Calories`).value = parseFloat(matches[2]).toFixed(0);
-            document.getElementById(`${formPrefix}Fat`).value = parseFloat(matches[3]).toFixed(1);
-            document.getElementById(`${formPrefix}Carbs`).value = parseFloat(matches[4]).toFixed(1);
-            document.getElementById(`${formPrefix}Protein`).value = parseFloat(matches[5]).toFixed(1);
-            resetMacroSlidersForMealType(formPrefix);
-            populatedSuccessfully = true;
-        } else {
-            const nameMatchOnly = data.match(/Name:\s*(.+?)(?=,\s*(?:Cals|$))/i);
-            if (nameMatchOnly && nameMatchOnly[1]) {
-                document.getElementById(`${formPrefix}DishName`).value = nameMatchOnly[1].trim();
-                populatedSuccessfully = true; 
-            }
-            console.warn(`Could not parse full macros from AI command edit response: ${data}`);
-        }
+        const populatedSuccessfully = populateMacroFieldsFromResponse(data, mealType, 'command edit');
         if (populatedSuccessfully) {
             if (saveButton && saveButton.dataset.editingId) {
                 saveInitiated = true;

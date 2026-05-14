@@ -1,5 +1,6 @@
 # --- START OF COMPLETE app.py ---
 from flask import Flask, request, jsonify
+import json
 import requests
 import os
 from base64 import b64encode
@@ -82,6 +83,106 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 if not openai_api_key: raise ValueError("OPENAI_API_KEY not found.")
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 if not GOOGLE_CLIENT_ID: raise ValueError("GOOGLE_CLIENT_ID not found.")
+
+OPENAI_MACRO_MODEL = "gpt-5.4-mini"
+OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+MEAL_MACRO_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "dishName": {
+            "type": "string",
+            "description": "Clean, concise meal name with any useful quantity or weight included."
+        },
+        "calories": {
+            "type": "number",
+            "description": "Estimated total calories for the whole meal."
+        },
+        "fat": {
+            "type": "number",
+            "description": "Estimated total fat in grams for the whole meal."
+        },
+        "carbs": {
+            "type": "number",
+            "description": "Estimated total carbohydrates in grams for the whole meal."
+        },
+        "protein": {
+            "type": "number",
+            "description": "Estimated total protein in grams for the whole meal."
+        }
+    },
+    "required": ["dishName", "calories", "fat", "carbs", "protein"],
+    "additionalProperties": False
+}
+MEAL_MACRO_TEXT_FORMAT = {
+    "type": "json_schema",
+    "name": "meal_macro_estimate",
+    "schema": MEAL_MACRO_SCHEMA,
+    "strict": True
+}
+
+def create_macro_payload(content, max_output_tokens=300):
+    return {
+        "model": OPENAI_MACRO_MODEL,
+        "reasoning": {"effort": "none"},
+        "text": {
+            "format": MEAL_MACRO_TEXT_FORMAT,
+            "verbosity": "low"
+        },
+        "input": [{
+            "role": "system",
+            "content": "You estimate meal nutrition. Return JSON only using the provided schema."
+        }, {
+            "role": "user",
+            "content": content
+        }],
+        "max_output_tokens": max_output_tokens
+    }
+
+def extract_response_text(data):
+    output_text = data.get('output_text')
+    if isinstance(output_text, list):
+        text = ''.join(part for part in output_text if isinstance(part, str)).strip()
+        if text:
+            return text
+    elif isinstance(output_text, str) and output_text.strip():
+        return output_text.strip()
+
+    for entry in data.get('output', []):
+        if not isinstance(entry, dict) or entry.get('type') != 'message':
+            continue
+        text_parts = []
+        for piece in entry.get('content', []):
+            if isinstance(piece, dict):
+                if piece.get('type') == 'refusal':
+                    raise ValueError(piece.get('refusal') or 'Model refused the request')
+                if piece.get('type') in ('text', 'output_text'):
+                    text_parts.append(piece.get('text', ''))
+        text = ''.join(text_parts).strip()
+        if text:
+            return text
+    return ''
+
+def parse_macro_response(data):
+    try:
+        macro_data = json.loads(extract_response_text(data))
+    except (TypeError, json.JSONDecodeError, ValueError) as exc:
+        raise ValueError(f"OpenAI response did not contain valid macro JSON: {exc}") from exc
+
+    required_fields = ("dishName", "calories", "fat", "carbs", "protein")
+    missing = [field for field in required_fields if field not in macro_data]
+    if missing:
+        raise ValueError(f"OpenAI macro JSON missing fields: {', '.join(missing)}")
+
+    try:
+        return {
+            "dishName": str(macro_data["dishName"]).strip(),
+            "calories": round(float(macro_data["calories"])),
+            "fat": round(float(macro_data["fat"]), 1),
+            "carbs": round(float(macro_data["carbs"]), 1),
+            "protein": round(float(macro_data["protein"]), 1)
+        }
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"OpenAI macro JSON contained non-numeric macro values: {exc}") from exc
 
 """
 # FLAG FOR ONE-TIME DB INITIALIZATION (per worker)
@@ -303,50 +404,27 @@ def sync_data(current_user):
 
 @app.route('/estimate_macros', methods=['POST'])
 def estimate_macros():
-    if 'meal_name' not in request.json:
+    request_data = request.get_json(silent=True) or {}
+    if 'meal_name' not in request_data:
         return jsonify({'error': 'No meal name provided'}), 400
-    meal_name = request.json['meal_name']
-    prompt_text = f"""Please estimate the macros for the meal named '{meal_name}'. Try to estimate the name of the dish that was inputted (if you suspect it was misspelled or shortened), calories, fat, carbs, and protein in grams based on common recipes and serving sizes. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information (if a meal name input includes the mass, then keep that in your output name though, it could be useful.), just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Fat: b g, Carbs: c g, Protein: d g'."""
+    meal_name = request_data['meal_name']
+    prompt_text = f"""Estimate the macros for this meal name: {meal_name}
+
+Infer the likely dish if the input is misspelled or shortened. Use common recipes and serving sizes. If the input includes a mass, portion count, or useful quantity, preserve that in dishName. Return JSON with total whole-meal calories, fat, carbs, and protein."""
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {openai_api_key}"}
-    payload = {
-        "model": "gpt-5-mini",
-        "reasoning": {"effort": "minimal"},
-        "input": [{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": prompt_text}
-            ]
-        }],
-        "max_output_tokens": 150
-    }
-    response = requests.post("https://api.openai.com/v1/responses", headers=headers, json=payload)
+    payload = create_macro_payload(prompt_text, max_output_tokens=200)
+    response = requests.post(OPENAI_RESPONSES_URL, headers=headers, json=payload)
     if response.status_code != 200:
         return jsonify({'error': f"Failed to estimate macros: {response.text}"}), response.status_code
 
     data = response.json()
-    ai_text = ''
-    output_text = data.get('output_text')
-    if isinstance(output_text, list):
-        ai_text = ''.join(part for part in output_text if isinstance(part, str)).strip()
-    elif isinstance(output_text, str):
-        ai_text = output_text.strip()
-
-    if not ai_text:
-        for entry in data.get('output', []):
-            if not isinstance(entry, dict) or entry.get('type') != 'message':
-                continue
-            for piece in entry.get('content', []):
-                if isinstance(piece, dict) and piece.get('type') in ('text', 'output_text'):
-                    ai_text += piece.get('text', '')
-            if ai_text:
-                ai_text = ai_text.strip()
-                break
-
-    if not ai_text:
-        app.logger.error(f"Parse OpenAI estimate_macros: No usable content - Resp: {data}")
+    try:
+        macro_data = parse_macro_response(data)
+    except ValueError as exc:
+        app.logger.error(f"Parse OpenAI estimate_macros: {exc} - Resp: {data}")
         return jsonify({'error': 'Error parsing OpenAI response'}), 500
 
-    return jsonify(ai_text)
+    return jsonify(macro_data)
 
 @app.route('/analyze_image', methods=['POST'])
 def analyze_image():
@@ -356,51 +434,27 @@ def analyze_image():
     mime_type = getattr(image_file, 'mimetype', None) or 'image/jpeg'
     base64_image = b64encode(image_file.read()).decode('utf-8')
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {openai_api_key}"}
-    payload = {
-        "model": "gpt-5-mini",
-        "reasoning": {"effort": "minimal"},
-        "input": [{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": "Estimate macros for this meal image. Try to estimate the mass of each piece of food and then multiply the weight with the caloric density of each food. Also try to estimate the macros; fat, carbs, and protein in grams. Try to figure out what the dish is and name it as well. The final output should only write out the name and the full nutrients for the whole meal. Remove all other unnecessary information, just output the name of the food and the whole meal's nutrients without any extra words. Use the format: 'Name: [Dish Name], Cals: a, Fat: b g, Carbs: c g, Protein: d g'."},
-                {"type": "input_image", "image_url": f"data:{mime_type};base64,{base64_image}"}
-            ]
-        }],
-        "max_output_tokens": 300
-    }
-    response = requests.post("https://api.openai.com/v1/responses", headers=headers, json=payload)
+    payload = create_macro_payload([
+        {"type": "input_text", "text": "Estimate macros for this meal image. Identify the dish, estimate each visible food's portion mass, and use typical caloric density and macros. Return JSON with total whole-meal calories, fat, carbs, and protein."},
+        {"type": "input_image", "image_url": f"data:{mime_type};base64,{base64_image}"}
+    ], max_output_tokens=300)
+    response = requests.post(OPENAI_RESPONSES_URL, headers=headers, json=payload)
     if response.status_code != 200:
         app.logger.error(f"OpenAI analyze_image: {response.status_code} - {response.text}")
         return jsonify({'error': f"Failed to analyze image: {response.text}"}), response.status_code
 
     data = response.json()
-    ai_text = ''
-    output_text = data.get('output_text')
-    if isinstance(output_text, list):
-        ai_text = ''.join(part for part in output_text if isinstance(part, str)).strip()
-    elif isinstance(output_text, str):
-        ai_text = output_text.strip()
-
-    if not ai_text:
-        for entry in data.get('output', []):
-            if not isinstance(entry, dict) or entry.get('type') != 'message':
-                continue
-            for piece in entry.get('content', []):
-                if isinstance(piece, dict) and piece.get('type') in ('text', 'output_text'):
-                    ai_text += piece.get('text', '')
-            if ai_text:
-                ai_text = ai_text.strip()
-                break
-
-    if not ai_text:
-        app.logger.error(f"Parse OpenAI analyze_image: No usable content - Resp: {data}")
+    try:
+        macro_data = parse_macro_response(data)
+    except ValueError as exc:
+        app.logger.error(f"Parse OpenAI analyze_image: {exc} - Resp: {data}")
         return jsonify({'error': 'Error parsing OpenAI image analysis response'}), 500
 
-    return jsonify(ai_text)
+    return jsonify(macro_data)
 
 @app.route('/edit_macros_with_command', methods=['POST'])
 def edit_macros_with_command():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     required_fields = ['original_meal_name', 'new_meal_name', 'current_calories', 'current_fat', 'current_carbs', 'current_protein']
     if not all(field in data for field in required_fields):
         missing = [field for field in required_fields if field not in data]
@@ -419,7 +473,7 @@ def edit_macros_with_command():
         current_fat = float(current_fat)
         current_carbs = float(current_carbs)
         current_protein = float(current_protein)
-    except ValueError:
+    except (TypeError, ValueError):
         app.logger.error("edit_macros_with_command: Invalid current macro values provided.")
         return jsonify({'error': 'Invalid current macro values provided. Must be numbers.'}), 400
 
@@ -439,8 +493,7 @@ Your task is to:
    - For scaling commands (e.g., "x2", "200g" if original implied 100g), scale all macros proportionally based on the 'current macros'.
    - For additive/subtractive commands ("add 10g protein", "remove 5g fat"), adjust only the relevant macros.
    - For changes in dish nature (like switching to a plant-based version), estimate new macros based on typical values for that dish version, leveraging the provided macros as a starting reference.
-4. Provide the updated meal name and macros (always write these with numbers, not words like "seventy eight") in the format (and remove the issued command if there was one.):
-   'Name: [Dish Name], Cals: a, Fat: b g, Carbs: c g, Protein: d g'.
+4. Provide the updated meal name and macros as JSON. Always use numbers, not words like "seventy eight". Remove any issued command from dishName.
 5. If no change is necessary, return the provided macros but still use the formatting above.
 
 Always do what you think is best for the current input though, don't rely on these guidelines too much.
@@ -449,50 +502,24 @@ NOTE: If something looks like a command to you in the meal name; prioritize that
 """
 
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {openai_api_key}"}
-    payload = {
-        "model": "gpt-5-mini",
-        "reasoning": {"effort": "minimal"},
-        "input": [{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": prompt_content}
-            ]
-        }],
-        "max_output_tokens": 200
-    }
+    payload = create_macro_payload(prompt_content, max_output_tokens=250)
 
     app.logger.info(f"Sending to OpenAI for AI Edit: Original: '{original_meal_name}', New: '{new_meal_name}' with current macros C:{current_calories} F:{current_fat} Cb:{current_carbs} P:{current_protein}")
 
-    response = requests.post("https://api.openai.com/v1/responses", headers=headers, json=payload)
+    response = requests.post(OPENAI_RESPONSES_URL, headers=headers, json=payload)
 
     if response.status_code != 200:
         app.logger.error(f"OpenAI edit_macros_with_command API error: {response.status_code} - {response.text}")
         return jsonify({'error': f"Failed to edit macros with command: {response.text}"}), response.status_code
 
     data = response.json()
-    ai_text = ''
-    output_text = data.get('output_text')
-    if isinstance(output_text, list):
-        ai_text = ''.join(part for part in output_text if isinstance(part, str)).strip()
-    elif isinstance(output_text, str):
-        ai_text = output_text.strip()
-
-    if not ai_text:
-        for entry in data.get('output', []):
-            if not isinstance(entry, dict) or entry.get('type') != 'message':
-                continue
-            for piece in entry.get('content', []):
-                if isinstance(piece, dict) and piece.get('type') in ('text', 'output_text'):
-                    ai_text += piece.get('text', '')
-            if ai_text:
-                ai_text = ai_text.strip()
-                break
-
-    if not ai_text:
-        app.logger.error(f"Error parsing OpenAI response for edit_macros_with_command: No usable content - Response JSON: {data}")
+    try:
+        macro_data = parse_macro_response(data)
+    except ValueError as exc:
+        app.logger.error(f"Error parsing OpenAI response for edit_macros_with_command: {exc} - Response JSON: {data}")
         return jsonify({'error': 'Error parsing OpenAI response for command edit'}), 500
 
-    return jsonify(ai_text)
+    return jsonify(macro_data)
 
 @app.route('/health', methods=['GET'])
 def health_check(): return jsonify({'status': 'live'}), 200

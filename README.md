@@ -6,6 +6,10 @@
 
 https://tn-js.github.io/BeforeYouEat/
 
+## AI Model
+
+Macro estimation, image analysis, and macro edits use OpenAI `gpt-5.4-mini` through the Responses API with schema-backed structured JSON outputs.
+
 ## Images
 
 **Uploading an image**
