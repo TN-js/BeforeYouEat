@@ -1,6 +1,7 @@
 // --- START OF scripts.js ---
 // const BACKEND_URL = 'http://127.0.0.1:5000'; // Local
-const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Production
+const BACKEND_URL = 'http://82.70.52.163:5000'; // New Oracle cloud backend
+//const BACKEND_URL = 'https://beforeyoueat.onrender.com'; // Old Render backend
 const GOOGLE_CLIENT_ID = '212430289140-fipq7nufjjq8psmogq5n8v8p43g73jsk.apps.googleusercontent.com';
 
 // --- Global State Variables ---
